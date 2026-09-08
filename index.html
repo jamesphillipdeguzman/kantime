@@ -2,71 +2,30 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>KanTime | Stake Choir Practice Hub</title>
-  <style>
-    :root {
-      --primary: #1d4ed8;
-      --primary-light: #eff6ff;
-      --accent: #d97706;
-      --accent-light: #fffbeb;
-      --bg: #f8fafc;
-      --card-bg: #ffffff;
-      --text: #0f172a;
-      --text-muted: #64748b;
-      --border: #e2e8f0;
-      --success: #10b981;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); padding-bottom: 60px; }
-    header { background: var(--primary); color: white; padding: 20px 16px; text-align: center; }
-    header h1 { font-size: 1.35rem; font-weight: 700; }
-    header p { font-size: 0.85rem; opacity: 0.9; margin-top: 4px; }
-    
-    .container { max-width: 520px; margin: 0 auto; padding: 14px; }
-    
-    /* Card Styles */
-    .card { background: var(--card-bg); border-radius: 12px; padding: 16px; margin-bottom: 14px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    .card h2 { font-size: 1.05rem; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
-    
-    /* Inputs */
-    label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px; }
-    input, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.95rem; margin-bottom: 10px; outline: none; background: #fff; }
-    input:focus, select:focus { border-color: var(--primary); }
 
-    /* Songs List */
-    .song-item { border-left: 4px solid var(--primary); padding: 10px 12px; background: var(--primary-light); border-radius: 4px 8px 8px 4px; margin-bottom: 10px; }
-    .song-item.primary-piece { border-left-color: var(--accent); background: var(--accent-light); }
-    .song-title { font-weight: 600; font-size: 0.95rem; margin-top: 2px; }
-    .song-tag { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
-    .song-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-    .btn-link { font-size: 0.8rem; padding: 6px 12px; background: white; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; color: var(--text); font-weight: 500; display: inline-flex; align-items: center; gap: 4px; }
-    .btn-link:hover { border-color: var(--primary); color: var(--primary); }
-    
-    /* Timer */
-    .timer-display { font-size: 2.8rem; font-weight: 800; text-align: center; color: var(--primary); margin: 6px 0; font-variant-numeric: tabular-nums; }
-    .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: 600; font-size: 0.95rem; cursor: pointer; text-align: center; }
-    .btn-primary { background: var(--primary); color: white; }
-    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
-    .btn:active { transform: scale(0.98); }
-
-    /* Leaderboard Tables */
-    .board-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
-    .board-row:last-child { border-bottom: none; }
-    .rank { font-weight: 800; width: 34px; color: var(--text-muted); }
-    .rank-top3 { color: var(--accent); }
-    .part-badge { font-size: 0.72rem; padding: 2px 7px; border-radius: 10px; background: #e2e8f0; color: #334155; margin-left: 6px; font-weight: 600; }
-    .mins-badge { font-weight: 700; color: var(--primary); font-size: 0.88rem; }
-
-    /* Toast */
-    #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 10px 20px; border-radius: 20px; font-size: 0.85rem; display: none; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.15); }
-  </style>
+  <!-- Open Graph / Messenger Preview -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="KanTime | Stake Choir Practice Hub">
+  <meta property="og:description" content="Log 15-minute practice sessions, access sheet music and audio tracks, and see live choir standings.">
+  <meta property="og:image" content="images/kantime-logo.png">
+  <meta property="og:image:alt" content="KanTime Logo">
+  
+  <meta name="theme-color" content="#1d4ed8">
+  <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
   <header>
-    <h1>🎶 KanTime</h1>
-    <p>Stake Choir Prep • Oct 24–25</p>
+    <div class="header-brand">
+      <img src="images/kantime-logo.png" alt="KanTime Logo" class="header-logo" onerror="this.style.display='none'">
+      <div class="header-text">
+        <h1>KanTime</h1>
+        <p>Stake Choir Prep • Oct 24–25</p>
+      </div>
+    </div>
   </header>
 
   <div class="container">
@@ -202,9 +161,10 @@
       return true;
     }
 
-    // --- 15-MINUTE STRICT TIMER ---
-    let timerDuration = 15 * 60; // 15 minutes (900 seconds)
+    // --- 15-MINUTE STRICT TIMER (TIMESTAMP-BASED FOR MOBILE/BACKGROUND RESILIENCE) ---
+    const timerDuration = 15 * 60; // 15 minutes (900 seconds)
     let timeRemaining = timerDuration;
+    let targetEndTime = null;
     let timerInterval = null;
 
     function formatTime(seconds) {
@@ -213,38 +173,69 @@
       return `${m}:${s}`;
     }
 
+    function updateTimerTick() {
+      if (!targetEndTime) return;
+      const now = Date.now();
+      const diffMs = targetEndTime - now;
+      timeRemaining = Math.max(0, Math.ceil(diffMs / 1000));
+      document.getElementById("timerDisplay").innerText = formatTime(timeRemaining);
+
+      if (timeRemaining <= 0) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        targetEndTime = null;
+        timeRemaining = timerDuration;
+        document.getElementById("timerDisplay").innerText = formatTime(timeRemaining);
+
+        const btn = document.getElementById("timerBtn");
+        btn.innerText = "Start 15m Session";
+        btn.classList.remove("btn-outline");
+        btn.classList.add("btn-primary");
+
+        alert("🎉 Session Complete! You've logged 15 minutes of solid practice!");
+        submitPracticeSession(15);
+      }
+    }
+
     function toggleTimer() {
       if (!validateUser()) return;
 
       const btn = document.getElementById("timerBtn");
       if (timerInterval) {
+        // Pause timer
         clearInterval(timerInterval);
         timerInterval = null;
+        if (targetEndTime) {
+          timeRemaining = Math.max(0, Math.ceil((targetEndTime - Date.now()) / 1000));
+        }
+        targetEndTime = null;
+        document.getElementById("timerDisplay").innerText = formatTime(timeRemaining);
         btn.innerText = "Resume 15m Session";
         btn.classList.remove("btn-outline");
         btn.classList.add("btn-primary");
       } else {
+        // Start or Resume timer
+        targetEndTime = Date.now() + (timeRemaining * 1000);
         btn.innerText = "Pause Session";
         btn.classList.remove("btn-primary");
         btn.classList.add("btn-outline");
-        
-        timerInterval = setInterval(() => {
-          timeRemaining--;
-          document.getElementById("timerDisplay").innerText = formatTime(timeRemaining);
-          if (timeRemaining <= 0) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-            timeRemaining = timerDuration;
-            document.getElementById("timerDisplay").innerText = formatTime(timeRemaining);
-            btn.innerText = "Start 15m Session";
-            btn.classList.remove("btn-outline");
-            btn.classList.add("btn-primary");
-            alert("🎉 Session Complete! You've logged 15 minutes of solid practice!");
-            submitPracticeSession(15);
-          }
-        }, 1000);
+
+        updateTimerTick();
+        timerInterval = setInterval(updateTimerTick, 500);
       }
     }
+
+    // Refresh immediately when returning to the tab / Messenger browser
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden && timerInterval) {
+        updateTimerTick();
+      }
+    });
+    window.addEventListener("focus", () => {
+      if (timerInterval) {
+        updateTimerTick();
+      }
+    });
 
     function showToast(msg) {
       const t = document.getElementById("toast");
@@ -325,9 +316,9 @@
             singersHtml += `
               <div class="board-row">
                 <span class="rank ${isTop3}">${medal}#${idx + 1}</span>
-                <div style="flex:1;">
+                <div style="flex:1; min-width:0; padding-right:6px;">
                   <strong style="font-size:0.92rem;">${s.name}</strong>
-                  <span class="part-badge">${s.section}</span>
+                  <span class="part-badge" data-voice="${s.section}">${s.section}</span>
                 </div>
                 <span class="mins-badge">${s.totalMins}m <span style="font-weight:400; font-size:0.75rem; color:var(--text-muted);">(${hours}h)</span></span>
               </div>
@@ -339,11 +330,16 @@
           const sortedSections = Object.entries(sectionTotals).sort((a, b) => b[1] - a[1]);
           let sectionHtml = "";
           sortedSections.forEach(([sec, mins], idx) => {
+            const isTop3 = idx < 3 ? "rank-top3" : "";
+            const medal = idx === 0 ? "🥇 " : idx === 1 ? "🥈 " : idx === 2 ? "🥉 " : "";
             const hours = (mins / 60).toFixed(1);
             sectionHtml += `
               <div class="board-row">
-                <span class="rank">#${idx + 1}</span>
-                <span style="flex:1; font-weight:600;">${sec}</span>
+                <span class="rank ${isTop3}">${medal}#${idx + 1}</span>
+                <div style="flex:1; display:flex; align-items:center; min-width:0;">
+                  <span style="font-weight:700;">${sec}</span>
+                  <span class="part-badge" data-voice="${sec}">Section</span>
+                </div>
                 <span class="mins-badge">${mins}m <span style="font-weight:400; font-size:0.75rem; color:var(--text-muted);">(${hours}h)</span></span>
               </div>
             `;

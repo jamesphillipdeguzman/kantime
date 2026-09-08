@@ -1,0 +1,536 @@
+/* ==========================================================================
+   KanTime | Stake Choir Practice Hub - Modern Stylesheet
+   ========================================================================== */
+
+:root {
+  /* Brand & Theme Colors */
+  --primary: #1d4ed8;
+  --primary-hover: #1e40af;
+  --primary-light: #eff6ff;
+  --primary-border: #bfdbfe;
+  
+  --accent: #d97706;
+  --accent-hover: #b45309;
+  --accent-light: #fffbeb;
+  --accent-border: #fde68a;
+
+  --success: #10b981;
+  --success-light: #ecfdf5;
+
+  /* Neutrals & Surfaces */
+  --bg: #f8fafc;
+  --card-bg: #ffffff;
+  --card-bg-subtle: #f8fafc;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --text-subtle: #94a3b8;
+  --border: #e2e8f0;
+  --border-light: #f1f5f9;
+
+  /* Shadows & Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --shadow-card: 0 2px 6px -1px rgba(15, 23, 42, 0.06), 0 1px 3px -1px rgba(15, 23, 42, 0.04);
+  --shadow-elevated: 0 8px 20px -3px rgba(15, 23, 42, 0.08), 0 4px 8px -2px rgba(15, 23, 42, 0.04);
+  --shadow-btn: 0 4px 12px rgba(29, 78, 216, 0.22);
+}
+
+/* Reset & Base Setup */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  position: relative;
+  background-color: var(--bg);
+  background-image: radial-gradient(at 100% 0%, rgba(219, 234, 254, 0.4) 0px, transparent 50%),
+                    radial-gradient(at 0% 100%, rgba(254, 243, 199, 0.3) 0px, transparent 50%);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Watermark Background */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image: url("../images/iloilo-stake-choir-logo.jpg");
+  background-position: center 55%;
+  background-repeat: no-repeat;
+  background-size: min(360px, 72vw);
+  opacity: 0.065;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Header & Branding */
+header {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%);
+  color: #ffffff;
+  padding: calc(24px + env(safe-area-inset-top, 0px)) 16px 20px;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 4px 20px -2px rgba(29, 78, 216, 0.25);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.header-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+.header-text {
+  text-align: left;
+}
+
+header h1 {
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+header p {
+  font-size: 0.85rem;
+  opacity: 0.92;
+  margin-top: 3px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: #dbeafe;
+}
+
+/* Layout Container */
+.container {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 16px 14px;
+}
+
+/* Card Component */
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 18px 16px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card h2 {
+  font-size: 1.08rem;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+  color: var(--text);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* Form Controls & Labels */
+label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+input[type="text"], select {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border);
+  font-size: 16px; /* 16px minimum stops iOS WebKit from auto-zooming */
+  color: var(--text);
+  margin-bottom: 14px;
+  outline: none;
+  background-color: #ffffff;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+  font-family: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 38px;
+}
+
+input[type="text"]:focus, select:focus {
+  border-color: var(--primary);
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3.5px rgba(29, 78, 216, 0.14);
+}
+
+input[type="text"]::placeholder {
+  color: var(--text-subtle);
+  font-weight: 400;
+}
+
+/* 15-Minute Countdown Timer Display */
+.timer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 6px 0 14px;
+}
+
+.timer-display {
+  font-size: 3.2rem;
+  font-weight: 850;
+  text-align: center;
+  color: var(--primary);
+  letter-spacing: 1px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  padding: 14px 28px;
+  background: linear-gradient(180deg, #f0f7ff 0%, #e0effe 100%);
+  border: 1.5px solid var(--primary-border);
+  border-radius: var(--radius-lg);
+  box-shadow: inset 0 2px 4px rgba(29, 78, 216, 0.04), 0 2px 8px rgba(29, 78, 216, 0.08);
+  width: 100%;
+  max-width: 280px;
+  margin: 8px auto 12px;
+  transition: all 0.25s ease;
+}
+
+/* Button System */
+.btn {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 18px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 0.96rem;
+  cursor: pointer;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  box-shadow: var(--shadow-btn);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(180deg, #1d4ed8 0%, #1e40af 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(29, 78, 216, 0.3);
+}
+
+.btn-outline {
+  background: #ffffff;
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-outline:hover {
+  border-color: var(--text-muted);
+  background: var(--bg);
+}
+
+.btn:active {
+  transform: scale(0.975);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Repertoire & Song Cards */
+.song-item {
+  border-left: 4px solid var(--primary);
+  padding: 12px 14px;
+  background: var(--primary-light);
+  border-radius: 6px var(--radius-md) var(--radius-md) 6px;
+  margin-bottom: 12px;
+  border-top: 1px solid rgba(191, 219, 254, 0.4);
+  border-right: 1px solid rgba(191, 219, 254, 0.4);
+  border-bottom: 1px solid rgba(191, 219, 254, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.song-item:last-child {
+  margin-bottom: 0;
+}
+
+.song-item.primary-piece {
+  border-left-color: var(--accent);
+  background: var(--accent-light);
+  border-top-color: rgba(253, 230, 138, 0.5);
+  border-right-color: rgba(253, 230, 138, 0.5);
+  border-bottom-color: rgba(253, 230, 138, 0.5);
+}
+
+.song-tag {
+  font-size: 0.72rem;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 800;
+  display: inline-block;
+  margin-bottom: 2px;
+}
+
+.song-title {
+  font-weight: 700;
+  font-size: 0.98rem;
+  color: var(--text);
+  line-height: 1.35;
+  margin-top: 1px;
+}
+
+.song-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-link {
+  font-size: 0.82rem;
+  padding: 7px 12px;
+  min-height: 36px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.btn-link:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(29, 78, 216, 0.12);
+}
+
+.btn-link:active {
+  transform: scale(0.97);
+}
+
+/* Leaderboards & Standings */
+.board-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.92rem;
+  transition: background-color 0.15s ease;
+}
+
+.board-row:last-child {
+  border-bottom: none;
+  padding-bottom: 4px;
+}
+
+.rank {
+  font-weight: 850;
+  min-width: 42px;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.rank-top3 {
+  color: #b45309;
+  font-weight: 900;
+}
+
+/* Voice Part Badges */
+.part-badge {
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  background: #f1f5f9;
+  color: #334155;
+  margin-left: 6px;
+  font-weight: 700;
+  display: inline-block;
+  vertical-align: middle;
+  letter-spacing: 0.02em;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Section Specific Pill Badges */
+.part-badge[data-voice="Soprano"],
+.part-badge.soprano {
+  background: #fdf2f8;
+  color: #9d174d;
+  border-color: #fbcfe8;
+}
+
+.part-badge[data-voice="Alto"],
+.part-badge.alto {
+  background: #f5f3ff;
+  color: #6d28d9;
+  border-color: #ddd6fe;
+}
+
+.part-badge[data-voice="Tenor"],
+.part-badge.tenor {
+  background: #f0fdfa;
+  color: #0f766e;
+  border-color: #99f6e4;
+}
+
+.part-badge[data-voice="Bass"],
+.part-badge.bass {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.part-badge[data-voice="Primary"],
+.part-badge.primary {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #fde68a;
+}
+
+.part-badge:empty {
+  display: none;
+}
+
+.mins-badge {
+  font-weight: 800;
+  color: var(--primary);
+  font-size: 0.92rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Floating Toast Notification */
+#toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.94);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #ffffff;
+  padding: 12px 24px;
+  border-radius: var(--radius-full);
+  font-size: 0.88rem;
+  font-weight: 600;
+  display: none;
+  z-index: 1000;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 4px 10px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  text-align: center;
+  max-width: 90%;
+  animation: toastFade 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes toastFade {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+/* Responsive & Mobile Optimizations */
+@media (max-width: 480px) {
+  .container {
+    padding: 12px 10px;
+  }
+  
+  .card {
+    padding: 16px 14px;
+    border-radius: 14px;
+  }
+  
+  .timer-display {
+    font-size: 2.75rem;
+    padding: 10px 20px;
+  }
+  
+  .header-brand {
+    gap: 10px;
+  }
+  
+  .header-logo {
+    width: 38px;
+    height: 38px;
+  }
+  
+  header h1 {
+    font-size: 1.3rem;
+  }
+}
