@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -7,17 +8,19 @@
 
   <!-- Open Graph / Facebook Messenger Preview -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://jamesphillipdeguzman.github.io/kantime/">
+  <meta property="og:url" content="https://kantimes.netlify.app/">
+  <meta property="og:image" content="https://kantimes.netlify.app/images/kantime-logo.png">
   <meta property="og:title" content="🎶 KanTime | Stake Choir Practice Hub">
-  <meta property="og:description" content="Access hymn repertoire, practice tracks, and track your daily 15-minute practice sessions for Oct 24–25!">
-  <meta property="og:image" content="https://jamesphillipdeguzman.github.io/kantime/images/kantime-logo.png">
+  <meta property="og:description"
+    content="Access hymn repertoire, practice tracks, and track your daily 15-minute practice sessions for Oct 24–25!">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  
+
   <meta name="theme-color" content="#1d4ed8">
   <link rel="icon" type="image/x-icon" href="images/favicon.ico">
   <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
 
   <header>
@@ -37,7 +40,7 @@
       <h2>👤 Choir Member</h2>
       <label for="memberName">Full Name (Required)</label>
       <input type="text" id="memberName" placeholder="e.g. Juan dela Cruz" onchange="saveProfile()">
-      
+
       <label for="memberSection">Voice Part / Choir</label>
       <select id="memberSection" onchange="saveProfile()">
         <option value="">-- Select Your Voice --</option>
@@ -77,7 +80,9 @@
         <span class="song-tag">Adult Choir #1</span>
         <div class="song-title">Know This, That Every Soul Is Free (Hymn #240)</div>
         <div class="song-actions">
-          <a class="btn-link" href="https://www.churchofjesuschrist.org/media/music/songs/know-this-that-every-soul-is-free?crumbs=hymns&order=number&lang=eng" target="_blank" rel="noopener noreferrer">🎼 Interactive Sheet & Audio</a>
+          <a class="btn-link"
+            href="https://www.churchofjesuschrist.org/media/music/songs/know-this-that-every-soul-is-free?crumbs=hymns&order=number&lang=eng"
+            target="_blank" rel="noopener noreferrer">🎼 Interactive Sheet & Audio</a>
         </div>
       </div>
 
@@ -86,7 +91,9 @@
         <span class="song-tag">Adult Choir #2</span>
         <div class="song-title">Rise, Ye Saints, and Temples Enter (Hymn #287)</div>
         <div class="song-actions">
-          <a class="btn-link" href="https://www.churchofjesuschrist.org/media/music/songs/rise-ye-saints-and-temples-enter?crumbs=hymns&order=number&lang=eng" target="_blank" rel="noopener noreferrer">🎼 Interactive Sheet & Audio</a>
+          <a class="btn-link"
+            href="https://www.churchofjesuschrist.org/media/music/songs/rise-ye-saints-and-temples-enter?crumbs=hymns&order=number&lang=eng"
+            target="_blank" rel="noopener noreferrer">🎼 Interactive Sheet & Audio</a>
         </div>
       </div>
 
@@ -95,8 +102,11 @@
         <span class="song-tag">Adult Choir #3</span>
         <div class="song-title">Choose You This Day</div>
         <div class="song-actions">
-          <a class="btn-link" href="https://drive.google.com/drive/folders/1bBnCakJGBj-zfka8wVbz42_ykvipMnwU?usp=sharing" target="_blank" rel="noopener noreferrer">📁 Sheet Music & Tracks (Drive)</a>
-          <a class="btn-link" href="https://www.youtube.com/watch?v=q54H2OqWBcY" target="_blank" rel="noopener noreferrer">▶️ YouTube Video</a>
+          <a class="btn-link"
+            href="https://drive.google.com/drive/folders/1bBnCakJGBj-zfka8wVbz42_ykvipMnwU?usp=sharing" target="_blank"
+            rel="noopener noreferrer">📁 Sheet Music & Tracks (Drive)</a>
+          <a class="btn-link" href="https://www.youtube.com/watch?v=q54H2OqWBcY" target="_blank"
+            rel="noopener noreferrer">▶️ YouTube Video</a>
         </div>
       </div>
 
@@ -105,16 +115,20 @@
         <span class="song-tag" style="color:var(--accent);">Primary Presentation</span>
         <div class="song-title">Holy Places</div>
         <div class="song-actions">
-          <a class="btn-link" href="https://www.churchofjesuschrist.org/media/music/songs/holy-places?crumbs=hymns-for-home-and-church&order=number&lang=eng" target="_blank" rel="noopener noreferrer">🎼 Interactive Sheet & Audio</a>
+          <a class="btn-link"
+            href="https://www.churchofjesuschrist.org/media/music/songs/holy-places?crumbs=hymns-for-home-and-church&order=number&lang=eng"
+            target="_blank" rel="noopener noreferrer">🎼 Interactive Sheet & Audio</a>
         </div>
       </div>
     </div>
 
     <!-- Top 10 Dedicated Singers -->
     <div class="card">
-      <h2>🏆 Top 10 Dedicated Singers <button class="btn btn-outline" style="padding:4px 8px; font-size:0.75rem; width:auto;" onclick="loadLeaderboard()">Refresh</button></h2>
+      <h2>🏆 Top 10 Dedicated Singers <button class="btn btn-outline"
+          style="padding:4px 8px; font-size:0.75rem; width:auto;" onclick="loadLeaderboard()">Refresh</button></h2>
       <div id="topSingersList">
-        <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 12px;">Loading leaderboard...</div>
+        <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 12px;">Loading
+          leaderboard...</div>
       </div>
     </div>
 
@@ -122,7 +136,8 @@
     <div class="card">
       <h2>📊 Section Standings</h2>
       <div id="sectionList">
-        <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 12px;">Loading section rankings...</div>
+        <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 12px;">Loading section
+          rankings...</div>
       </div>
     </div>
 
@@ -267,14 +282,14 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       })
-      .then(() => {
-        showToast("Logged! Salamat sa practice! 🔥");
-        setTimeout(loadLeaderboard, 1500);
-      })
-      .catch(err => {
-        showToast("Error logging. Please check connection.");
-        console.error(err);
-      });
+        .then(() => {
+          showToast("Logged! Salamat sa practice! 🔥");
+          setTimeout(loadLeaderboard, 1500);
+        })
+        .catch(err => {
+          showToast("Error logging. Please check connection.");
+          console.error(err);
+        });
     }
 
     // --- LOAD LEADERBOARDS (TOP 10 & SECTIONS) ---
@@ -355,10 +370,11 @@
     }
 
     // Initial load
-    window.onload = function() {
+    window.onload = function () {
       loadProfile();
       loadLeaderboard();
     };
   </script>
 </body>
+
 </html>
