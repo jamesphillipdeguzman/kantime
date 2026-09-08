@@ -35,14 +35,26 @@
 
   <div class="container">
 
-    <!-- Singer Profile -->
-    <div class="card">
-      <h2>👤 Choir Member</h2>
+    <!-- Active Singer Banner (Visible when signed in) -->
+    <div id="activeProfileBanner" class="active-profile-card fade-in" style="display: none;">
+      <div class="active-profile-info">
+        <span class="active-profile-label">Signed in as</span>
+        <h3>
+          <span id="activeProfileName">Juan dela Cruz</span>
+          <span class="part-badge" id="activeProfileBadge">Voice Part</span>
+        </h3>
+      </div>
+      <button class="btn-link" onclick="switchProfile()" style="margin-top:0; min-height:36px; white-space:nowrap;">✏️ Change</button>
+    </div>
+
+    <!-- Singer Profile Setup Card (Visible before sign-in / on change) -->
+    <div class="card fade-in" id="profileCard">
+      <h2>👤 Choir Member Setup</h2>
       <label for="memberName">Full Name (Required)</label>
-      <input type="text" id="memberName" placeholder="e.g. Juan dela Cruz" onchange="saveProfile()">
+      <input type="text" id="memberName" placeholder="e.g. Juan dela Cruz">
 
       <label for="memberSection">Voice Part / Choir</label>
-      <select id="memberSection" onchange="saveProfile()">
+      <select id="memberSection">
         <option value="">-- Select Your Voice --</option>
         <option value="Soprano">Soprano</option>
         <option value="Alto">Alto</option>
@@ -50,95 +62,100 @@
         <option value="Bass">Bass</option>
         <option value="Primary">Primary</option>
       </select>
+
+      <button class="btn btn-primary" id="saveProfileBtn" onclick="handleProfileSubmit()" style="margin-top: 4px;">Continue to Practice Hub</button>
     </div>
 
-    <!-- Practice Session Timer -->
-    <div class="card">
-      <h2>⏱️ 15-Minute Practice Session</h2>
-      <label for="targetSong">Select Song to Rehearse</label>
-      <select id="targetSong">
-        <option value="Know This, That Every Soul Is Free">Know This, That Every Soul Is Free (#240)</option>
-        <option value="Rise, Ye Saints, and Temples Enter">Rise, Ye Saints, and Temples Enter (#287)</option>
-        <option value="Choose You This Day">Choose You This Day</option>
-        <option value="Holy Places">Holy Places (Primary)</option>
-      </select>
+    <!-- Main Dashboard (Gated: Timer, Repertoire Resources, Leaderboards) -->
+    <div id="mainDashboard" class="fade-in" style="display: none;">
 
-      <div class="timer-display" id="timerDisplay">15:00</div>
-      <p style="font-size: 0.78rem; text-align: center; color: var(--text-muted); margin-bottom: 12px;">
-        Hit Start, practice your parts, and complete the 15-minute countdown to record your session.
-      </p>
+      <!-- Practice Session Timer -->
+      <div class="card" id="timerSection">
+        <h2>⏱️ 15-Minute Practice Session</h2>
+        <label for="targetSong">Select Song to Rehearse</label>
+        <select id="targetSong">
+          <option value="Know This, That Every Soul Is Free">Know This, That Every Soul Is Free (#240)</option>
+          <option value="Rise, Ye Saints, and Temples Enter">Rise, Ye Saints, and Temples Enter (#287)</option>
+          <option value="Choose You This Day">Choose You This Day</option>
+          <option value="Holy Places">Holy Places (Primary)</option>
+        </select>
 
-      <button class="btn btn-primary" id="timerBtn" onclick="toggleTimer()">Start 15m Session</button>
-    </div>
+        <div class="timer-display" id="timerDisplay">15:00</div>
+        <p style="font-size: 0.78rem; text-align: center; color: var(--text-muted); margin-bottom: 12px;">
+          Hit Start, practice your parts, and complete the 15-minute countdown to record your session.
+        </p>
 
-    <!-- Song Resources -->
-    <div class="card">
-      <h2>🎵 Practice Repertoire</h2>
+        <button class="btn btn-primary" id="timerBtn" onclick="toggleTimer()">Start 15m Session</button>
+      </div>
 
-      <!-- Adult Song 1 -->
-      <div class="song-item">
-        <span class="song-tag">Adult Choir #1</span>
-        <div class="song-title">Know This, That Every Soul Is Free (Hymn #240)</div>
-        <div class="song-actions">
-          <a class="btn-link"
-            href="https://www.churchofjesuschrist.org/media/music/songs/know-this-that-every-soul-is-free?crumbs=hymns&order=number&lang=eng"
-            target="_blank" rel="noopener noreferrer">🎼 Interactive Sheet & Audio</a>
+      <!-- Song Resources -->
+      <div class="card">
+        <h2>🎵 Practice Repertoire</h2>
+
+        <!-- Adult Song 1 -->
+        <div class="song-item">
+          <span class="song-tag">Adult Choir #1</span>
+          <div class="song-title">Know This, That Every Soul Is Free (Hymn #240)</div>
+          <div class="song-actions">
+            <a class="btn-link"
+              href="https://www.churchofjesuschrist.org/media/music/songs/know-this-that-every-soul-is-free?crumbs=hymns&order=number&lang=eng"
+              target="_blank" rel="noopener noreferrer">🎼 Interactive Sheet & Audio</a>
+          </div>
+        </div>
+
+        <!-- Adult Song 2 -->
+        <div class="song-item">
+          <span class="song-tag">Adult Choir #2</span>
+          <div class="song-title">Rise, Ye Saints, and Temples Enter (Hymn #287)</div>
+          <div class="song-actions">
+            <a class="btn-link"
+              href="https://www.churchofjesuschrist.org/media/music/songs/rise-ye-saints-and-temples-enter?crumbs=hymns&order=number&lang=eng"
+              target="_blank" rel="noopener noreferrer">🎼 Interactive Sheet & Audio</a>
+          </div>
+        </div>
+
+        <!-- Adult Song 3 -->
+        <div class="song-item">
+          <span class="song-tag">Adult Choir #3</span>
+          <div class="song-title">Choose You This Day</div>
+          <div class="song-actions">
+            <a class="btn-link"
+              href="https://drive.google.com/drive/folders/1bBnCakJGBj-zfka8wVbz42_ykvipMnwU?usp=sharing" target="_blank"
+              rel="noopener noreferrer">📁 Sheet Music & Tracks (Drive)</a>
+            <a class="btn-link" href="https://www.youtube.com/watch?v=q54H2OqWBcY" target="_blank"
+              rel="noopener noreferrer">▶️ YouTube Video</a>
+          </div>
+        </div>
+
+        <!-- Primary Song -->
+        <div class="song-item primary-piece">
+          <span class="song-tag" style="color:var(--accent);">Primary Presentation</span>
+          <div class="song-title">Holy Places</div>
+          <div class="song-actions">
+            <a class="btn-link"
+              href="https://www.churchofjesuschrist.org/media/music/songs/holy-places?crumbs=hymns-for-home-and-church&order=number&lang=eng"
+              target="_blank" rel="noopener noreferrer">🎼 Interactive Sheet & Audio</a>
+          </div>
         </div>
       </div>
 
-      <!-- Adult Song 2 -->
-      <div class="song-item">
-        <span class="song-tag">Adult Choir #2</span>
-        <div class="song-title">Rise, Ye Saints, and Temples Enter (Hymn #287)</div>
-        <div class="song-actions">
-          <a class="btn-link"
-            href="https://www.churchofjesuschrist.org/media/music/songs/rise-ye-saints-and-temples-enter?crumbs=hymns&order=number&lang=eng"
-            target="_blank" rel="noopener noreferrer">🎼 Interactive Sheet & Audio</a>
+      <!-- Top 10 Dedicated Singers -->
+      <div class="card">
+        <h2>🏆 Top 10 Dedicated Singers <button class="btn btn-outline"
+            style="padding:4px 8px; font-size:0.75rem; width:auto;" onclick="loadLeaderboard()">Refresh</button></h2>
+        <div id="topSingersList">
+          <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 12px;">Loading leaderboard...</div>
         </div>
       </div>
 
-      <!-- Adult Song 3 -->
-      <div class="song-item">
-        <span class="song-tag">Adult Choir #3</span>
-        <div class="song-title">Choose You This Day</div>
-        <div class="song-actions">
-          <a class="btn-link"
-            href="https://drive.google.com/drive/folders/1bBnCakJGBj-zfka8wVbz42_ykvipMnwU?usp=sharing" target="_blank"
-            rel="noopener noreferrer">📁 Sheet Music & Tracks (Drive)</a>
-          <a class="btn-link" href="https://www.youtube.com/watch?v=q54H2OqWBcY" target="_blank"
-            rel="noopener noreferrer">▶️ YouTube Video</a>
+      <!-- Section Standings -->
+      <div class="card">
+        <h2>📊 Section Standings</h2>
+        <div id="sectionList">
+          <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 12px;">Loading section rankings...</div>
         </div>
       </div>
 
-      <!-- Primary Song -->
-      <div class="song-item primary-piece">
-        <span class="song-tag" style="color:var(--accent);">Primary Presentation</span>
-        <div class="song-title">Holy Places</div>
-        <div class="song-actions">
-          <a class="btn-link"
-            href="https://www.churchofjesuschrist.org/media/music/songs/holy-places?crumbs=hymns-for-home-and-church&order=number&lang=eng"
-            target="_blank" rel="noopener noreferrer">🎼 Interactive Sheet & Audio</a>
-        </div>
-      </div>
-    </div>
-
-    <!-- Top 10 Dedicated Singers -->
-    <div class="card">
-      <h2>🏆 Top 10 Dedicated Singers <button class="btn btn-outline"
-          style="padding:4px 8px; font-size:0.75rem; width:auto;" onclick="loadLeaderboard()">Refresh</button></h2>
-      <div id="topSingersList">
-        <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 12px;">Loading
-          leaderboard...</div>
-      </div>
-    </div>
-
-    <!-- Section Standings -->
-    <div class="card">
-      <h2>📊 Section Standings</h2>
-      <div id="sectionList">
-        <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 12px;">Loading section
-          rankings...</div>
-      </div>
     </div>
 
   </div>
@@ -149,30 +166,87 @@
     // --- APPS SCRIPT WEB APP URL ---
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6r8JCXFOeuDqk8mlrTFAY5G5jOUOcoljMIC-ow1tlStLj3EVBpEWE_q9iT_sRngEa/exec";
 
-    // --- PROFILE STORAGE (LOCALSTORAGE) ---
+    // --- PROFILE STORAGE & GATED DASHBOARD ACCESS ---
+    function updateActiveProfileDisplay(name, section) {
+      const activeName = document.getElementById("activeProfileName");
+      const activeBadge = document.getElementById("activeProfileBadge");
+      if (activeName) activeName.innerText = name;
+      if (activeBadge) {
+        activeBadge.innerText = section;
+        activeBadge.setAttribute("data-voice", section);
+      }
+    }
+
     function loadProfile() {
       const savedName = localStorage.getItem("choir_name");
       const savedSection = localStorage.getItem("choir_section");
-      if (savedName) document.getElementById("memberName").value = savedName;
-      if (savedSection) document.getElementById("memberSection").value = savedSection;
+      const profileCard = document.getElementById("profileCard");
+      const activeBanner = document.getElementById("activeProfileBanner");
+      const mainDashboard = document.getElementById("mainDashboard");
+
+      if (savedName && savedSection) {
+        document.getElementById("memberName").value = savedName;
+        document.getElementById("memberSection").value = savedSection;
+        updateActiveProfileDisplay(savedName, savedSection);
+
+        profileCard.style.display = "none";
+        activeBanner.style.display = "flex";
+        mainDashboard.style.display = "block";
+        loadLeaderboard();
+      } else {
+        profileCard.style.display = "block";
+        activeBanner.style.display = "none";
+        mainDashboard.style.display = "none";
+      }
     }
 
-    function saveProfile() {
-      localStorage.setItem("choir_name", document.getElementById("memberName").value.trim());
-      localStorage.setItem("choir_section", document.getElementById("memberSection").value);
+    function handleProfileSubmit() {
+      const name = document.getElementById("memberName").value.trim();
+      const section = document.getElementById("memberSection").value;
+
+      if (!name) {
+        alert("Please enter your full name first!");
+        document.getElementById("memberName").focus();
+        return;
+      }
+      if (!section) {
+        alert("Please select your voice part (Soprano, Alto, Tenor, Bass, or Primary)!");
+        document.getElementById("memberSection").focus();
+        return;
+      }
+
+      localStorage.setItem("choir_name", name);
+      localStorage.setItem("choir_section", section);
+      updateActiveProfileDisplay(name, section);
+
+      document.getElementById("profileCard").style.display = "none";
+      document.getElementById("activeProfileBanner").style.display = "flex";
+      
+      const dashboard = document.getElementById("mainDashboard");
+      dashboard.style.display = "block";
+
+      loadLeaderboard();
+
+      // Smoothly scroll down to the practice timer
+      const timerSection = document.getElementById("timerSection");
+      if (timerSection) {
+        timerSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+
+    function switchProfile() {
+      document.getElementById("profileCard").style.display = "block";
+      document.getElementById("activeProfileBanner").style.display = "none";
+      document.getElementById("mainDashboard").style.display = "none";
+      document.getElementById("memberName").focus();
     }
 
     function validateUser() {
       const name = document.getElementById("memberName").value.trim();
       const section = document.getElementById("memberSection").value;
-      if (!name) {
-        alert("Please enter your name at the top first!");
-        document.getElementById("memberName").focus();
-        return false;
-      }
-      if (!section) {
-        alert("Please select your voice part (Soprano, Alto, Tenor, Bass, or Primary)!");
-        document.getElementById("memberSection").focus();
+      if (!name || !section) {
+        alert("Please confirm your name and voice part before starting!");
+        switchProfile();
         return false;
       }
       return true;
@@ -372,7 +446,6 @@
     // Initial load
     window.onload = function () {
       loadProfile();
-      loadLeaderboard();
     };
   </script>
 </body>
