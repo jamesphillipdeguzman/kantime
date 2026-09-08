@@ -44,7 +44,7 @@
           <span class="part-badge" id="activeProfileBadge">Voice Part</span>
         </h3>
       </div>
-      <button class="btn-link" onclick="switchProfile()" style="margin-top:0; min-height:36px; white-space:nowrap;">✏️ Change</button>
+      <button class="btn-link" onclick="switchProfile()" style="margin-top:0; min-height:36px; white-space:nowrap;">✏️ Switch Voice / Change Name</button>
     </div>
 
     <!-- Singer Profile Setup Card (Visible before sign-in / on change) -->
@@ -69,11 +69,11 @@
     <!-- Main Dashboard (Gated: Timer, Repertoire Resources, Leaderboards) -->
     <div id="mainDashboard" class="fade-in" style="display: none;">
 
-      <!-- Practice Session Timer -->
-      <div class="card" id="timerSection">
+      <!-- Practice Session & Dynamic Workspace -->
+      <div class="card" id="practiceWorkspace">
         <h2>⏱️ 15-Minute Practice Session</h2>
         <label for="targetSong">Select Song to Rehearse</label>
-        <select id="targetSong">
+        <select id="targetSong" onchange="handleSongSelectionChange()">
           <option value="Know This, That Every Soul Is Free">Know This, That Every Soul Is Free (#240)</option>
           <option value="Rise, Ye Saints, and Temples Enter">Rise, Ye Saints, and Temples Enter (#287)</option>
           <option value="Choose You This Day">Choose You This Day</option>
@@ -88,54 +88,11 @@
         <button class="btn btn-primary" id="timerBtn" onclick="toggleTimer()">Start 15m Session</button>
       </div>
 
-      <!-- Song Resources -->
-      <div class="card">
-        <h2>🎵 Practice Repertoire</h2>
-
-        <!-- Adult Song 1 -->
-        <div class="song-item">
-          <span class="song-tag">Adult Choir #1</span>
-          <div class="song-title">Know This, That Every Soul Is Free (Hymn #240)</div>
-          <div class="song-actions">
-            <a class="btn-link"
-              href="https://www.churchofjesuschrist.org/media/music/songs/know-this-that-every-soul-is-free?crumbs=hymns&order=number&lang=eng"
-              target="_blank" rel="noopener noreferrer">🎼 Interactive Sheet & Audio</a>
-          </div>
-        </div>
-
-        <!-- Adult Song 2 -->
-        <div class="song-item">
-          <span class="song-tag">Adult Choir #2</span>
-          <div class="song-title">Rise, Ye Saints, and Temples Enter (Hymn #287)</div>
-          <div class="song-actions">
-            <a class="btn-link"
-              href="https://www.churchofjesuschrist.org/media/music/songs/rise-ye-saints-and-temples-enter?crumbs=hymns&order=number&lang=eng"
-              target="_blank" rel="noopener noreferrer">🎼 Interactive Sheet & Audio</a>
-          </div>
-        </div>
-
-        <!-- Adult Song 3 -->
-        <div class="song-item">
-          <span class="song-tag">Adult Choir #3</span>
-          <div class="song-title">Choose You This Day</div>
-          <div class="song-actions">
-            <a class="btn-link"
-              href="https://drive.google.com/drive/folders/1bBnCakJGBj-zfka8wVbz42_ykvipMnwU?usp=sharing" target="_blank"
-              rel="noopener noreferrer">📁 Sheet Music & Tracks (Drive)</a>
-            <a class="btn-link" href="https://www.youtube.com/watch?v=q54H2OqWBcY" target="_blank"
-              rel="noopener noreferrer">▶️ YouTube Video</a>
-          </div>
-        </div>
-
-        <!-- Primary Song -->
-        <div class="song-item primary-piece">
-          <span class="song-tag" style="color:var(--accent);">Primary Presentation</span>
-          <div class="song-title">Holy Places</div>
-          <div class="song-actions">
-            <a class="btn-link"
-              href="https://www.churchofjesuschrist.org/media/music/songs/holy-places?crumbs=hymns-for-home-and-church&order=number&lang=eng"
-              target="_blank" rel="noopener noreferrer">🎼 Interactive Sheet & Audio</a>
-          </div>
+      <!-- Active Song Resources (Dynamically Filtered) -->
+      <div class="card" id="activeResourcesCard">
+        <h2>🎵 Active Song Repertoire</h2>
+        <div id="dynamicResourceContainer">
+          <!-- Dynamically populated based on targetSong selection -->
         </div>
       </div>
 
@@ -166,6 +123,95 @@
     // --- APPS SCRIPT WEB APP URL ---
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6r8JCXFOeuDqk8mlrTFAY5G5jOUOcoljMIC-ow1tlStLj3EVBpEWE_q9iT_sRngEa/exec";
 
+    // --- SONG REPERTOIRE DATA ---
+    const SONG_RESOURCES = {
+      "Know This, That Every Soul Is Free": {
+        tag: "Adult Choir #1",
+        title: "Know This, That Every Soul Is Free (Hymn #240)",
+        primaryPiece: false,
+        actions: [
+          { type: "link", text: "🎼 Interactive Sheet & Audio ↗", url: "https://www.churchofjesuschrist.org/media/music/songs/know-this-that-every-soul-is-free?crumbs=hymns&order=number&lang=eng" }
+        ],
+        note: "ℹ️ Opens in external tab. Your 15-minute timer will keep running while you practice!"
+      },
+      "Rise, Ye Saints, and Temples Enter": {
+        tag: "Adult Choir #2",
+        title: "Rise, Ye Saints, and Temples Enter (Hymn #287)",
+        primaryPiece: false,
+        actions: [
+          { type: "link", text: "🎼 Interactive Sheet & Audio ↗", url: "https://www.churchofjesuschrist.org/media/music/songs/rise-ye-saints-and-temples-enter?crumbs=hymns&order=number&lang=eng" }
+        ],
+        note: "ℹ️ Opens in external tab. Your 15-minute timer will keep running while you practice!"
+      },
+      "Choose You This Day": {
+        tag: "Adult Choir #3",
+        title: "Choose You This Day",
+        primaryPiece: false,
+        embedVideo: "https://www.youtube.com/embed/q54H2OqWBcY?enablejsapi=1",
+        actions: [
+          { type: "modal_video", text: "▶️ Watch Video (In-App)", title: "▶️ Choose You This Day (Video Track)", url: "https://www.youtube.com/embed/q54H2OqWBcY?enablejsapi=1" },
+          { type: "modal_doc", text: "🎼 Preview Sheet (In-App)", title: "🎼 Choose You This Day (Sheet Music)", url: "https://drive.google.com/embeddedfolderview?id=1bBnCakJGBj-zfka8wVbz42_ykvipMnwU#grid" },
+          { type: "link", text: "📁 Open Drive Folder ↗", url: "https://drive.google.com/drive/folders/1bBnCakJGBj-zfka8wVbz42_ykvipMnwU?usp=sharing" }
+        ],
+        note: null
+      },
+      "Holy Places": {
+        tag: "Primary Presentation",
+        title: "Holy Places",
+        primaryPiece: true,
+        actions: [
+          { type: "link", text: "🎼 Interactive Sheet & Audio ↗", url: "https://www.churchofjesuschrist.org/media/music/songs/holy-places?crumbs=hymns-for-home-and-church&order=number&lang=eng" }
+        ],
+        note: "ℹ️ Opens in external tab. Your 15-minute timer will keep running while you practice!"
+      }
+    };
+
+    function renderSelectedSongResource(songKey) {
+      const container = document.getElementById("dynamicResourceContainer");
+      if (!container) return;
+      const data = SONG_RESOURCES[songKey] || SONG_RESOURCES["Know This, That Every Soul Is Free"];
+
+      let actionsHtml = "";
+      data.actions.forEach(act => {
+        if (act.type === "link") {
+          actionsHtml += `<a class="btn-link" href="${act.url}" target="_blank" rel="noopener noreferrer">${act.text}</a> `;
+        } else if (act.type === "modal_video") {
+          actionsHtml += `<button class="btn-link" type="button" onclick="openResourceModal('${act.title}', '${act.url}', 'video')">${act.text}</button> `;
+        } else if (act.type === "modal_doc") {
+          actionsHtml += `<button class="btn-link" type="button" onclick="openResourceModal('${act.title}', '${act.url}', 'doc')">${act.text}</button> `;
+        }
+      });
+
+      let embedHtml = "";
+      if (data.embedVideo) {
+        embedHtml = `
+          <div style="margin-top: 12px; border-radius: 8px; overflow: hidden; background: #000; position: relative; padding-bottom: 56.25%; height: 0;">
+            <iframe src="${data.embedVideo}" style="position: absolute; top:0; left:0; width:100%; height:100%; border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+        `;
+      }
+
+      const isPrimary = data.primaryPiece ? "primary-piece" : "";
+      const tagStyle = data.primaryPiece ? "style='color:var(--accent);'" : "";
+      const noteHtml = data.note ? `<div class="external-note">${data.note}</div>` : "";
+
+      container.innerHTML = `
+        <div class="song-item ${isPrimary} fade-in">
+          <span class="song-tag" ${tagStyle}>${data.tag}</span>
+          <div class="song-title">${data.title}</div>
+          <div class="song-actions">${actionsHtml}</div>
+          ${noteHtml}
+          ${embedHtml}
+        </div>
+      `;
+    }
+
+    function handleSongSelectionChange() {
+      const selectedSong = document.getElementById("targetSong").value;
+      localStorage.setItem("kantime_target_song", selectedSong);
+      renderSelectedSongResource(selectedSong);
+    }
+
     // --- PROFILE STORAGE & GATED DASHBOARD ACCESS ---
     function updateActiveProfileDisplay(name, section) {
       const activeName = document.getElementById("activeProfileName");
@@ -192,6 +238,13 @@
         profileCard.style.display = "none";
         activeBanner.style.display = "flex";
         mainDashboard.style.display = "block";
+
+        const savedSong = localStorage.getItem("kantime_target_song") || "Know This, That Every Soul Is Free";
+        if (document.getElementById("targetSong")) {
+          document.getElementById("targetSong").value = savedSong;
+        }
+        renderSelectedSongResource(savedSong);
+
         loadLeaderboard();
       } else {
         profileCard.style.display = "block";
@@ -225,12 +278,15 @@
       const dashboard = document.getElementById("mainDashboard");
       dashboard.style.display = "block";
 
+      const currentSong = document.getElementById("targetSong").value || "Know This, That Every Soul Is Free";
+      renderSelectedSongResource(currentSong);
+
       loadLeaderboard();
 
-      // Smoothly scroll down to the practice timer
-      const timerSection = document.getElementById("timerSection");
-      if (timerSection) {
-        timerSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      // Smoothly scroll down to the practice workspace
+      const practiceWorkspace = document.getElementById("practiceWorkspace");
+      if (practiceWorkspace) {
+        practiceWorkspace.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     }
 
@@ -252,7 +308,7 @@
       return true;
     }
 
-    // --- 15-MINUTE STRICT TIMER (TIMESTAMP-BASED FOR MOBILE/BACKGROUND RESILIENCE) ---
+    // --- 15-MINUTE STRICT TIMER (LOCALSTORAGE TIMESTAMP-PERSISTED) ---
     const timerDuration = 15 * 60; // 15 minutes (900 seconds)
     let timeRemaining = timerDuration;
     let targetEndTime = null;
@@ -272,19 +328,74 @@
       document.getElementById("timerDisplay").innerText = formatTime(timeRemaining);
 
       if (timeRemaining <= 0) {
+        completeTimerSession();
+      }
+    }
+
+    function completeTimerSession() {
+      if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
-        targetEndTime = null;
-        timeRemaining = timerDuration;
-        document.getElementById("timerDisplay").innerText = formatTime(timeRemaining);
+      }
+      targetEndTime = null;
+      timeRemaining = timerDuration;
+      localStorage.removeItem("kantime_target_end");
+      localStorage.removeItem("kantime_target_song");
+      localStorage.removeItem("kantime_paused_remaining");
 
-        const btn = document.getElementById("timerBtn");
-        btn.innerText = "Start 15m Session";
-        btn.classList.remove("btn-outline");
-        btn.classList.add("btn-primary");
+      document.getElementById("timerDisplay").innerText = formatTime(timeRemaining);
 
-        alert("🎉 Session Complete! You've logged 15 minutes of solid practice!");
-        submitPracticeSession(15);
+      const btn = document.getElementById("timerBtn");
+      btn.innerText = "Start 15m Session";
+      btn.classList.remove("btn-outline");
+      btn.classList.add("btn-primary");
+
+      alert("🎉 Session Complete! You've logged 15 minutes of solid practice!");
+      submitPracticeSession(15);
+    }
+
+    function restoreTimerState() {
+      const savedTargetEnd = localStorage.getItem("kantime_target_end");
+      const btn = document.getElementById("timerBtn");
+      const savedSong = localStorage.getItem("kantime_target_song");
+      if (savedSong && document.getElementById("targetSong")) {
+        document.getElementById("targetSong").value = savedSong;
+      }
+
+      if (savedTargetEnd) {
+        const savedEndTime = Number(savedTargetEnd);
+        const now = Date.now();
+
+        if (now < savedEndTime) {
+          // Timer is running
+          targetEndTime = savedEndTime;
+          timeRemaining = Math.max(0, Math.ceil((targetEndTime - now) / 1000));
+          document.getElementById("timerDisplay").innerText = formatTime(timeRemaining);
+
+          btn.innerText = "Pause Session";
+          btn.classList.remove("btn-primary");
+          btn.classList.add("btn-outline");
+
+          if (!timerInterval) {
+            timerInterval = setInterval(updateTimerTick, 500);
+          }
+        } else {
+          // Timer elapsed while user was away / in another tab
+          completeTimerSession();
+        }
+      } else {
+        // Paused state
+        const savedPaused = localStorage.getItem("kantime_paused_remaining");
+        if (savedPaused && Number(savedPaused) > 0 && Number(savedPaused) < timerDuration) {
+          timeRemaining = Number(savedPaused);
+          document.getElementById("timerDisplay").innerText = formatTime(timeRemaining);
+          btn.innerText = "Resume 15m Session";
+          btn.classList.remove("btn-outline");
+          btn.classList.add("btn-primary");
+        } else {
+          timeRemaining = timerDuration;
+          document.getElementById("timerDisplay").innerText = formatTime(timeRemaining);
+        }
       }
     }
 
@@ -300,6 +411,9 @@
           timeRemaining = Math.max(0, Math.ceil((targetEndTime - Date.now()) / 1000));
         }
         targetEndTime = null;
+        localStorage.removeItem("kantime_target_end");
+        localStorage.setItem("kantime_paused_remaining", timeRemaining);
+
         document.getElementById("timerDisplay").innerText = formatTime(timeRemaining);
         btn.innerText = "Resume 15m Session";
         btn.classList.remove("btn-outline");
@@ -307,6 +421,10 @@
       } else {
         // Start or Resume timer
         targetEndTime = Date.now() + (timeRemaining * 1000);
+        localStorage.setItem("kantime_target_end", targetEndTime);
+        localStorage.setItem("kantime_target_song", document.getElementById("targetSong").value);
+        localStorage.removeItem("kantime_paused_remaining");
+
         btn.innerText = "Pause Session";
         btn.classList.remove("btn-primary");
         btn.classList.add("btn-outline");
@@ -318,14 +436,12 @@
 
     // Refresh immediately when returning to the tab / Messenger browser
     document.addEventListener("visibilitychange", () => {
-      if (!document.hidden && timerInterval) {
-        updateTimerTick();
+      if (!document.hidden) {
+        restoreTimerState();
       }
     });
     window.addEventListener("focus", () => {
-      if (timerInterval) {
-        updateTimerTick();
-      }
+      restoreTimerState();
     });
 
     function showToast(msg) {
@@ -443,11 +559,60 @@
         });
     }
 
+    // --- IN-APP RESOURCE VIEWER MODAL ---
+    function openResourceModal(title, url, type) {
+      const modal = document.getElementById("resourceModal");
+      const modalTitle = document.getElementById("modalTitle");
+      const iframe = document.getElementById("resourceIframe");
+      const wrapper = document.getElementById("modalWrapper");
+
+      modalTitle.innerText = title;
+      iframe.src = url;
+      if (type === 'doc') {
+        wrapper.classList.add('doc-view');
+      } else {
+        wrapper.classList.remove('doc-view');
+      }
+      modal.classList.add("active");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeResourceModal() {
+      const modal = document.getElementById("resourceModal");
+      const iframe = document.getElementById("resourceIframe");
+      modal.classList.remove("active");
+      iframe.src = "";
+      document.body.style.overflow = "";
+    }
+
+    function closeModalOnBackdrop(e) {
+      if (e.target.id === "resourceModal") {
+        closeResourceModal();
+      }
+    }
+
     // Initial load
     window.onload = function () {
       loadProfile();
+      restoreTimerState();
     };
   </script>
+
+  <!-- In-App Resource Viewer Modal -->
+  <div id="resourceModal" class="modal-backdrop" onclick="closeModalOnBackdrop(event)">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modalTitle">🎵 Resource Viewer</h3>
+        <button class="modal-close-btn" type="button" onclick="closeResourceModal()" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-iframe-wrapper" id="modalWrapper">
+          <iframe id="resourceIframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </body>
 
 </html>
