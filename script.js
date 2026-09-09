@@ -2524,7 +2524,7 @@ function applyTutorialLang(lang) {
   const strings = TUTORIAL_I18N[lang];
   if (!strings) return;
 
-  // Swap all data-i18n elements inside the tutorial tab
+  // Swap all data-i18n text nodes inside the tutorial tab panel
   const panel = document.getElementById("tabPanelTutorial");
   if (panel) {
     panel.querySelectorAll("[data-i18n]").forEach(function (el) {
@@ -2535,7 +2535,7 @@ function applyTutorialLang(lang) {
     });
   }
 
-  // Update pill active state
+  // Update the active pill highlight
   document.querySelectorAll(".lang-pill").forEach(function (btn) {
     btn.classList.toggle("active", btn.getAttribute("data-lang") === lang);
   });
@@ -2548,17 +2548,17 @@ function exportTutorialToPdf() {
   const settings = getUserSettings();
   const targetDate = settings.targetDate || "Stake Choir Prep • Oct 24–25";
   const year = new Date().getFullYear();
-  const dateStr = new Date().toLocaleDateString(undefined, { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric' 
+  const dateStr = new Date().toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
   });
 
   const memberName = localStorage.getItem("choir_name") || "";
   const memberVoice = localStorage.getItem("choir_voice") || localStorage.getItem("choir_section") || "";
   const singerInfo = memberName ? `${escapeHtml(memberName)} (${escapeHtml(memberVoice || 'Choir Singer')})` : "";
 
-  // Use currently selected language for PDF content
+  // Use the currently selected tutorial language for PDF content
   const lang = currentTutorialLang || "en";
   const s = TUTORIAL_I18N[lang] || TUTORIAL_I18N.en;
 
@@ -2566,13 +2566,13 @@ function exportTutorialToPdf() {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>KanTime - Choir Member Practice Guide</title>
+  <title>KanTime \u2014 Choir Member Practice Guide</title>
   <style>
     @page {
       size: A4 portrait;
-      margin: 12mm 15mm;
+      margin: 14mm 16mm 14mm 16mm;
     }
-    * {
+    *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
@@ -2581,82 +2581,102 @@ function exportTutorialToPdf() {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       color: #0f172a;
       background: #ffffff;
-      line-height: 1.45;
-      padding: 8px 10px;
+      line-height: 1.5;
+      font-size: 10pt;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
+    /* ---- Document wrapper (fixed width for consistent rendering) ---- */
     .guide-doc {
-      max-width: 780px;
+      width: 680px;
+      max-width: 100%;
       margin: 0 auto;
     }
+    /* ---- Header ---- */
     .guide-header {
-      border-bottom: 2.5px solid #1d4ed8;
-      padding-bottom: 12px;
-      margin-bottom: 14px;
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+      border-bottom: 3px solid #1d4ed8;
     }
-    .guide-header-title h1 {
-      font-size: 19pt;
-      font-weight: 850;
-      color: #1e3a8a;
-      letter-spacing: -0.5px;
-      margin-bottom: 2px;
+    .guide-header-logo {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
     }
-    .guide-header-title p {
-      font-size: 10pt;
+    .guide-header-logo .logo-icon {
+      font-size: 22pt;
+      line-height: 1;
+    }
+    .guide-header-title h1 {
+      font-size: 16pt;
+      font-weight: 900;
+      color: #1e3a8a;
+      letter-spacing: -0.4px;
+      line-height: 1.15;
+      margin-bottom: 2px;
+    }
+    .guide-header-title .subtitle {
+      font-size: 9pt;
       color: #475569;
       font-weight: 600;
     }
     .guide-header-meta {
       text-align: right;
-      font-size: 8.5pt;
+      font-size: 7.5pt;
       color: #64748b;
-      line-height: 1.35;
+      line-height: 1.5;
     }
-    .guide-header-meta strong {
-      color: #1e293b;
-    }
+    .guide-header-meta strong { color: #1e293b; }
+    /* ---- Intro banner ---- */
     .guide-intro {
-      background: #f1f5f9;
+      background: #eff6ff;
       border-left: 4px solid #1d4ed8;
       padding: 8px 12px;
-      border-radius: 4px;
-      font-size: 9pt;
-      color: #334155;
+      border-radius: 0 5px 5px 0;
+      font-size: 8.5pt;
+      color: #1e40af;
       margin-bottom: 14px;
-      line-height: 1.4;
+      line-height: 1.45;
+      font-weight: 500;
     }
+    /* ---- Steps ---- */
     .steps-container {
       display: flex;
       flex-direction: column;
-      gap: 9px;
+      gap: 8px;
     }
     .step-item {
       border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      padding: 10px 13px;
+      border-left: 4px solid #cbd5e1;
+      border-radius: 0 6px 6px 0;
+      padding: 9px 12px;
       background: #f8fafc;
       page-break-inside: avoid;
+      break-inside: avoid;
     }
+    .step-item.s1 { border-left-color: #3b82f6; }
+    .step-item.s2 { border-left-color: #14b8a6; }
+    .step-item.s3 { border-left-color: #10b981; }
+    .step-item.s4 { border-left-color: #f59e0b; }
+    .step-item.s5 { border-left-color: #8b5cf6; }
     .step-header {
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 8px;
       margin-bottom: 4px;
     }
     .step-badge {
-      font-size: 7.5pt;
+      font-size: 6.5pt;
       font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 0.4px;
-      padding: 2px 7px;
+      letter-spacing: 0.5px;
+      padding: 2px 8px;
       border-radius: 999px;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
     .badge-1 { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
     .badge-2 { background: #f0fdfa; color: #0f766e; border: 1px solid #99f6e4; }
@@ -2664,135 +2684,167 @@ function exportTutorialToPdf() {
     .badge-4 { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
     .badge-5 { background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe; }
     .step-title {
-      font-size: 10.5pt;
-      font-weight: 750;
+      font-size: 10pt;
+      font-weight: 800;
       color: #0f172a;
     }
     .step-desc {
-      font-size: 9pt;
+      font-size: 8.5pt;
       color: #475569;
-      line-height: 1.4;
+      line-height: 1.45;
+      padding-left: 1px;
     }
-    .step-desc strong {
-      color: #0f172a;
-    }
-    .step-desc em {
-      font-style: normal;
-      color: #1d4ed8;
-      font-weight: 600;
-    }
+    /* ---- Footer ---- */
     .guide-footer {
-      margin-top: 18px;
-      padding-top: 10px;
+      margin-top: 20px;
+      padding-top: 8px;
       border-top: 1px solid #e2e8f0;
       display: flex;
       justify-content: space-between;
-      font-size: 8.5pt;
-      color: #64748b;
+      align-items: center;
+      font-size: 7pt;
+      color: #94a3b8;
+      gap: 8px;
+    }
+    .guide-footer-left { text-align: left; line-height: 1.5; }
+    .guide-footer-right { text-align: right; white-space: nowrap; }
+    @media print {
+      body { font-size: 10pt; }
+      .guide-doc { width: 100%; }
     }
   </style>
 </head>
 <body>
   <div class="guide-doc">
+
+    <!-- Document Header -->
     <div class="guide-header">
-      <div class="guide-header-title">
-        <h1>🎵 KanTime | Choir Member Practice Guide</h1>
-        <p>${escapeHtml(targetDate)}</p>
+      <div class="guide-header-logo">
+        <div class="logo-icon">🎵</div>
+        <div class="guide-header-title">
+          <h1>KanTime: Choir Member Quick Guide</h1>
+          <div class="subtitle">Stake Choir Prep &nbsp;&bull;&nbsp; 5 Simple Steps &nbsp;&bull;&nbsp; ${escapeHtml(targetDate)}</div>
+        </div>
       </div>
       <div class="guide-header-meta">
         <div>Stake Choir Practice Hub</div>
         ${singerInfo ? `<div>Member: <strong>${singerInfo}</strong></div>` : ''}
-        <div>Date: ${dateStr}</div>
+        <div>Printed: ${dateStr}</div>
       </div>
     </div>
 
+    <!-- Intro -->
     <div class="guide-intro">
-      Welcome to KanTime! Follow this 5-step guide to personalize your rehearsal routine, practice parts with dynamic audio/sheet resources, and track verified minutes for your choir section.
+      Welcome to KanTime! Follow these 5 steps to set up your profile, configure your practice timer, sing along with interactive sheets, check your pitch, and track your minutes on the Choir Standings.
     </div>
 
+    <!-- Steps (no extra wrappers — clean sequential list) -->
     <div class="steps-container">
-      <div class="step-item">
+
+      <div class="step-item s1">
         <div class="step-header">
           <span class="step-badge badge-1">${escapeHtml(s.step_label_1)}</span>
           <span class="step-title">${escapeHtml(s.step1_title)}</span>
         </div>
-        <div class="step-desc">
-          ${escapeHtml(s.step1_desc)}
-        </div>
+        <div class="step-desc">${escapeHtml(s.step1_desc)}</div>
       </div>
 
-      <div class="step-item">
+      <div class="step-item s2">
         <div class="step-header">
           <span class="step-badge badge-2">${escapeHtml(s.step_label_2)}</span>
           <span class="step-title">${escapeHtml(s.step2_title)}</span>
         </div>
-        <div class="step-desc">
-          ${escapeHtml(s.step2_desc)}
-        </div>
+        <div class="step-desc">${escapeHtml(s.step2_desc)}</div>
       </div>
 
-      <div class="step-item">
+      <div class="step-item s3">
         <div class="step-header">
           <span class="step-badge badge-3">${escapeHtml(s.step_label_3)}</span>
           <span class="step-title">${escapeHtml(s.step3_title)}</span>
         </div>
-        <div class="step-desc">
-          ${escapeHtml(s.step3_desc)}
-        </div>
+        <div class="step-desc">${escapeHtml(s.step3_desc)}</div>
       </div>
 
-      <div class="step-item">
+      <div class="step-item s4">
         <div class="step-header">
           <span class="step-badge badge-4">${escapeHtml(s.step_label_4)}</span>
           <span class="step-title">${escapeHtml(s.step4_title)}</span>
         </div>
-        <div class="step-desc">
-          ${escapeHtml(s.step4_desc)}
-        </div>
+        <div class="step-desc">${escapeHtml(s.step4_desc)}</div>
       </div>
 
-      <div class="step-item">
+      <div class="step-item s5">
         <div class="step-header">
           <span class="step-badge badge-5">${escapeHtml(s.step_label_5)}</span>
           <span class="step-title">${escapeHtml(s.step5_title)}</span>
         </div>
-        <div class="step-desc">
-          ${escapeHtml(s.step5_desc)}
-        </div>
+        <div class="step-desc">${escapeHtml(s.step5_desc)}</div>
       </div>
+
     </div>
 
+    <!-- Footer Branding -->
     <div class="guide-footer">
-      <div>&copy; ${year} James Phillip De Guzman • Stake Choir Practice Hub</div>
-      <div>Official KanTime Member Handout</div>
+      <div class="guide-footer-left">
+        Developed for Iloilo Stake Choir &nbsp;&bull;&nbsp; Built by James Phillip De Guzman &nbsp;&bull;&nbsp; v2.0 KanTime
+      </div>
+      <div class="guide-footer-right">&copy; ${year} &nbsp;|&nbsp; Official KanTime Member Handout</div>
     </div>
+
   </div>
 </body>
 </html>`;
 
-  const iframe = document.createElement("iframe");
-  iframe.style.position = "fixed";
-  iframe.style.right = "0";
-  iframe.style.bottom = "0";
-  iframe.style.width = "0";
-  iframe.style.height = "0";
-  iframe.style.border = "0";
-  document.body.appendChild(iframe);
+  // --- Primary: open a popup window for a clean, isolated print dialog ---
+  // A real popup is far more reliable than a hidden 0×0 iframe across all browsers.
+  const printWin = window.open("", "_blank", "width=820,height=700,menubar=no,toolbar=no,scrollbars=yes,resizable=yes");
 
-  const doc = iframe.contentWindow.document;
-  doc.open();
-  doc.write(printHtml);
-  doc.close();
+  if (!printWin) {
+    // Popup blocked by the browser — fall through to the @media print isolation fallback
+    showToast("Popup blocked \u2014 using print fallback. \ud83d\udcc4");
+    _printTutorialFallback();
+    return;
+  }
 
-  setTimeout(() => {
-    iframe.contentWindow.focus();
-    iframe.contentWindow.print();
-    setTimeout(() => {
-      if (iframe.parentNode) {
-        document.body.removeChild(iframe);
-      }
-    }, 1500);
-  }, 350);
+  printWin.document.open();
+  printWin.document.write(printHtml);
+  printWin.document.close();
+
+  // Trigger print once content is fully loaded in the popup
+  printWin.onload = function () {
+    printWin.focus();
+    printWin.print();
+    setTimeout(function () {
+      if (!printWin.closed) printWin.close();
+    }, 900);
+  };
+
+  // Belt-and-suspenders: fire print after a short delay if onload is unreliable
+  setTimeout(function () {
+    if (printWin && !printWin.closed) {
+      try {
+        printWin.focus();
+        printWin.print();
+      } catch (e) { /* no-op if already printed via onload */ }
+    }
+  }, 700);
+}
+
+// --- @media print fallback: isolate only the tutorial panel on the main window ---
+function _printTutorialFallback() {
+  const panel = document.getElementById("tabPanelTutorial");
+  if (!panel) { window.print(); return; }
+
+  panel.classList.add("tutorial-print-area");
+  document.body.classList.add("printing-tutorial");
+
+  window.print();
+
+  // Restore UI after the print dialog is dismissed
+  setTimeout(function () {
+    panel.classList.remove("tutorial-print-area");
+    document.body.classList.remove("printing-tutorial");
+  }, 1500);
 }
 
 // Initial load
