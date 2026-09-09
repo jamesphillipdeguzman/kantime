@@ -122,82 +122,226 @@ function getLeaderboardAvatarHtml(avatarFile, singerName) {
   `;
 }
 
-// --- SONG REPERTOIRE DATA ---
-const SONG_RESOURCES = {
-  "Know This, That Every Soul Is Free": {
-    tag: "Adult Choir #1",
-    title: "Know This, That Every Soul Is Free (Hymn #240)",
-    primaryPiece: false,
-    actions: [
-      { type: "link", text: "🎼 Interactive Sheet & Audio ↗", url: "https://www.churchofjesuschrist.org/media/music/songs/know-this-that-every-soul-is-free?crumbs=hymns&order=number&lang=eng" }
-    ],
-    note: "ℹ️ Opens in external tab. Your 15-minute timer will keep running while you practice!"
-  },
-  "Rise, Ye Saints, and Temples Enter": {
-    tag: "Adult Choir #2",
-    title: "Rise, Ye Saints, and Temples Enter (Hymn #287)",
-    primaryPiece: false,
-    actions: [
-      { type: "link", text: "🎼 Interactive Sheet & Audio ↗", url: "https://www.churchofjesuschrist.org/media/music/songs/rise-ye-saints-and-temples-enter?crumbs=hymns&order=number&lang=eng" }
-    ],
-    note: "ℹ️ Opens in external tab. Your 15-minute timer will keep running while you practice!"
-  },
-  "Choose You This Day": {
-    tag: "Adult Choir #3",
-    title: "Choose You This Day",
-    primaryPiece: false,
-    embedVideo: "https://www.youtube.com/embed/q54H2OqWBcY?enablejsapi=1",
-    actions: [
-      { type: "modal_video", text: "▶️ Watch Video (In-App)", title: "▶️ Choose You This Day (Video Track)", url: "https://www.youtube.com/embed/q54H2OqWBcY?enablejsapi=1" },
-      { type: "modal_doc", text: "🎼 Preview Sheet (In-App)", title: "🎼 Choose You This Day (Sheet Music)", url: "https://drive.google.com/embeddedfolderview?id=1bBnCakJGBj-zfka8wVbz42_ykvipMnwU#grid" },
-      { type: "link", text: "📁 Open Drive Folder ↗", url: "https://drive.google.com/drive/folders/1bBnCakJGBj-zfka8wVbz42_ykvipMnwU?usp=sharing" }
-    ],
-    note: null
-  },
-  "Holy Places": {
-    tag: "Primary Presentation",
-    title: "Holy Places",
-    primaryPiece: true,
-    actions: [
-      { type: "link", text: "🎼 Interactive Sheet & Audio ↗", url: "https://www.churchofjesuschrist.org/media/music/songs/holy-places?crumbs=hymns-for-home-and-church&order=number&lang=eng" }
-    ],
-    note: "ℹ️ Opens in external tab. Your 15-minute timer will keep running while you practice!"
-  }
+// --- USER SETTINGS & DEFAULT CHOIR REPERTOIRE ---
+const DEFAULT_USER_SETTINGS = {
+  targetDate: "Stake Choir Prep • Oct 24–25",
+  timerMinutes: 15,
+  songs: [
+    {
+      id: "song_1",
+      title: "Know This, That Every Soul Is Free (#240)",
+      part: "Adult Choir #1",
+      sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/know-this-that-every-soul-is-free?crumbs=hymns&order=number&lang=eng",
+      videoUrl: "",
+      note: "ℹ️ Opens in external tab. Your timer will keep running while you practice!"
+    },
+    {
+      id: "song_2",
+      title: "Rise, Ye Saints, and Temples Enter (#287)",
+      part: "Adult Choir #2",
+      sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/rise-ye-saints-and-temples-enter?crumbs=hymns&order=number&lang=eng",
+      videoUrl: "",
+      note: "ℹ️ Opens in external tab. Your timer will keep running while you practice!"
+    },
+    {
+      id: "song_3",
+      title: "Choose You This Day",
+      part: "Adult Choir #3",
+      sheetUrl: "https://drive.google.com/embeddedfolderview?id=1bBnCakJGBj-zfka8wVbz42_ykvipMnwU#grid",
+      videoUrl: "https://www.youtube.com/embed/q54H2OqWBcY?enablejsapi=1",
+      note: ""
+    },
+    {
+      id: "song_4",
+      title: "Holy Places (Primary)",
+      part: "Primary",
+      sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/holy-places?crumbs=hymns-for-home-and-church&order=number&lang=eng",
+      videoUrl: "",
+      note: "ℹ️ Opens in external tab. Your timer will keep running while you practice!"
+    }
+  ]
 };
+
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function formatYouTubeEmbedUrl(url) {
+  if (!url || !url.trim()) return "";
+  const trimmed = url.trim();
+  if (trimmed.includes("youtube.com/embed/")) {
+    return trimmed;
+  }
+  const watchMatch = trimmed.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+  if (watchMatch && watchMatch[1]) {
+    return `https://www.youtube.com/embed/${watchMatch[1]}?enablejsapi=1`;
+  }
+  return trimmed;
+}
+
+function getUserSettings() {
+  const stored = localStorage.getItem("kantime_user_settings");
+  if (!stored) {
+    return JSON.parse(JSON.stringify(DEFAULT_USER_SETTINGS));
+  }
+  try {
+    const parsed = JSON.parse(stored);
+    return {
+      targetDate: parsed.targetDate !== undefined ? parsed.targetDate : DEFAULT_USER_SETTINGS.targetDate,
+      timerMinutes: Number(parsed.timerMinutes) || DEFAULT_USER_SETTINGS.timerMinutes,
+      songs: Array.isArray(parsed.songs) && parsed.songs.length > 0 ? parsed.songs : DEFAULT_USER_SETTINGS.songs
+    };
+  } catch (e) {
+    console.error("Failed to parse kantime_user_settings:", e);
+    return JSON.parse(JSON.stringify(DEFAULT_USER_SETTINGS));
+  }
+}
+
+function saveUserSettings(settings) {
+  localStorage.setItem("kantime_user_settings", JSON.stringify(settings));
+}
+
+function applyHeaderTargetDate() {
+  const settings = getUserSettings();
+  const el = document.getElementById("headerSubtitle");
+  if (el) {
+    el.innerText = settings.targetDate || "Stake Choir Prep • Oct 24–25";
+  }
+}
+
+// --- PRACTICE TIMER STATE & DURATION (CONFIGURABLE & TIMESTAMP-PERSISTED) ---
+let timerDuration = 15 * 60; // Dynamic practice duration in seconds (defaults to 15m)
+let timeRemaining = timerDuration;
+let targetEndTime = null;
+let timerInterval = null;
+
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+  const s = (seconds % 60).toString().padStart(2, '0');
+  return `${m}:${s}`;
+}
+
+function applyTimerDuration(minutes, resetReadyClock = true) {
+  const mins = Number(minutes) || 15;
+
+  const titleEl = document.getElementById("practiceDurationTitle");
+  if (titleEl) titleEl.innerText = mins;
+
+  const subtextEl = document.getElementById("practiceInstructionSubtext");
+  if (subtextEl) {
+    subtextEl.innerText = `Hit Start, practice your parts, and complete the ${mins}-minute countdown to record your session.`;
+  }
+
+  // Update timer display and button if timer is in ready state
+  if (!timerInterval && !targetEndTime) {
+    const savedPaused = localStorage.getItem("kantime_paused_remaining");
+    const btn = document.getElementById("timerBtn");
+
+    if (resetReadyClock || !savedPaused) {
+      timerDuration = mins * 60;
+      timeRemaining = timerDuration;
+      localStorage.removeItem("kantime_paused_remaining");
+      const disp = document.getElementById("timerDisplay");
+      if (disp) disp.innerText = formatTime(timeRemaining);
+      if (btn) {
+        btn.innerText = `Start ${mins}m Session`;
+        btn.classList.remove("btn-outline");
+        btn.classList.add("btn-primary");
+      }
+    } else {
+      if (btn) btn.innerText = `Resume ${mins}m Session`;
+    }
+  }
+}
+
+function populateSongSelectDropdown() {
+  const select = document.getElementById("targetSong");
+  if (!select) return;
+
+  const settings = getUserSettings();
+  const songs = settings.songs || [];
+  const savedSong = localStorage.getItem("kantime_target_song");
+
+  let html = "";
+  let matched = false;
+  songs.forEach(s => {
+    const isSelected = (savedSong === s.title || savedSong === s.id);
+    if (isSelected) matched = true;
+    const partLabel = s.part && s.part !== "All" ? ` (${s.part})` : "";
+    html += `<option value="${escapeHtml(s.title)}" ${isSelected ? "selected" : ""}>${escapeHtml(s.title)}${escapeHtml(partLabel)}</option>`;
+  });
+
+  select.innerHTML = html;
+
+  if (!matched && songs.length > 0) {
+    select.value = songs[0].title;
+    localStorage.setItem("kantime_target_song", songs[0].title);
+  }
+}
+
+function getSongResource(songKeyOrTitle) {
+  const settings = getUserSettings();
+  const songs = settings.songs || [];
+  let found = songs.find(s => s.id === songKeyOrTitle || s.title === songKeyOrTitle);
+  if (!found && songs.length > 0) {
+    found = songs[0];
+  }
+  return found;
+}
 
 function renderSelectedSongResource(songKey) {
   const container = document.getElementById("dynamicResourceContainer");
   if (!container) return;
-  const data = SONG_RESOURCES[songKey] || SONG_RESOURCES["Know This, That Every Soul Is Free"];
+
+  const song = getSongResource(songKey);
+  if (!song) {
+    container.innerHTML = `<div style="text-align:center; padding:16px; color:var(--text-muted); font-size:0.85rem;">No piece selected.</div>`;
+    return;
+  }
 
   let actionsHtml = "";
-  data.actions.forEach(act => {
-    if (act.type === "link") {
-      actionsHtml += `<a class="btn-link" href="${act.url}" target="_blank" rel="noopener noreferrer">${act.text}</a> `;
-    } else if (act.type === "modal_video") {
-      actionsHtml += `<button class="btn-link" type="button" onclick="openResourceModal('${act.title}', '${act.url}', 'video')">${act.text}</button> `;
-    } else if (act.type === "modal_doc") {
-      actionsHtml += `<button class="btn-link" type="button" onclick="openResourceModal('${act.title}', '${act.url}', 'doc')">${act.text}</button> `;
+
+  if (song.sheetUrl) {
+    const isGoogleDrive = song.sheetUrl.includes("drive.google.com");
+    if (isGoogleDrive) {
+      actionsHtml += `<button class="btn-link" type="button" onclick="openResourceModal('${escapeHtml(song.title)} (Sheet)', '${escapeHtml(song.sheetUrl)}', 'doc')">🎼 Preview Sheet (In-App)</button> `;
+      const directFolderUrl = song.sheetUrl.replace('/embeddedfolderview', '/drive/folders').split('#')[0];
+      actionsHtml += `<a class="btn-link" href="${escapeHtml(directFolderUrl)}" target="_blank" rel="noopener noreferrer">📁 Open Drive Folder ↗</a> `;
+    } else {
+      actionsHtml += `<a class="btn-link" href="${escapeHtml(song.sheetUrl)}" target="_blank" rel="noopener noreferrer">🎼 Interactive Sheet & Audio ↗</a> `;
     }
-  });
+  }
+
+  if (song.videoUrl) {
+    const embedUrl = formatYouTubeEmbedUrl(song.videoUrl);
+    actionsHtml += `<button class="btn-link" type="button" onclick="openResourceModal('${escapeHtml(song.title)} (Video)', '${escapeHtml(embedUrl)}', 'video')">▶️ Watch Video (In-App)</button> `;
+  }
 
   let embedHtml = "";
-  if (data.embedVideo) {
+  if (song.videoUrl) {
+    const embedUrl = formatYouTubeEmbedUrl(song.videoUrl);
     embedHtml = `
       <div style="margin-top: 12px; border-radius: 8px; overflow: hidden; background: #000; position: relative; padding-bottom: 56.25%; height: 0;">
-        <iframe src="${data.embedVideo}" style="position: absolute; top:0; left:0; width:100%; height:100%; border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        <iframe src="${escapeHtml(embedUrl)}" style="position: absolute; top:0; left:0; width:100%; height:100%; border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
       </div>
     `;
   }
 
-  const isPrimary = data.primaryPiece ? "primary-piece" : "";
-  const tagStyle = data.primaryPiece ? "style='color:var(--accent);'" : "";
-  const noteHtml = data.note ? `<div class="external-note">${data.note}</div>` : "";
+  const isPrimary = (song.part || "").toLowerCase() === "primary" ? "primary-piece" : "";
+  const tagStyle = isPrimary ? "style='color:var(--accent);'" : "";
+  const mins = getUserSettings().timerMinutes || 15;
+  const noteText = song.note !== undefined ? song.note : (song.sheetUrl ? `ℹ️ Opens in external tab. Your ${mins}-minute timer will keep running while you practice!` : "");
+  const noteHtml = noteText ? `<div class="external-note">${escapeHtml(noteText)}</div>` : "";
 
   container.innerHTML = `
     <div class="song-item ${isPrimary} fade-in">
-      <span class="song-tag" ${tagStyle}>${data.tag}</span>
-      <div class="song-title">${data.title}</div>
+      <span class="song-tag" ${tagStyle}>${escapeHtml(song.part || 'Repertoire')}</span>
+      <div class="song-title">${escapeHtml(song.title)}</div>
       <div class="song-actions">${actionsHtml}</div>
       ${noteHtml}
       ${embedHtml}
@@ -210,6 +354,7 @@ function handleSongSelectionChange() {
   localStorage.setItem("kantime_target_song", selectedSong);
   renderSelectedSongResource(selectedSong);
 }
+
 
 // --- PROFILE STORAGE & GATED DASHBOARD ACCESS ---
 function updateActiveProfileDisplay(name, section, avatar) {
@@ -243,6 +388,10 @@ function updateActiveProfileDisplay(name, section, avatar) {
 }
 
 function loadProfile() {
+  applyHeaderTargetDate();
+  applyTimerDuration(getUserSettings().timerMinutes, false);
+  populateSongSelectDropdown();
+
   const savedName = localStorage.getItem("choir_name");
   const savedSection = localStorage.getItem("choir_section");
   const savedAvatar = localStorage.getItem("choir_avatar") || "";
@@ -264,11 +413,9 @@ function loadProfile() {
 
     if (cancelBtn) cancelBtn.style.display = "inline-flex";
 
-    const savedSong = localStorage.getItem("kantime_target_song") || "Know This, That Every Soul Is Free";
-    if (document.getElementById("targetSong")) {
-      document.getElementById("targetSong").value = savedSong;
-    }
-    renderSelectedSongResource(savedSong);
+    const targetSelect = document.getElementById("targetSong");
+    const activeSong = (targetSelect && targetSelect.value) ? targetSelect.value : (localStorage.getItem("kantime_target_song") || "");
+    renderSelectedSongResource(activeSong);
 
     loadLeaderboard();
   } else {
@@ -328,6 +475,10 @@ function handleProfileSubmit() {
 }
 
 function switchProfile() {
+  const inactModal = document.getElementById("inactivityModal");
+  if (inactModal) inactModal.classList.remove("active");
+  isIdleModalOpen = false;
+
   const savedAvatar = localStorage.getItem("choir_avatar") || "";
   renderAvatarPicker(savedAvatar);
 
@@ -372,16 +523,222 @@ function validateUser() {
   return true;
 }
 
-// --- 15-MINUTE STRICT TIMER (LOCALSTORAGE TIMESTAMP-PERSISTED) ---
-const timerDuration = 15 * 60; // 15 minutes (900 seconds)
-let timeRemaining = timerDuration;
-let targetEndTime = null;
-let timerInterval = null;
+// --- INACTIVITY / IDLE DETECTION SYSTEM (Typing.com style) ---
+const IDLE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes (300,000 ms)
+const IDLE_EVENTS = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
+let idleTimerId = null;
+let lastActivityTime = Date.now();
+let isIdleTrackingActive = false;
+let isIdleModalOpen = false;
+let lastThrottleTime = 0;
 
-function formatTime(seconds) {
-  const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-  const s = (seconds % 60).toString().padStart(2, '0');
-  return `${m}:${s}`;
+function getFirstName(fullName) {
+  if (!fullName) return "Singer";
+  const clean = fullName.trim();
+  const parts = clean.split(/\s+/);
+  return parts[0] || "Singer";
+}
+
+function handleUserInteraction() {
+  const now = Date.now();
+  // Throttle interaction checks to max once per second
+  if (now - lastThrottleTime < 1000) return;
+  lastThrottleTime = now;
+
+  // Do not reset while the inactivity modal is open
+  if (isIdleModalOpen) return;
+
+  lastActivityTime = now;
+  localStorage.setItem("kantime_last_activity", now);
+
+  // If practice timer is currently running, reset the 5m countdown
+  if (timerInterval && targetEndTime) {
+    if (idleTimerId) {
+      clearTimeout(idleTimerId);
+    }
+    idleTimerId = setTimeout(triggerInactivityTimeout, IDLE_TIMEOUT_MS);
+  }
+}
+
+function startIdleTracking() {
+  if (!timerInterval && !targetEndTime) return; // Only track while active practice session is running
+
+  lastActivityTime = Date.now();
+  localStorage.setItem("kantime_last_activity", lastActivityTime);
+
+  if (!isIdleTrackingActive) {
+    isIdleTrackingActive = true;
+    IDLE_EVENTS.forEach(evt => {
+      window.addEventListener(evt, handleUserInteraction, { passive: true });
+    });
+  }
+
+  if (idleTimerId) {
+    clearTimeout(idleTimerId);
+  }
+  idleTimerId = setTimeout(triggerInactivityTimeout, IDLE_TIMEOUT_MS);
+}
+
+function stopIdleTracking() {
+  if (isIdleTrackingActive) {
+    isIdleTrackingActive = false;
+    IDLE_EVENTS.forEach(evt => {
+      window.removeEventListener(evt, handleUserInteraction);
+    });
+  }
+
+  if (idleTimerId) {
+    clearTimeout(idleTimerId);
+    idleTimerId = null;
+  }
+}
+
+function triggerInactivityTimeout() {
+  // Only trigger when timer is active
+  if (!timerInterval && !targetEndTime) return;
+
+  // 1. Pause active practice countdown timer (preserve remaining time)
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+
+  if (targetEndTime) {
+    timeRemaining = Math.max(0, Math.ceil((targetEndTime - Date.now()) / 1000));
+  }
+  targetEndTime = null;
+  localStorage.removeItem("kantime_target_end");
+  localStorage.setItem("kantime_paused_remaining", timeRemaining);
+
+  const timerDisp = document.getElementById("timerDisplay");
+  if (timerDisp) timerDisp.innerText = formatTime(timeRemaining);
+
+  const curMins = getUserSettings().timerMinutes || 15;
+  const btn = document.getElementById("timerBtn");
+  if (btn) {
+    btn.innerText = `Resume ${curMins}m Session`;
+    btn.classList.remove("btn-outline");
+    btn.classList.add("btn-primary");
+  }
+
+  stopIdleTracking();
+
+  // 2. Open inactivity modal
+  openInactivityModal();
+}
+
+function openInactivityModal() {
+  isIdleModalOpen = true;
+  const modal = document.getElementById("inactivityModal");
+  if (!modal) return;
+
+  const fullName = localStorage.getItem("choir_name") || "Singer";
+  const firstName = getFirstName(fullName);
+  const avatar = localStorage.getItem("choir_avatar") || "";
+
+  const titleEl = document.getElementById("inactivityTitle");
+  if (titleEl) {
+    titleEl.innerText = `Are you still practicing, ${firstName}?`;
+  }
+
+  const avatarWrap = document.getElementById("inactivityAvatarWrap");
+  if (avatarWrap) {
+    if (avatar && avatar.trim()) {
+      const src = getAvatarImgSrc(avatar);
+      avatarWrap.innerHTML = `
+        <img src="${src}" alt="${firstName}" class="inactivity-avatar-circle" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="inactivity-avatar-circle avatar-fallback" style="display:none;" title="${firstName}">🎵</div>
+      `;
+    } else {
+      avatarWrap.innerHTML = `
+        <div class="inactivity-avatar-circle avatar-fallback" title="${firstName}">🎵</div>
+      `;
+    }
+  }
+
+  modal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function dismissInactivityModal(resumeSession) {
+  isIdleModalOpen = false;
+  const modal = document.getElementById("inactivityModal");
+  if (modal) modal.classList.remove("active");
+  document.body.style.overflow = "";
+
+  if (resumeSession) {
+    // Resume countdown timer
+    if (timeRemaining > 0) {
+      targetEndTime = Date.now() + (timeRemaining * 1000);
+      localStorage.setItem("kantime_target_end", targetEndTime);
+      localStorage.setItem("kantime_target_song", document.getElementById("targetSong").value);
+      localStorage.removeItem("kantime_paused_remaining");
+
+      const btn = document.getElementById("timerBtn");
+      if (btn) {
+        btn.innerText = "Pause Session";
+        btn.classList.remove("btn-primary");
+        btn.classList.add("btn-outline");
+      }
+
+      updateTimerTick();
+      timerInterval = setInterval(updateTimerTick, 500);
+      startIdleTracking();
+      showToast("Resumed! Keep going! 🎶");
+    }
+  } else {
+    // Keep session paused
+    stopIdleTracking();
+    showToast("Session paused.");
+  }
+}
+
+function closeInactivityOnBackdrop(e) {
+  if (e.target.id === "inactivityModal") {
+    dismissInactivityModal(false);
+  }
+}
+
+function checkInactivityOnRestore() {
+  const savedTargetEnd = localStorage.getItem("kantime_target_end");
+  if (!savedTargetEnd) return false;
+
+  const now = Date.now();
+  const savedLastActivity = Number(localStorage.getItem("kantime_last_activity") || now);
+  const elapsedSinceActivity = now - savedLastActivity;
+
+  // If user was away / inactive for >= 5 minutes while timer was running
+  if (elapsedSinceActivity >= IDLE_TIMEOUT_MS) {
+    // Session is credited only up to the 5-minute inactivity boundary
+    const idlePauseTime = savedLastActivity + IDLE_TIMEOUT_MS;
+    const remainingMs = Math.max(0, Number(savedTargetEnd) - idlePauseTime);
+    timeRemaining = Math.max(0, Math.ceil(remainingMs / 1000));
+
+    targetEndTime = null;
+    localStorage.removeItem("kantime_target_end");
+    localStorage.setItem("kantime_paused_remaining", timeRemaining);
+
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+
+    const timerDisp = document.getElementById("timerDisplay");
+    if (timerDisp) timerDisp.innerText = formatTime(timeRemaining);
+
+    const curMins = getUserSettings().timerMinutes || 15;
+    const btn = document.getElementById("timerBtn");
+    if (btn) {
+      btn.innerText = `Resume ${curMins}m Session`;
+      btn.classList.remove("btn-outline");
+      btn.classList.add("btn-primary");
+    }
+
+    stopIdleTracking();
+    openInactivityModal();
+    return true;
+  }
+  return false;
 }
 
 function updateTimerTick() {
@@ -397,28 +754,40 @@ function updateTimerTick() {
 }
 
 function completeTimerSession() {
+  stopIdleTracking();
+  const modal = document.getElementById("inactivityModal");
+  if (modal) modal.classList.remove("active");
+  isIdleModalOpen = false;
+
+  const currentDurationMins = getUserSettings().timerMinutes || 15;
+
   if (timerInterval) {
     clearInterval(timerInterval);
     timerInterval = null;
   }
   targetEndTime = null;
+  timerDuration = currentDurationMins * 60;
   timeRemaining = timerDuration;
   localStorage.removeItem("kantime_target_end");
   localStorage.removeItem("kantime_target_song");
   localStorage.removeItem("kantime_paused_remaining");
+  localStorage.removeItem("kantime_last_activity");
 
   document.getElementById("timerDisplay").innerText = formatTime(timeRemaining);
 
   const btn = document.getElementById("timerBtn");
-  btn.innerText = "Start 15m Session";
+  btn.innerText = `Start ${currentDurationMins}m Session`;
   btn.classList.remove("btn-outline");
   btn.classList.add("btn-primary");
 
-  alert("🎉 Session Complete! You've logged 15 minutes of solid practice!");
-  submitPracticeSession(15);
+  alert(`🎉 Session Complete! You've logged ${currentDurationMins} minutes of solid practice!`);
+  submitPracticeSession(currentDurationMins);
 }
 
 function restoreTimerState() {
+  if (isIdleModalOpen) return;
+
+  const currentDurationMins = getUserSettings().timerMinutes || 15;
   const savedTargetEnd = localStorage.getItem("kantime_target_end");
   const btn = document.getElementById("timerBtn");
   const savedSong = localStorage.getItem("kantime_target_song");
@@ -427,10 +796,16 @@ function restoreTimerState() {
   }
 
   if (savedTargetEnd) {
+    // Check if idle timeout elapsed while tab was inactive or backgrounded
+    if (checkInactivityOnRestore()) {
+      return;
+    }
+
     const savedEndTime = Number(savedTargetEnd);
     const now = Date.now();
 
     if (now < savedEndTime) {
+      // Timer is running
       targetEndTime = savedEndTime;
       timeRemaining = Math.max(0, Math.ceil((targetEndTime - now) / 1000));
       document.getElementById("timerDisplay").innerText = formatTime(timeRemaining);
@@ -442,20 +817,28 @@ function restoreTimerState() {
       if (!timerInterval) {
         timerInterval = setInterval(updateTimerTick, 500);
       }
+
+      startIdleTracking();
     } else {
       completeTimerSession();
     }
   } else {
+    // Paused state
+    stopIdleTracking();
     const savedPaused = localStorage.getItem("kantime_paused_remaining");
     if (savedPaused && Number(savedPaused) > 0 && Number(savedPaused) < timerDuration) {
       timeRemaining = Number(savedPaused);
       document.getElementById("timerDisplay").innerText = formatTime(timeRemaining);
-      btn.innerText = "Resume 15m Session";
+      btn.innerText = `Resume ${currentDurationMins}m Session`;
       btn.classList.remove("btn-outline");
       btn.classList.add("btn-primary");
     } else {
+      timerDuration = currentDurationMins * 60;
       timeRemaining = timerDuration;
       document.getElementById("timerDisplay").innerText = formatTime(timeRemaining);
+      btn.innerText = `Start ${currentDurationMins}m Session`;
+      btn.classList.remove("btn-outline");
+      btn.classList.add("btn-primary");
     }
   }
 }
@@ -463,6 +846,7 @@ function restoreTimerState() {
 function toggleTimer() {
   if (!validateUser()) return;
 
+  const currentDurationMins = getUserSettings().timerMinutes || 15;
   const btn = document.getElementById("timerBtn");
   if (timerInterval) {
     // Pause timer
@@ -476,9 +860,11 @@ function toggleTimer() {
     localStorage.setItem("kantime_paused_remaining", timeRemaining);
 
     document.getElementById("timerDisplay").innerText = formatTime(timeRemaining);
-    btn.innerText = "Resume 15m Session";
+    btn.innerText = `Resume ${currentDurationMins}m Session`;
     btn.classList.remove("btn-outline");
     btn.classList.add("btn-primary");
+
+    stopIdleTracking();
   } else {
     // Start or Resume timer
     targetEndTime = Date.now() + (timeRemaining * 1000);
@@ -492,6 +878,8 @@ function toggleTimer() {
 
     updateTimerTick();
     timerInterval = setInterval(updateTimerTick, 500);
+
+    startIdleTracking();
   }
 }
 
@@ -504,6 +892,7 @@ document.addEventListener("visibilitychange", () => {
 window.addEventListener("focus", () => {
   restoreTimerState();
 });
+
 
 function showToast(msg) {
   const t = document.getElementById("toast");
@@ -691,8 +1080,349 @@ function closeModalOnBackdrop(e) {
   }
 }
 
+// --- PERSONAL SETTINGS & REPERTOIRE EDITOR MODAL ---
+function openSettingsModal() {
+  const modal = document.getElementById("settingsModal");
+  if (!modal) return;
+
+  const settings = getUserSettings();
+
+  const targetDateInput = document.getElementById("settingTargetDate");
+  if (targetDateInput) {
+    targetDateInput.value = settings.targetDate || "";
+  }
+
+  const timerDurSelect = document.getElementById("settingTimerDuration");
+  if (timerDurSelect) {
+    timerDurSelect.value = settings.timerMinutes || 15;
+  }
+
+  closeSongForm();
+  renderRepertoireList();
+  switchSettingsTab("preferences");
+
+  modal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeSettingsModal() {
+  // Ensure any newly selected duration value is applied
+  const timerDurSelect = document.getElementById("settingTimerDuration");
+  if (timerDurSelect) {
+    const selectedMins = Number(timerDurSelect.value) || 15;
+    const settings = getUserSettings();
+    if (settings.timerMinutes !== selectedMins) {
+      handleTimerDurationChange(selectedMins);
+    }
+  }
+
+  const modal = document.getElementById("settingsModal");
+  if (modal) modal.classList.remove("active");
+  document.body.style.overflow = "";
+}
+
+function closeSettingsOnBackdrop(e) {
+  if (e.target.id === "settingsModal") {
+    closeSettingsModal();
+  }
+}
+
+function switchSettingsTab(tabName) {
+  const prefTabBtn = document.getElementById("tabBtnPreferences");
+  const repTabBtn = document.getElementById("tabBtnRepertoire");
+  const prefPanel = document.getElementById("tabPanelPreferences");
+  const repPanel = document.getElementById("tabPanelRepertoire");
+
+  if (tabName === "preferences") {
+    if (prefTabBtn) {
+      prefTabBtn.classList.add("active");
+      prefTabBtn.setAttribute("aria-selected", "true");
+    }
+    if (repTabBtn) {
+      repTabBtn.classList.remove("active");
+      repTabBtn.setAttribute("aria-selected", "false");
+    }
+    if (prefPanel) prefPanel.style.display = "block";
+    if (repPanel) repPanel.style.display = "none";
+  } else {
+    if (prefTabBtn) {
+      prefTabBtn.classList.remove("active");
+      prefTabBtn.setAttribute("aria-selected", "false");
+    }
+    if (repTabBtn) {
+      repTabBtn.classList.add("active");
+      repTabBtn.setAttribute("aria-selected", "true");
+    }
+    if (prefPanel) prefPanel.style.display = "none";
+    if (repPanel) repPanel.style.display = "block";
+  }
+}
+
+function handleTargetDateInput(val) {
+  const subtitleEl = document.getElementById("headerSubtitle");
+  const displayVal = val.trim() ? val : "Stake Choir Prep • Oct 24–25";
+  if (subtitleEl) {
+    subtitleEl.innerText = displayVal;
+  }
+  const settings = getUserSettings();
+  settings.targetDate = val;
+  saveUserSettings(settings);
+}
+
+function handleTimerDurationChange(val) {
+  const newMins = Number(val) || 15;
+  const settings = getUserSettings();
+  const oldMins = settings.timerMinutes || 15;
+
+  // If already matches current ready clock duration and not running, no-op
+  if (newMins === oldMins && timeRemaining === newMins * 60 && !timerInterval && !targetEndTime) {
+    return;
+  }
+
+  // If a session is currently running or paused with active progress, confirm reset
+  const isRunning = Boolean(timerInterval || targetEndTime);
+  const pausedVal = localStorage.getItem("kantime_paused_remaining");
+  const hasPausedProgress = Boolean(pausedVal && Number(pausedVal) > 0 && Number(pausedVal) < timerDuration);
+  const hasActiveSession = isRunning || hasPausedProgress;
+
+  if (hasActiveSession) {
+    const proceed = confirm("Changing practice duration will reset your current timer countdown. Do you wish to continue?");
+    if (!proceed) {
+      const select = document.getElementById("settingTimerDuration");
+      if (select) select.value = oldMins;
+      return;
+    }
+
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+    targetEndTime = null;
+    localStorage.removeItem("kantime_target_end");
+    localStorage.removeItem("kantime_paused_remaining");
+    stopIdleTracking();
+  }
+
+  settings.timerMinutes = newMins;
+  saveUserSettings(settings);
+  applyTimerDuration(newMins, true);
+
+  const currentSong = document.getElementById("targetSong") ? document.getElementById("targetSong").value : "";
+  if (currentSong) renderSelectedSongResource(currentSong);
+
+  showToast(`Timer set to ${newMins} minutes! ⏱️`);
+}
+
+function renderRepertoireList() {
+  const container = document.getElementById("repertoireListContainer");
+  const countEl = document.getElementById("repertoireCount");
+  if (!container) return;
+
+  const settings = getUserSettings();
+  const songs = settings.songs || [];
+  if (countEl) countEl.innerText = songs.length;
+
+  if (songs.length === 0) {
+    container.innerHTML = `<div style="text-align:center; padding:16px; color:var(--text-muted); font-size:0.85rem;">No pieces in repertoire yet. Click "+ Add Song" above!</div>`;
+    return;
+  }
+
+  let html = "";
+  songs.forEach(song => {
+    const partBadge = song.part && song.part !== "All"
+      ? `<span class="part-badge" data-voice="${escapeHtml(song.part)}">${escapeHtml(song.part)}</span>`
+      : `<span class="part-badge" style="background:#f1f5f9; color:#475569;">All Parts</span>`;
+
+    const videoTag = song.videoUrl ? `<span class="link-tag">📹 Video</span>` : "";
+    const sheetTag = song.sheetUrl ? `<span class="link-tag">🎼 Sheet</span>` : "";
+
+    html += `
+      <div class="repertoire-list-item">
+        <div class="repertoire-item-info">
+          <div class="repertoire-item-title-row">
+            <strong>${escapeHtml(song.title)}</strong>
+            ${partBadge}
+          </div>
+          <div class="repertoire-item-links">
+            ${videoTag}
+            ${sheetTag}
+          </div>
+        </div>
+        <div class="repertoire-item-actions">
+          <button type="button" class="btn-icon" onclick="openSongForm('${song.id}')" title="Edit piece" aria-label="Edit ${escapeHtml(song.title)}">✏️</button>
+          <button type="button" class="btn-icon btn-icon-danger" onclick="deleteSong('${song.id}')" title="Delete piece" aria-label="Delete ${escapeHtml(song.title)}">🗑️</button>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function openSongForm(songId) {
+  const formCard = document.getElementById("songEditorForm");
+  const heading = document.getElementById("songFormHeading");
+  const titleInput = document.getElementById("songFormTitle");
+  const partSelect = document.getElementById("songFormPart");
+  const videoInput = document.getElementById("songFormVideo");
+  const sheetInput = document.getElementById("songFormSheet");
+  const idInput = document.getElementById("editingSongId");
+
+  if (!formCard) return;
+
+  if (songId) {
+    // Edit existing piece
+    const settings = getUserSettings();
+    const song = settings.songs.find(s => s.id === songId);
+    if (!song) return;
+
+    idInput.value = songId;
+    heading.innerText = `✏️ Edit Repertoire Piece`;
+    titleInput.value = song.title || "";
+    partSelect.value = song.part || "All";
+    videoInput.value = song.videoUrl || "";
+    sheetInput.value = song.sheetUrl || "";
+  } else {
+    // Add new piece
+    idInput.value = "";
+    heading.innerText = `➕ Add New Repertoire Piece`;
+    titleInput.value = "";
+    partSelect.value = "All";
+    videoInput.value = "";
+    sheetInput.value = "";
+  }
+
+  formCard.style.display = "block";
+  titleInput.focus();
+  formCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function closeSongForm() {
+  const formCard = document.getElementById("songEditorForm");
+  if (formCard) formCard.style.display = "none";
+}
+
+function saveSongFromForm() {
+  const title = document.getElementById("songFormTitle").value.trim();
+  const part = document.getElementById("songFormPart").value;
+  let videoUrl = document.getElementById("songFormVideo").value.trim();
+  const sheetUrl = document.getElementById("songFormSheet").value.trim();
+  const songId = document.getElementById("editingSongId").value;
+
+  if (!title) {
+    alert("Please enter a song title!");
+    document.getElementById("songFormTitle").focus();
+    return;
+  }
+
+  if (videoUrl) {
+    videoUrl = formatYouTubeEmbedUrl(videoUrl);
+  }
+
+  const settings = getUserSettings();
+
+  if (songId) {
+    // Update existing
+    const idx = settings.songs.findIndex(s => s.id === songId);
+    if (idx !== -1) {
+      settings.songs[idx] = {
+        ...settings.songs[idx],
+        title: title,
+        part: part,
+        videoUrl: videoUrl,
+        sheetUrl: sheetUrl
+      };
+    }
+  } else {
+    // Add new song
+    const newId = "song_" + Date.now();
+    settings.songs.push({
+      id: newId,
+      title: title,
+      part: part,
+      videoUrl: videoUrl,
+      sheetUrl: sheetUrl,
+      note: sheetUrl ? `ℹ️ Opens in external tab. Your timer will keep running while you practice!` : ""
+    });
+  }
+
+  saveUserSettings(settings);
+  closeSongForm();
+  renderRepertoireList();
+  populateSongSelectDropdown();
+
+  // If currently selected piece was edited or if it's the only one, update player
+  const targetSelect = document.getElementById("targetSong");
+  if (targetSelect) {
+    if (!targetSelect.value || targetSelect.value === title) {
+      targetSelect.value = title;
+      localStorage.setItem("kantime_target_song", title);
+    }
+    renderSelectedSongResource(targetSelect.value);
+  }
+
+  showToast("Repertoire saved! 🎶");
+}
+
+function deleteSong(songId) {
+  const settings = getUserSettings();
+  const song = settings.songs.find(s => s.id === songId);
+  if (!song) return;
+
+  const confirmDelete = confirm(`Remove "${song.title}" from your personal repertoire?`);
+  if (!confirmDelete) return;
+
+  settings.songs = settings.songs.filter(s => s.id !== songId);
+  saveUserSettings(settings);
+
+  renderRepertoireList();
+  populateSongSelectDropdown();
+
+  const targetSelect = document.getElementById("targetSong");
+  if (targetSelect) {
+    renderSelectedSongResource(targetSelect.value);
+  }
+
+  showToast("Piece removed.");
+}
+
+function resetUserSettingsToDefault() {
+  const confirmReset = confirm("Reset all your personal preferences, schedule target, and repertoire back to the default Stake Choir setup?");
+  if (!confirmReset) return;
+
+  localStorage.removeItem("kantime_user_settings");
+  closeSongForm();
+
+  // Apply default settings
+  const defaults = getUserSettings();
+  applyHeaderTargetDate();
+  applyTimerDuration(defaults.timerMinutes, true);
+  populateSongSelectDropdown();
+
+  const targetSelect = document.getElementById("targetSong");
+  if (targetSelect && defaults.songs.length > 0) {
+    targetSelect.value = defaults.songs[0].title;
+    localStorage.setItem("kantime_target_song", defaults.songs[0].title);
+    renderSelectedSongResource(defaults.songs[0].title);
+  }
+
+  // Update Settings form inputs
+  const targetDateInput = document.getElementById("settingTargetDate");
+  if (targetDateInput) targetDateInput.value = defaults.targetDate;
+
+  const timerDurSelect = document.getElementById("settingTimerDuration");
+  if (timerDurSelect) timerDurSelect.value = defaults.timerMinutes;
+
+  renderRepertoireList();
+
+  showToast("Reset to Choir Defaults! ✨");
+}
+
 // Initial load
 window.addEventListener("DOMContentLoaded", function () {
+  applyHeaderTargetDate();
+  applyTimerDuration(getUserSettings().timerMinutes, false);
+  populateSongSelectDropdown();
   loadProfile();
   restoreTimerState();
 });

@@ -24,12 +24,15 @@
 <body>
 
   <header>
-    <div class="header-brand">
-      <img src="images/kantime-logo.png" alt="KanTime Logo" class="header-logo" onerror="this.style.display='none'">
-      <div class="header-text">
-        <h1>KanTime</h1>
-        <p>Stake Choir Prep • Oct 24–25</p>
+    <div class="header-inner">
+      <div class="header-brand">
+        <img src="images/kantime-logo.png" alt="KanTime Logo" class="header-logo" onerror="this.style.display='none'">
+        <div class="header-text">
+          <h1>KanTime</h1>
+          <p id="headerSubtitle">Stake Choir Prep • Oct 24–25</p>
+        </div>
       </div>
+      <button class="settings-btn" id="openSettingsBtn" onclick="openSettingsModal()" aria-label="Settings" title="Settings & Practice Preferences">⚙️</button>
     </div>
   </header>
 
@@ -89,17 +92,14 @@
 
       <!-- Practice Session & Dynamic Workspace -->
       <div class="card" id="practiceWorkspace">
-        <h2>⏱️ 15-Minute Practice Session</h2>
+        <h2>⏱️ <span id="practiceDurationTitle">15</span>-Minute Practice Session</h2>
         <label for="targetSong">Select Song to Rehearse</label>
         <select id="targetSong" onchange="handleSongSelectionChange()">
-          <option value="Know This, That Every Soul Is Free">Know This, That Every Soul Is Free (#240)</option>
-          <option value="Rise, Ye Saints, and Temples Enter">Rise, Ye Saints, and Temples Enter (#287)</option>
-          <option value="Choose You This Day">Choose You This Day</option>
-          <option value="Holy Places">Holy Places (Primary)</option>
+          <!-- Populated dynamically from userSettings.songs -->
         </select>
 
         <div class="timer-display" id="timerDisplay">15:00</div>
-        <p style="font-size: 0.78rem; text-align: center; color: var(--text-muted); margin-bottom: 12px;">
+        <p id="practiceInstructionSubtext" style="font-size: 0.78rem; text-align: center; color: var(--text-muted); margin-bottom: 12px;">
           Hit Start, practice your parts, and complete the 15-minute countdown to record your session.
         </p>
 
@@ -150,6 +150,115 @@
         <div class="modal-iframe-wrapper" id="modalWrapper">
           <iframe id="resourceIframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inactivity / Idle Timeout Modal -->
+  <div id="inactivityModal" class="modal-backdrop" onclick="closeInactivityOnBackdrop(event)" role="dialog" aria-modal="true" aria-labelledby="inactivityTitle">
+    <div class="modal-box inactivity-modal-box">
+      <div class="inactivity-content">
+        <div id="inactivityAvatarWrap" class="inactivity-avatar-wrap">
+          <!-- Populated dynamically with chosen avatar or default 🎵 -->
+        </div>
+        <h3 id="inactivityTitle">Are you still practicing?</h3>
+        <p id="inactivitySubtext">Your session is paused. Click below to continue practicing, or cancel if you're done.</p>
+        <div class="inactivity-actions">
+          <button type="button" class="btn btn-primary" id="inactivityResumeBtn" onclick="dismissInactivityModal(true)">Yes, keep practicing!</button>
+          <button type="button" class="btn btn-outline" id="inactivityDoneBtn" onclick="dismissInactivityModal(false)">I'm done / Pause Session</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Personal Settings / Preferences Modal -->
+  <div id="settingsModal" class="modal-backdrop" onclick="closeSettingsOnBackdrop(event)" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
+    <div class="modal-box settings-modal-box">
+      <div class="modal-header">
+        <h3 id="settingsModalTitle">⚙️ Practice Preferences</h3>
+        <button class="modal-close-btn" type="button" onclick="closeSettingsModal()" aria-label="Close settings">&times;</button>
+      </div>
+
+      <!-- Settings Navigation Tabs -->
+      <div class="settings-nav-tabs" role="tablist">
+        <button type="button" class="settings-tab-btn active" id="tabBtnPreferences" role="tab" aria-selected="true" onclick="switchSettingsTab('preferences')">⚙️ Preferences</button>
+        <button type="button" class="settings-tab-btn" id="tabBtnRepertoire" role="tab" aria-selected="false" onclick="switchSettingsTab('repertoire')">🎵 Repertoire & Parts</button>
+      </div>
+
+      <div class="modal-body settings-modal-body">
+
+        <!-- Tab 1: Practice Preferences -->
+        <div id="tabPanelPreferences" class="settings-tab-panel active" role="tabpanel">
+          <div class="settings-section">
+            <label for="settingTargetDate">Stake Conference / Target Event</label>
+            <input type="text" id="settingTargetDate" placeholder="e.g. Stake Choir Prep • Oct 24–25" oninput="handleTargetDateInput(this.value)">
+            <p class="settings-hint">Updates the top header subtitle in real-time on your device.</p>
+          </div>
+
+          <div class="settings-section">
+            <label for="settingTimerDuration">Practice Timer Duration</label>
+            <select id="settingTimerDuration" onchange="handleTimerDurationChange(this.value)">
+              <option value="5">5 Minutes</option>
+              <option value="10">10 Minutes</option>
+              <option value="15">15 Minutes (Default)</option>
+              <option value="20">20 Minutes</option>
+              <option value="30">30 Minutes</option>
+              <option value="45">45 Minutes</option>
+              <option value="60">60 Minutes (1 Hour)</option>
+            </select>
+            <p class="settings-hint">Sets your rehearsal countdown block and minutes logged upon completion.</p>
+          </div>
+        </div>
+
+        <!-- Tab 2: Repertoire & Parts Editor -->
+        <div id="tabPanelRepertoire" class="settings-tab-panel" role="tabpanel" style="display: none;">
+          <div class="repertoire-header-row">
+            <h4>Custom Repertoire (<span id="repertoireCount">0</span>)</h4>
+            <button type="button" class="btn-link" id="toggleAddSongBtn" onclick="openSongForm()">➕ Add Song</button>
+          </div>
+
+          <!-- Song Add / Edit Form -->
+          <div id="songEditorForm" class="song-editor-card" style="display: none;">
+            <h5 id="songFormHeading">➕ Add New Repertoire Piece</h5>
+            <input type="hidden" id="editingSongId" value="">
+
+            <label for="songFormTitle">Song Title *</label>
+            <input type="text" id="songFormTitle" placeholder="e.g. Choose You This Day">
+
+            <label for="songFormPart">Target Voice Part / Choir</label>
+            <select id="songFormPart">
+              <option value="All">All Voice Parts</option>
+              <option value="Soprano">Soprano</option>
+              <option value="Alto">Alto</option>
+              <option value="Tenor">Tenor</option>
+              <option value="Bass">Bass</option>
+              <option value="Primary">Primary</option>
+            </select>
+
+            <label for="songFormVideo">Video / Audio URL (YouTube or Direct)</label>
+            <input type="text" id="songFormVideo" placeholder="https://www.youtube.com/watch?v=... or embed URL">
+
+            <label for="songFormSheet">Sheet Music PDF / Drive URL</label>
+            <input type="text" id="songFormSheet" placeholder="https://... PDF or Google Drive link">
+
+            <div style="display: flex; gap: 8px; margin-top: 10px;">
+              <button type="button" class="btn btn-primary" style="flex: 1;" onclick="saveSongFromForm()">Save Piece</button>
+              <button type="button" class="btn btn-outline" style="width: auto;" onclick="closeSongForm()">Cancel</button>
+            </div>
+          </div>
+
+          <!-- List of Repertoire Songs -->
+          <div id="repertoireListContainer" class="repertoire-items-list">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Settings Modal Footer -->
+      <div class="settings-modal-footer">
+        <button type="button" class="btn-link btn-danger-link" onclick="resetUserSettingsToDefault()">🔄 Reset to Choir Defaults</button>
+        <button type="button" class="btn btn-primary" style="width: auto; min-height: 38px; padding: 6px 18px;" onclick="closeSettingsModal()">Done</button>
       </div>
     </div>
   </div>
