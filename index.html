@@ -154,7 +154,76 @@
       <p>&copy; <span id="footerYear"></span> James Phillip De Guzman</p>
     </footer>
 
-  </div>
+  <!-- Fixed Persistent Voice Pitch Checker Overlay (Corner Card) -->
+  <aside id="pitchCheckerWidget" class="pitch-checker-widget" aria-label="Voice Pitch Checker" style="display: none;">
+    <!-- Minimized Pill / Activation Bar -->
+    <div class="pitch-widget-minimized" id="pitchWidgetMinimized" onclick="expandPitchWidget()" role="button" tabindex="0" title="Tap to expand Voice Pitch Check">
+      <span class="pitch-widget-icon">🎤</span>
+      <span class="pitch-widget-label" id="pitchWidgetMiniLabel">Voice Check</span>
+      <span class="pitch-widget-status-dot" id="pitchMiniStatusDot"></span>
+    </div>
+
+    <!-- Expanded Pitch Checker Card -->
+    <div class="pitch-widget-card" id="pitchWidgetCard" style="display: none;">
+      <div class="pitch-card-header">
+        <div class="pitch-header-left">
+          <span class="pitch-header-icon">🎤</span>
+          <div>
+            <h4 class="pitch-header-title">Voice Pitch Check</h4>
+            <p class="pitch-header-sub" id="pitchTargetSub">Target: Voice Section</p>
+          </div>
+        </div>
+        <div class="pitch-header-actions">
+          <button type="button" class="pitch-btn-toggle" id="pitchMicToggleBtn" onclick="togglePitchDetection()" title="Toggle Microphone Capture">
+            <span id="pitchMicIcon">🎙️</span> <span id="pitchMicText">Start</span>
+          </button>
+          <button type="button" class="pitch-btn-minimize" onclick="collapsePitchWidget()" aria-label="Minimize Pitch Check" title="Minimize">&minus;</button>
+        </div>
+      </div>
+
+      <!-- Reference Starting Tone Buttons (Pitch Pipe) -->
+      <div class="pitch-reference-row">
+        <span class="pitch-reference-label">🎵 Pitch Pipe:</span>
+        <div class="pitch-ref-buttons">
+          <button type="button" class="pitch-ref-btn" id="pitchRefSoprano" data-part="Soprano" onclick="playReferenceTone('Soprano')" title="Play Soprano reference pitch C5">S: C5</button>
+          <button type="button" class="pitch-ref-btn" id="pitchRefAlto" data-part="Alto" onclick="playReferenceTone('Alto')" title="Play Alto reference pitch A3">A: A3</button>
+          <button type="button" class="pitch-ref-btn" id="pitchRefTenor" data-part="Tenor" onclick="playReferenceTone('Tenor')" title="Play Tenor reference pitch E3">T: E3</button>
+          <button type="button" class="pitch-ref-btn" id="pitchRefBass" data-part="Bass" onclick="playReferenceTone('Bass')" title="Play Bass reference pitch C3">B: C3</button>
+        </div>
+      </div>
+
+      <!-- Real-Time Pitch Display Area -->
+      <div class="pitch-display-area" id="pitchDisplayArea">
+        <div class="pitch-note-row">
+          <div class="pitch-note-badge" id="pitchNoteBadge">
+            <span class="pitch-detected-note" id="pitchNoteValue">--</span>
+          </div>
+          <div class="pitch-freq-wrap">
+            <div class="pitch-freq-readout" id="pitchHzValue">0.0 Hz</div>
+            <div class="pitch-cents-readout" id="pitchCentsReadout">-- cents</div>
+          </div>
+        </div>
+
+        <!-- Horizontal Cents Gauge Needle Visual (-50 to +50 cents) -->
+        <div class="cents-gauge-container">
+          <div class="cents-gauge-track">
+            <div class="cents-zone flat-zone" title="Flat (-50 to -10 cents)"></div>
+            <div class="cents-zone in-tune-zone" title="In Tune Target (±10 cents)"></div>
+            <div class="cents-zone sharp-zone" title="Sharp (+10 to +50 cents)"></div>
+            <div class="cents-center-mark" title="Exact Pitch Center (0 cents)"></div>
+            <div class="cents-needle" id="centsNeedle" style="left: 50%;"></div>
+          </div>
+          <div class="cents-scale-labels">
+            <span>-50¢ (Flat)</span>
+            <span class="cents-scale-center">Target (0¢)</span>
+            <span>+50¢ (Sharp)</span>
+          </div>
+        </div>
+
+        <p class="pitch-feedback-prompt" id="pitchFeedbackPrompt">Tap "Start" to check your pitch in real time.</p>
+      </div>
+    </div>
+  </aside>
 
   <div id="toast">Saved!</div>
 

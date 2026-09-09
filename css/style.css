@@ -1581,6 +1581,430 @@ input[type="text"]::placeholder {
   gap: 4px;
 }
 
+/* ==========================================================================
+   Voice Pitch Checker Component (Persistent Fixed Corner Card / Overlay)
+   ========================================================================== */
+.pitch-checker-widget {
+  position: fixed;
+  left: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 950;
+  font-family: inherit;
+  pointer-events: auto;
+}
+
+/* Minimized Floating Pill */
+.pitch-widget-minimized {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1.5px solid var(--primary-border);
+  border-radius: var(--radius-full);
+  padding: 8px 14px;
+  box-shadow: 0 4px 16px rgba(29, 78, 216, 0.18), 0 1px 3px rgba(15, 23, 42, 0.08);
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pitch-widget-minimized:hover {
+  transform: translateY(-2px) scale(1.02);
+  border-color: var(--primary);
+  box-shadow: 0 6px 20px rgba(29, 78, 216, 0.25);
+}
+
+.pitch-widget-minimized:active {
+  transform: scale(0.96);
+}
+
+.pitch-widget-icon {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.pitch-widget-label {
+  font-size: 0.82rem;
+  font-weight: 750;
+  color: var(--primary);
+  letter-spacing: 0.01em;
+}
+
+.pitch-widget-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  display: inline-block;
+  transition: background-color 0.2s ease;
+}
+
+.pitch-widget-status-dot.active {
+  background: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+  animation: pulseDot 1.6s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  50% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.8; }
+}
+
+/* Expanded Card */
+.pitch-widget-card {
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1.5px solid #e2e8f0;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.2), 0 4px 12px rgba(15, 23, 42, 0.08);
+  padding: 14px 14px 12px;
+  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  overflow: hidden;
+}
+
+/* Dynamic State Backgrounds */
+.pitch-widget-card.state-in-tune {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.45);
+  box-shadow: 0 12px 32px -4px rgba(34, 197, 94, 0.25), 0 0 0 1px rgba(34, 197, 94, 0.2);
+}
+
+.pitch-widget-card.state-near-tune {
+  background: rgba(245, 158, 11, 0.10);
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 12px 32px -4px rgba(245, 158, 11, 0.2);
+}
+
+.pitch-widget-card.state-off-pitch {
+  background: rgba(239, 68, 68, 0.10);
+  border-color: rgba(239, 68, 68, 0.38);
+  box-shadow: 0 12px 32px -4px rgba(239, 68, 68, 0.2);
+}
+
+.pitch-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.pitch-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pitch-header-icon {
+  font-size: 1.15rem;
+}
+
+.pitch-header-title {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.pitch-header-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.pitch-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pitch-btn-toggle {
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 5px 12px;
+  font-size: 0.76rem;
+  font-weight: 750;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 6px rgba(29, 78, 216, 0.25);
+  transition: all 0.18s ease;
+}
+
+.pitch-btn-toggle.recording {
+  background: linear-gradient(180deg, #dc2626 0%, #b91c1c 100%);
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.28);
+}
+
+.pitch-btn-toggle:hover {
+  transform: translateY(-1px);
+}
+
+.pitch-btn-toggle:active {
+  transform: scale(0.95);
+}
+
+.pitch-btn-minimize {
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  color: var(--text-muted);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pitch-btn-minimize:hover {
+  background: #f1f5f9;
+  color: var(--text);
+}
+
+/* Reference Tone Buttons (Pitch Pipe) */
+.pitch-reference-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 4px 6px;
+  background: rgba(248, 250, 252, 0.85);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(226, 232, 240, 0.7);
+}
+
+.pitch-reference-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.pitch-ref-buttons {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.pitch-ref-btn {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 3px 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+}
+
+.pitch-ref-btn:hover {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.pitch-ref-btn.active-part {
+  border-color: var(--primary);
+  background: #eff6ff;
+  color: var(--primary);
+}
+
+.pitch-ref-btn.playing {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.25);
+  animation: pulseTone 0.8s infinite alternate;
+}
+
+@keyframes pulseTone {
+  from { transform: scale(1); }
+  to { transform: scale(1.06); }
+}
+
+/* Pitch Display Area */
+.pitch-display-area {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pitch-note-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 6px;
+}
+
+.pitch-note-badge {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2.5px solid var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(29, 78, 216, 0.15);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.pitch-note-badge.in-tune {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25), 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.pitch-note-badge.off-pitch {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.pitch-detected-note {
+  font-size: 1.45rem;
+  font-weight: 850;
+  color: var(--text);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.pitch-note-badge.in-tune .pitch-detected-note {
+  color: #059669;
+}
+
+.pitch-freq-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.pitch-freq-readout {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.pitch-cents-readout {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pitch-cents-readout.in-tune {
+  color: #15803d;
+  font-weight: 800;
+}
+
+/* Horizontal Cents Gauge Needle Visual */
+.cents-gauge-container {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 2px;
+}
+
+.cents-gauge-track {
+  position: relative;
+  height: 12px;
+  border-radius: var(--radius-full);
+  background: #e2e8f0;
+  overflow: hidden;
+  display: flex;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.cents-zone {
+  height: 100%;
+}
+
+.cents-zone.flat-zone {
+  width: 40%;
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.3) 0%, rgba(245, 158, 11, 0.3) 100%);
+}
+
+.cents-zone.in-tune-zone {
+  width: 20%;
+  background: #86efac;
+}
+
+.cents-zone.sharp-zone {
+  width: 40%;
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.3) 0%, rgba(239, 68, 68, 0.3) 100%);
+}
+
+.cents-center-mark {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 100%;
+  background: #15803d;
+  z-index: 2;
+}
+
+.cents-needle {
+  position: absolute;
+  top: -2px;
+  width: 4px;
+  height: 16px;
+  border-radius: 2px;
+  background: #0f172a;
+  transform: translateX(-50%);
+  z-index: 3;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: left 0.08s linear;
+}
+
+.cents-scale-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  padding: 0 2px;
+}
+
+.cents-scale-center {
+  color: #15803d;
+  font-weight: 750;
+}
+
+.pitch-feedback-prompt {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.35;
+  margin-top: 2px;
+  font-style: italic;
+  min-height: 18px;
+}
+
 /* Responsive & Mobile Optimizations */
 @media (max-width: 480px) {
   .container {

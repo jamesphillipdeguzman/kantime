@@ -486,12 +486,19 @@ function loadProfile() {
     const activeSong = (targetSelect && targetSelect.value) ? targetSelect.value : (localStorage.getItem("kantime_target_song") || "");
     renderSelectedSongResource(activeSong);
 
+    const pitchWidget = document.getElementById("pitchCheckerWidget");
+    if (pitchWidget) pitchWidget.style.display = "block";
+    updatePitchTargetVoice();
+
     loadLeaderboard();
   } else {
     profileCard.style.display = "block";
     activeBanner.style.display = "none";
     mainDashboard.style.display = "none";
     if (cancelBtn) cancelBtn.style.display = "none";
+
+    const pitchWidget = document.getElementById("pitchCheckerWidget");
+    if (pitchWidget) pitchWidget.style.display = "none";
   }
 }
 
@@ -537,6 +544,10 @@ function handleProfileSubmit() {
   showToast("Profile updated!");
   loadLeaderboard();
   initEncouragementBanner();
+
+  const pitchWidget = document.getElementById("pitchCheckerWidget");
+  if (pitchWidget) pitchWidget.style.display = "block";
+  updatePitchTargetVoice();
 
   // Smoothly scroll down to the practice workspace
   const practiceWorkspace = document.getElementById("practiceWorkspace");
@@ -594,6 +605,7 @@ function saveProfileFromSettings() {
   if (currentSong) renderSelectedSongResource(currentSong);
 
   loadLeaderboard();
+  updatePitchTargetVoice();
   showToast("Profile & Voice updated! ✨");
   return true;
 }
@@ -1349,6 +1361,424 @@ function loadLeaderboard() {
       }
     });
 }
+
+// --- REAL-TIME IN-BROWSER VOICE PITCH CHECKER & REFERENCE TONES ---
+const REFERENCE_PITCHES = {
+  Soprano: { note: "C5", freq: 523.25, label: "S: C5" },
+  Alto: { note: "A3", freq: 220.00, label: "A: A3" },
+  Tenor: { note: "E3", freq: 164.81, label: "T: E3" },
+  Bass: { note: "C3", freq: 130.81, label: "B: C3" },
+  Primary: { note: "D4", freq: 293.66, label: "Pri: D4" }
+};
+
+const MUSICAL_NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+
+let pitchAudioContext = null;
+let pitchMediaStream = null;
+let pitchAnalyserNode = null;
+let pitchAnimFrameId = null;
+let isPitchDetecting = false;
+let pitchTimeBuffer = null;
+let activeRefOscillator = null;
+let activeRefGain = null;
+let activeRefTimeout = null;
+
+function getPitchAudioContext() {
+  if (!pitchAudioContext) {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) {
+      pitchAudioContext = new AudioCtx();
+    }
+  }
+  return pitchAudioContext;
+}
+
+// 1. Reference Starting Pitches (Pitch Pipe Oscillators)
+function playReferenceTone(part) {
+  const ref = REFERENCE_PITCHES[part] || REFERENCE_PITCHES.Tenor;
+  const audioCtx = getPitchAudioContext();
+  if (!audioCtx) {
+    showToast("Audio is not supported in this browser.");
+    return;
+  }
+
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+
+  stopReferenceTone();
+
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(ref.freq, audioCtx.currentTime);
+
+    const now = audioCtx.currentTime;
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.exponentialRampToValueAtTime(0.28, now + 0.08);
+    gain.gain.setValueAtTime(0.28, now + 1.5);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 2.1);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start(now);
+    osc.stop(now + 2.15);
+
+    activeRefOscillator = osc;
+    activeRefGain = gain;
+
+    document.querySelectorAll(".pitch-ref-btn").forEach(btn => btn.classList.remove("playing"));
+    const activeBtn = document.querySelector(`.pitch-ref-btn[data-part="${part}"]`);
+    if (activeBtn) activeBtn.classList.add("playing");
+
+    activeRefTimeout = setTimeout(() => {
+      if (activeBtn) activeBtn.classList.remove("playing");
+    }, 2150);
+
+    showToast(`🎵 ${part} starting pitch: ${ref.note} (${ref.freq.toFixed(1)} Hz)`);
+  } catch (err) {
+    console.error("Reference pitch error:", err);
+  }
+}
+
+function stopReferenceTone() {
+  if (activeRefTimeout) {
+    clearTimeout(activeRefTimeout);
+    activeRefTimeout = null;
+  }
+  if (activeRefOscillator) {
+    try {
+      activeRefOscillator.stop();
+      activeRefOscillator.disconnect();
+    } catch (e) {}
+    activeRefOscillator = null;
+  }
+  if (activeRefGain) {
+    try { activeRefGain.disconnect(); } catch (e) {}
+    activeRefGain = null;
+  }
+  document.querySelectorAll(".pitch-ref-btn").forEach(btn => btn.classList.remove("playing"));
+}
+
+// 2. Widget UI Expansion & Collapse
+function expandPitchWidget() {
+  const mini = document.getElementById("pitchWidgetMinimized");
+  const card = document.getElementById("pitchWidgetCard");
+  if (mini) mini.style.display = "none";
+  if (card) {
+    card.style.display = "block";
+    card.classList.add("fade-in");
+  }
+  updatePitchTargetVoice();
+}
+
+function collapsePitchWidget() {
+  const mini = document.getElementById("pitchWidgetMinimized");
+  const card = document.getElementById("pitchWidgetCard");
+  if (card) card.style.display = "none";
+  if (mini) mini.style.display = "inline-flex";
+}
+
+function updatePitchTargetVoice() {
+  const targetSub = document.getElementById("pitchTargetSub");
+  const voicePart = localStorage.getItem("choir_voice") || localStorage.getItem("choir_section") || "Choir";
+  if (targetSub) {
+    const ref = REFERENCE_PITCHES[voicePart];
+    if (ref) {
+      targetSub.innerText = `Target: ${voicePart} (${ref.note})`;
+    } else {
+      targetSub.innerText = `Target: ${voicePart} Voice`;
+    }
+  }
+
+  document.querySelectorAll(".pitch-ref-btn").forEach(btn => {
+    if (btn.getAttribute("data-part") === voicePart) {
+      btn.classList.add("active-part");
+    } else {
+      btn.classList.remove("active-part");
+    }
+  });
+}
+
+// 3. Real-Time Pitch Detection & Autocorrelation
+function togglePitchDetection() {
+  if (isPitchDetecting) {
+    stopPitchDetection();
+  } else {
+    startPitchDetection();
+  }
+}
+
+async function startPitchDetection() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showToast("⚠️ Microphone access is not supported in this browser environment.");
+    return;
+  }
+
+  const audioCtx = getPitchAudioContext();
+  if (!audioCtx) {
+    showToast("⚠️ Web Audio API is not supported on this device.");
+    return;
+  }
+
+  if (audioCtx.state === "suspended") {
+    await audioCtx.resume();
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false
+      }
+    });
+
+    pitchMediaStream = stream;
+    const source = audioCtx.createMediaStreamSource(stream);
+    pitchAnalyserNode = audioCtx.createAnalyser();
+    pitchAnalyserNode.fftSize = 2048;
+
+    source.connect(pitchAnalyserNode);
+    pitchTimeBuffer = new Float32Array(pitchAnalyserNode.fftSize);
+
+    isPitchDetecting = true;
+    updatePitchToggleUI(true);
+
+    showToast("🎙️ Voice Check active — sing into your microphone!");
+
+    pitchAnalysisLoop();
+  } catch (err) {
+    console.error("Microphone capture error:", err);
+    if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+      showToast("🔒 Mic permission denied. Please allow microphone access in settings.");
+    } else {
+      showToast("⚠️ Could not access microphone: " + (err.message || "Error"));
+    }
+    stopPitchDetection();
+  }
+}
+
+function stopPitchDetection() {
+  isPitchDetecting = false;
+
+  if (pitchAnimFrameId) {
+    cancelAnimationFrame(pitchAnimFrameId);
+    pitchAnimFrameId = null;
+  }
+
+  if (pitchMediaStream) {
+    try {
+      pitchMediaStream.getTracks().forEach(track => track.stop());
+    } catch (e) {}
+    pitchMediaStream = null;
+  }
+
+  pitchAnalyserNode = null;
+  pitchTimeBuffer = null;
+
+  updatePitchToggleUI(false);
+  resetPitchDisplay();
+}
+
+function updatePitchToggleUI(active) {
+  const toggleBtn = document.getElementById("pitchMicToggleBtn");
+  const icon = document.getElementById("pitchMicIcon");
+  const text = document.getElementById("pitchMicText");
+  const statusDot = document.getElementById("pitchMiniStatusDot");
+  const miniLabel = document.getElementById("pitchWidgetMiniLabel");
+
+  if (active) {
+    if (toggleBtn) {
+      toggleBtn.classList.add("recording");
+      toggleBtn.title = "Stop Pitch Check";
+    }
+    if (icon) icon.innerText = "⏹️";
+    if (text) text.innerText = "Stop";
+    if (statusDot) statusDot.classList.add("active");
+    if (miniLabel) miniLabel.innerText = "Listening...";
+  } else {
+    if (toggleBtn) {
+      toggleBtn.classList.remove("recording");
+      toggleBtn.title = "Start Pitch Check";
+    }
+    if (icon) icon.innerText = "🎙️";
+    if (text) text.innerText = "Start";
+    if (statusDot) statusDot.classList.remove("active");
+    if (miniLabel) miniLabel.innerText = "Voice Check";
+  }
+}
+
+function resetPitchDisplay() {
+  const card = document.getElementById("pitchWidgetCard");
+  const noteBadge = document.getElementById("pitchNoteBadge");
+  const noteVal = document.getElementById("pitchNoteValue");
+  const hzVal = document.getElementById("pitchHzValue");
+  const centsVal = document.getElementById("pitchCentsReadout");
+  const needle = document.getElementById("centsNeedle");
+  const prompt = document.getElementById("pitchFeedbackPrompt");
+
+  if (card) {
+    card.classList.remove("state-in-tune", "state-near-tune", "state-off-pitch");
+  }
+  if (noteBadge) {
+    noteBadge.classList.remove("in-tune", "off-pitch");
+  }
+  if (noteVal) noteVal.innerText = "--";
+  if (hzVal) hzVal.innerText = "0.0 Hz";
+  if (centsVal) {
+    centsVal.innerText = "-- cents";
+    centsVal.classList.remove("in-tune");
+  }
+  if (needle) needle.style.left = "50%";
+  if (prompt) prompt.innerText = 'Tap "Start" to check your pitch in real time.';
+}
+
+function pitchAnalysisLoop() {
+  if (!isPitchDetecting || !pitchAnalyserNode || !pitchAudioContext) return;
+
+  pitchAnalyserNode.getFloatTimeDomainData(pitchTimeBuffer);
+  const freq = autoCorrelate(pitchTimeBuffer, pitchAudioContext.sampleRate);
+
+  updatePitchUI(freq);
+
+  pitchAnimFrameId = requestAnimationFrame(pitchAnalysisLoop);
+}
+
+// Normalized Autocorrelation algorithm with energy confidence check & parabolic peak refinement
+function autoCorrelate(buf, sampleRate) {
+  const SIZE = buf.length;
+  let sumOfSquares = 0;
+  for (let i = 0; i < SIZE; i++) {
+    const val = buf[i];
+    sumOfSquares += val * val;
+  }
+  const rms = Math.sqrt(sumOfSquares / SIZE);
+  if (rms < 0.015) return -1;
+
+  const minPeriod = Math.floor(sampleRate / 1200);
+  const maxPeriod = Math.floor(sampleRate / 55);
+
+  let bestPeriod = -1;
+  let bestCorrelation = 0;
+
+  for (let period = minPeriod; period <= maxPeriod; period++) {
+    let correlation = 0;
+    for (let i = 0; i < SIZE - period; i++) {
+      correlation += buf[i] * buf[i + period];
+    }
+    if (correlation > bestCorrelation) {
+      bestCorrelation = correlation;
+      bestPeriod = period;
+    }
+  }
+
+  if (bestCorrelation <= 0 || bestPeriod === -1) return -1;
+
+  const confidence = bestCorrelation / sumOfSquares;
+  if (confidence < 0.36) return -1;
+
+  let shift = 0;
+  if (bestPeriod > minPeriod && bestPeriod < maxPeriod) {
+    let prev = 0, next = 0;
+    for (let i = 0; i < SIZE - (bestPeriod - 1); i++) prev += buf[i] * buf[i + bestPeriod - 1];
+    for (let i = 0; i < SIZE - (bestPeriod + 1); i++) next += buf[i] * buf[i + bestPeriod + 1];
+    const a = prev + next - 2 * bestCorrelation;
+    const b = (next - prev) / 2;
+    if (Math.abs(a) > 1e-5) {
+      shift = -b / a;
+    }
+  }
+
+  const exactPeriod = bestPeriod + shift;
+  return sampleRate / exactPeriod;
+}
+
+// Frequency to Note mapping, cents gauge (-50 to +50), and dynamic feedback colors
+function updatePitchUI(freq) {
+  const card = document.getElementById("pitchWidgetCard");
+  const noteBadge = document.getElementById("pitchNoteBadge");
+  const noteVal = document.getElementById("pitchNoteValue");
+  const hzVal = document.getElementById("pitchHzValue");
+  const centsVal = document.getElementById("pitchCentsReadout");
+  const needle = document.getElementById("centsNeedle");
+  const prompt = document.getElementById("pitchFeedbackPrompt");
+
+  if (freq === -1) {
+    if (card) {
+      card.classList.remove("state-in-tune", "state-near-tune", "state-off-pitch");
+    }
+    if (noteBadge) {
+      noteBadge.classList.remove("in-tune", "off-pitch");
+    }
+    if (centsVal) centsVal.classList.remove("in-tune");
+    if (prompt && isPitchDetecting) {
+      const voicePart = localStorage.getItem("choir_voice") || "your part";
+      prompt.innerText = `Singing your ${voicePart} part? Watching pitch...`;
+    }
+    return;
+  }
+
+  const n = 12 * (Math.log(freq / 440) / Math.LN2) + 69;
+  const roundedNote = Math.round(n);
+  const cents = Math.round((n - roundedNote) * 100);
+
+  const noteName = MUSICAL_NOTE_NAMES[((roundedNote % 12) + 12) % 12];
+  const octave = Math.floor(roundedNote / 12) - 1;
+  const fullNote = `${noteName}${octave}`;
+
+  if (noteVal) noteVal.innerText = fullNote;
+  if (hzVal) hzVal.innerText = `${freq.toFixed(1)} Hz`;
+
+  const clampedCents = Math.max(-50, Math.min(50, cents));
+  const needlePct = clampedCents + 50;
+  if (needle) needle.style.left = `${needlePct}%`;
+
+  const absCents = Math.abs(cents);
+  const centsSign = cents > 0 ? "+" : "";
+
+  if (centsVal) {
+    centsVal.innerText = `${centsSign}${cents} cents`;
+  }
+
+  if (card && noteBadge && centsVal && prompt) {
+    card.classList.remove("state-in-tune", "state-near-tune", "state-off-pitch");
+    noteBadge.classList.remove("in-tune", "off-pitch");
+    centsVal.classList.remove("in-tune");
+
+    if (absCents <= 10) {
+      card.classList.add("state-in-tune");
+      noteBadge.classList.add("in-tune");
+      centsVal.classList.add("in-tune");
+      prompt.innerText = `Spot on! In tune (${fullNote}) ✨`;
+    } else if (absCents <= 20) {
+      card.classList.add("state-near-tune");
+      const dir = cents < 0 ? "flat" : "sharp";
+      prompt.innerText = `Close! Slightly ${dir} (${centsSign}${cents}¢)`;
+    } else {
+      card.classList.add("state-off-pitch");
+      noteBadge.classList.add("off-pitch");
+      const dir = cents < 0 ? "Flat" : "Sharp";
+      prompt.innerText = `${dir} by ${absCents}¢ — guide voice toward center`;
+    }
+  }
+}
+
+// Mobile WebView lifecycle: suspend AudioContext on hidden, resume on active
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    if (pitchAudioContext && pitchAudioContext.state === "running") {
+      pitchAudioContext.suspend();
+    }
+  } else {
+    if (isPitchDetecting && pitchAudioContext && pitchAudioContext.state === "suspended") {
+      pitchAudioContext.resume();
+    }
+  }
+});
 
 // --- IN-APP RESOURCE VIEWER MODAL ---
 function openResourceModal(title, url, type) {
