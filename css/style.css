@@ -1564,14 +1564,18 @@ input[type="text"]::placeholder {
 /* Application Page Footer */
 .app-footer {
   text-align: center;
-  padding: 20px 12px 20px;
+  padding: 20px 16px 20px;
   margin-top: 14px;
   color: var(--text-muted);
   font-size: 0.82rem;
   font-weight: 500;
   border-top: 1px solid var(--border);
   letter-spacing: 0.01em;
-  /* Extra bottom padding keeps footer above the fixed pitch overlay on mobile */
+  /* Ensure footer always renders above background overlays/watermarks */
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  /* Extra bottom padding keeps footer clear of the fixed pitch overlay on mobile */
   padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
 }
 
