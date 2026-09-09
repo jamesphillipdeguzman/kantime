@@ -2425,6 +2425,122 @@ function resetUserSettingsToDefault() {
   showToast("Reset to Choir Defaults! ✨");
 }
 
+// --- MULTILINGUAL TUTORIAL LOCALIZATION ---
+const TUTORIAL_I18N = {
+  en: {
+    guide_title: "Choir Member Quick Guide",
+    guide_subtitle: "Master your rehearsal routine, background tracking, and choir standings in 5 simple steps.",
+    step_label_1: "Step 1",
+    step1_title: "Set Up Profile & Avatar",
+    step1_desc: "Choose your voice part, name, and illustrated avatar.",
+    step_label_2: "Step 2",
+    step2_title: "Configure Preferences",
+    step2_desc: "Adjust timer length from 5\u201360 mins via settings.",
+    step_label_3: "Step 3",
+    step3_title: "Sing with Sheet & Audio",
+    step3_desc: "Tap Interactive Sheet & Audio; timer continues in the background.",
+    step_label_4: "Step 4",
+    step4_title: "Voice Pitch Check",
+    step4_desc: "Use the mic tool to test starting pitch and lock in your target note.",
+    step_label_5: "Step 5",
+    step5_title: "Log & Leaderboard",
+    step5_desc: "Complete the countdown to record practice minutes for your section."
+  },
+  hil: {
+    guide_title: "Giya para sa mga Miyembro sang Koro",
+    guide_subtitle: "Aramon ang imo rutina sang praktis, background timer, kag choir standings sa 5 ka mga hakop.",
+    step_label_1: "Hakop 1",
+    step1_title: "I-set ang Profile kag Avatar",
+    step1_desc: "Pilia ang imo tingog, ngalan, kag avatar sa \u2018Switch voice / change name\u2019.",
+    step_label_2: "Hakop 2",
+    step2_title: "Huwaron ang Oras sang Praktis",
+    step2_desc: "I-adjust ang timer halin 5 tubtob 60 minutos sa Preferences \u2699\ufe0f.",
+    step_label_3: "Hakop 3",
+    step3_title: "Magpraktis Upod ang Piesa kag Audio",
+    step3_desc: "Pinduta ang Interactive Sheet & Audio; padayon nga magadalagan ang timer samtang nagakanta ka.",
+    step_label_4: "Hakop 4",
+    step4_title: "Pag-check sang Tono sang Tingog",
+    step4_desc: "Gamita ang mic para ma-test ang starting note kag ma-lock ang husto nga pitch.",
+    step_label_5: "Hakop 5",
+    step5_title: "Pag-log kag Leaderboard",
+    step5_desc: "Tapusa ang countdown para awtomatiko nga marekord ang imo minuto sa Section Standings."
+  },
+  tl: {
+    guide_title: "Gabay para sa mga Miyembro ng Koro",
+    guide_subtitle: "Linangin ang inyong rutina sa ensayo, background timer, at choir standings sa 5 simpleng hakbang.",
+    step_label_1: "Hakbang 1",
+    step1_title: "Ayusin ang Profile at Avatar",
+    step1_desc: "Piliin ang boses, pangalan, at avatar sa \u2018Switch voice / change name\u2019.",
+    step_label_2: "Hakbang 2",
+    step2_title: "I-set ang Practice Preferences",
+    step2_desc: "I-adjust ang haba ng timer mula 5 hanggang 60 minuto sa Preferences \u2699\ufe0f.",
+    step_label_3: "Hakbang 3",
+    step3_title: "Mag-ensayo Gamit ang Pyesa at Audio",
+    step3_desc: "Pindutin ang Interactive Sheet & Audio; tuloy-tuloy ang timer sa background habang kumakanta.",
+    step_label_4: "Hakbang 4",
+    step4_title: "Pagsusuri ng Pitch ng Boses",
+    step4_desc: "Gamitin ang mikropono upang subukan ang starting note at makuha ang tamang tono.",
+    step_label_5: "Hakbang 5",
+    step5_title: "Pag-save at Leaderboard",
+    step5_desc: "Tapusin ang buong countdown upang awtomatikong maitala ang oras sa Section Standings."
+  },
+  ceb: {
+    guide_title: "Giya alang sa mga Miyembro sa Koro",
+    guide_subtitle: "Hukma ang imong rutina sa praktis, background timer, ug choir standings sa 5 ka yano nga lakang.",
+    step_label_1: "Lakang 1",
+    step1_title: "I-set ang Profile ug Avatar",
+    step1_desc: "Pilia ang imong boses, ngalan, ug avatar sa \u2018Switch voice / change name\u2019.",
+    step_label_2: "Lakang 2",
+    step2_title: "Usba ang Oras sa Praktis",
+    step2_desc: "I-adjust ang gitas-on sa timer gikan 5 hangtod 60 minutos sa Preferences \u2699\ufe0f.",
+    step_label_3: "Lakang 3",
+    step3_title: "Pagpraktis Uban sa Pyesa ug Audio",
+    step3_desc: "Pindota ang Interactive Sheet & Audio; magpadayon ang timer sa luyo samtang nagkanta ka.",
+    step_label_4: "Lakang 4",
+    step4_title: "Pagsusi sa Pitch sa Tingog",
+    step4_desc: "Gamita ang mic aron masulayan ang starting note ug ma-lock ang insaktong tono.",
+    step_label_5: "Lakang 5",
+    step5_title: "Pag-save ug Leaderboard",
+    step5_desc: "Humanon ang countdown aron awtomatikong marekord ang imong oras sa Section Standings."
+  }
+};
+
+let currentTutorialLang = "en";
+
+function initTutorialLang() {
+  const saved = localStorage.getItem("kantime_lang") || "en";
+  currentTutorialLang = TUTORIAL_I18N[saved] ? saved : "en";
+  applyTutorialLang(currentTutorialLang);
+}
+
+function setTutorialLang(lang) {
+  if (!TUTORIAL_I18N[lang]) return;
+  currentTutorialLang = lang;
+  localStorage.setItem("kantime_lang", lang);
+  applyTutorialLang(lang);
+}
+
+function applyTutorialLang(lang) {
+  const strings = TUTORIAL_I18N[lang];
+  if (!strings) return;
+
+  // Swap all data-i18n elements inside the tutorial tab
+  const panel = document.getElementById("tabPanelTutorial");
+  if (panel) {
+    panel.querySelectorAll("[data-i18n]").forEach(function (el) {
+      const key = el.getAttribute("data-i18n");
+      if (strings[key] !== undefined) {
+        el.textContent = strings[key];
+      }
+    });
+  }
+
+  // Update pill active state
+  document.querySelectorAll(".lang-pill").forEach(function (btn) {
+    btn.classList.toggle("active", btn.getAttribute("data-lang") === lang);
+  });
+}
+
 // --- EXPORT TUTORIAL GUIDE TO PDF ---
 function exportTutorialToPdf() {
   showToast("Opening printable PDF guide... 📄");
@@ -2441,6 +2557,10 @@ function exportTutorialToPdf() {
   const memberName = localStorage.getItem("choir_name") || "";
   const memberVoice = localStorage.getItem("choir_voice") || localStorage.getItem("choir_section") || "";
   const singerInfo = memberName ? `${escapeHtml(memberName)} (${escapeHtml(memberVoice || 'Choir Singer')})` : "";
+
+  // Use currently selected language for PDF content
+  const lang = currentTutorialLang || "en";
+  const s = TUTORIAL_I18N[lang] || TUTORIAL_I18N.en;
 
   const printHtml = `<!DOCTYPE html>
 <html lang="en">
@@ -2593,51 +2713,51 @@ function exportTutorialToPdf() {
     <div class="steps-container">
       <div class="step-item">
         <div class="step-header">
-          <span class="step-badge badge-1">Step 1</span>
-          <span class="step-title">Set Up Profile &amp; Avatar</span>
+          <span class="step-badge badge-1">${escapeHtml(s.step_label_1)}</span>
+          <span class="step-title">${escapeHtml(s.step1_title)}</span>
         </div>
         <div class="step-desc">
-          Select your choir voice section (<strong>Soprano, Alto, Tenor, Bass, or Primary</strong>), enter your full name, and pick an illustrated choir portrait to represent you on the community leaderboards.
+          ${escapeHtml(s.step1_desc)}
         </div>
       </div>
 
       <div class="step-item">
         <div class="step-header">
-          <span class="step-badge badge-2">Step 2</span>
-          <span class="step-title">Configure Preferences</span>
+          <span class="step-badge badge-2">${escapeHtml(s.step_label_2)}</span>
+          <span class="step-title">${escapeHtml(s.step2_title)}</span>
         </div>
         <div class="step-desc">
-          Adjust your rehearsal timer block anywhere from <strong>5 to 60 minutes</strong> (15-minute default) and personalize your target Stake Conference or performance date in Practice Preferences.
+          ${escapeHtml(s.step2_desc)}
         </div>
       </div>
 
       <div class="step-item">
         <div class="step-header">
-          <span class="step-badge badge-3">Step 3</span>
-          <span class="step-title">Practice &amp; Background Timer</span>
+          <span class="step-badge badge-3">${escapeHtml(s.step_label_3)}</span>
+          <span class="step-title">${escapeHtml(s.step3_title)}</span>
         </div>
         <div class="step-desc">
-          Choose your rehearsal anthem and tap <strong>Start Session</strong>. Click <em>"🎼 Interactive Sheet &amp; Audio"</em> or <em>"▶️ Watch Video"</em>—the countdown timer continues accurately in the background while you sing along!
+          ${escapeHtml(s.step3_desc)}
         </div>
       </div>
 
       <div class="step-item">
         <div class="step-header">
-          <span class="step-badge badge-4">Step 4</span>
-          <span class="step-title">Inactivity Auto-Pause</span>
+          <span class="step-badge badge-4">${escapeHtml(s.step_label_4)}</span>
+          <span class="step-title">${escapeHtml(s.step4_title)}</span>
         </div>
         <div class="step-desc">
-          KanTime features automatic idle detection. If no interaction (mouse, touch, or keys) occurs for <strong>5 minutes</strong> during an active session, the timer pauses with an <em>"Are you still practicing?"</em> modal to keep recorded time honest.
+          ${escapeHtml(s.step4_desc)}
         </div>
       </div>
 
       <div class="step-item">
         <div class="step-header">
-          <span class="step-badge badge-5">Step 5</span>
-          <span class="step-title">Leaderboards &amp; Standings</span>
+          <span class="step-badge badge-5">${escapeHtml(s.step_label_5)}</span>
+          <span class="step-title">${escapeHtml(s.step5_title)}</span>
         </div>
         <div class="step-desc">
-          When the countdown reaches 00:00, your rehearsal minutes are submitted automatically to the Stake Choir Sheet, instantly updating the <strong>Top 10 Dedicated Singers</strong> and the <strong>Section Standings</strong>.
+          ${escapeHtml(s.step5_desc)}
         </div>
       </div>
     </div>
@@ -2686,4 +2806,5 @@ window.addEventListener("DOMContentLoaded", function () {
   populateSongSelectDropdown();
   loadProfile();
   restoreTimerState();
+  initTutorialLang();
 });

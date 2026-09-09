@@ -416,58 +416,67 @@
         <div id="tabPanelTutorial" class="settings-tab-panel tab-content" role="tabpanel" style="display: none;">
           <div class="tutorial-guide-intro">
             <div class="tutorial-intro-left">
-              <h4>Choir Member Quick Guide</h4>
-              <p>Master your rehearsal routine, background tracking, and choir standings in 5 simple steps.</p>
+              <h4 data-i18n="guide_title">Choir Member Quick Guide</h4>
+              <p data-i18n="guide_subtitle">Master your rehearsal routine, background tracking, and choir standings in 5 simple steps.</p>
             </div>
-            <button type="button" class="btn btn-outline btn-export-pdf" onclick="exportTutorialToPdf()" title="Export or Print this guide as PDF">
-              📄 Export to PDF
-            </button>
+            <div class="tutorial-header-actions">
+              <!-- Language Switcher -->
+              <div class="lang-switcher" role="group" aria-label="Language selector">
+                <button type="button" class="lang-pill active" id="langBtn-en" data-lang="en" onclick="setTutorialLang('en')" title="English">EN</button>
+                <button type="button" class="lang-pill" id="langBtn-hil" data-lang="hil" onclick="setTutorialLang('hil')" title="Hiligaynon">HIL</button>
+                <button type="button" class="lang-pill" id="langBtn-tl" data-lang="tl" onclick="setTutorialLang('tl')" title="Tagalog">TL</button>
+                <button type="button" class="lang-pill" id="langBtn-ceb" data-lang="ceb" onclick="setTutorialLang('ceb')" title="Cebuano">CEB</button>
+              </div>
+              <button type="button" class="btn btn-outline btn-export-pdf" onclick="exportTutorialToPdf()" title="Export or Print this guide as PDF">
+                📄 Export to PDF
+              </button>
+            </div>
           </div>
 
           <div class="tutorial-steps-list">
             <!-- Step 1 -->
             <div class="tutorial-step-card">
               <div class="step-header">
-                <span class="step-badge step-badge-1">Step 1</span>
-                <h5>Set Up Profile &amp; Avatar</h5>
+                <span class="step-badge step-badge-1" data-i18n="step_label_1">Step 1</span>
+                <h5 data-i18n="step1_title">Set Up Profile &amp; Avatar</h5>
               </div>
-              <p>Select your choir voice section (<strong>Soprano, Alto, Tenor, Bass, or Primary</strong>), enter your name, and choose an illustrated choir portrait to represent you on the community boards.</p>
+              <p data-i18n="step1_desc">Choose your voice part, name, and illustrated avatar.</p>
             </div>
 
             <!-- Step 2 -->
             <div class="tutorial-step-card">
               <div class="step-header">
-                <span class="step-badge step-badge-2">Step 2</span>
-                <h5>Configure Preferences</h5>
+                <span class="step-badge step-badge-2" data-i18n="step_label_2">Step 2</span>
+                <h5 data-i18n="step2_title">Configure Preferences</h5>
               </div>
-              <p>Adjust your rehearsal timer block anywhere from <strong>5 to 60 minutes</strong> (15 min default) and personalize your target Stake Conference or event date to stay focused.</p>
+              <p data-i18n="step2_desc">Adjust timer length from 5–60 mins via settings.</p>
             </div>
 
             <!-- Step 3 -->
             <div class="tutorial-step-card">
               <div class="step-header">
-                <span class="step-badge step-badge-3">Step 3</span>
-                <h5>Practice &amp; Background Timer</h5>
+                <span class="step-badge step-badge-3" data-i18n="step_label_3">Step 3</span>
+                <h5 data-i18n="step3_title">Sing with Sheet &amp; Audio</h5>
               </div>
-              <p>Choose your anthem from the dropdown and tap <strong>Start Session</strong>. Click <em>"🎼 Interactive Sheet &amp; Audio"</em> or <em>"▶️ Watch Video"</em>—the countdown timer continues accurately in the background while you sing along!</p>
+              <p data-i18n="step3_desc">Tap Interactive Sheet &amp; Audio; timer continues in the background.</p>
             </div>
 
             <!-- Step 4 -->
             <div class="tutorial-step-card">
               <div class="step-header">
-                <span class="step-badge step-badge-4">Step 4</span>
-                <h5>Inactivity Auto-Pause</h5>
+                <span class="step-badge step-badge-4" data-i18n="step_label_4">Step 4</span>
+                <h5 data-i18n="step4_title">Voice Pitch Check</h5>
               </div>
-              <p>KanTime features automatic idle detection. If no interaction (mouse, touch, or keys) occurs for <strong>5 minutes</strong> during an active session, the timer pauses with an <em>"Are you still practicing?"</em> modal to keep recorded time honest.</p>
+              <p data-i18n="step4_desc">Use the mic tool to test starting pitch and lock in your target note.</p>
             </div>
 
             <!-- Step 5 -->
             <div class="tutorial-step-card">
               <div class="step-header">
-                <span class="step-badge step-badge-5">Step 5</span>
-                <h5>Leaderboards &amp; Standings</h5>
+                <span class="step-badge step-badge-5" data-i18n="step_label_5">Step 5</span>
+                <h5 data-i18n="step5_title">Log &amp; Leaderboard</h5>
               </div>
-              <p>When the countdown reaches 00:00, your rehearsal minutes are submitted to the Stake Choir Sheet, instantly updating the <strong>Top 10 Dedicated Singers</strong> and the <strong>Section Standings</strong>.</p>
+              <p data-i18n="step5_desc">Complete the countdown to record practice minutes for your section.</p>
             </div>
           </div>
         </div>
