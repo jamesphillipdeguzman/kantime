@@ -24,6 +24,7 @@ Expanded the gear icon (⚙️) modal from 2 tabs to 3 clearly demarcated naviga
     - **Step 3**: Practice & Background Timer
     - **Step 4**: Inactivity Auto-Pause (5-min idle detection)
     - **Step 5**: Leaderboards & Standings
+  - **📄 Export to PDF**: Direct print/export generator producing a publication-quality choir member handout formatted for letter/A4 printing or "Save as PDF" with zero external dependencies.
 
 ### 2. Streamlined "Switch Voice / Change Name" Workflow (`script.js`)
 - Clicking **"✏️ Switch Voice / Change Name"** in the top "SIGNED IN AS" header card now immediately opens the Settings modal on the **Profile & Voice** tab (`openSettingsModal('profile')`).

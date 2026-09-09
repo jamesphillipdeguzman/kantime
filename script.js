@@ -1568,8 +1568,262 @@ function resetUserSettingsToDefault() {
   showToast("Reset to Choir Defaults! ✨");
 }
 
+// --- EXPORT TUTORIAL GUIDE TO PDF ---
+function exportTutorialToPdf() {
+  showToast("Opening printable PDF guide... 📄");
+
+  const settings = getUserSettings();
+  const targetDate = settings.targetDate || "Stake Choir Prep • Oct 24–25";
+  const year = new Date().getFullYear();
+  const dateStr = new Date().toLocaleDateString(undefined, { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  });
+
+  const memberName = localStorage.getItem("choir_name") || "";
+  const memberVoice = localStorage.getItem("choir_voice") || localStorage.getItem("choir_section") || "";
+  const singerInfo = memberName ? `${escapeHtml(memberName)} (${escapeHtml(memberVoice || 'Choir Singer')})` : "";
+
+  const printHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>KanTime - Choir Member Practice Guide</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 12mm 15mm;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: #0f172a;
+      background: #ffffff;
+      line-height: 1.45;
+      padding: 8px 10px;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .guide-doc {
+      max-width: 780px;
+      margin: 0 auto;
+    }
+    .guide-header {
+      border-bottom: 2.5px solid #1d4ed8;
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .guide-header-title h1 {
+      font-size: 19pt;
+      font-weight: 850;
+      color: #1e3a8a;
+      letter-spacing: -0.5px;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .guide-header-title p {
+      font-size: 10pt;
+      color: #475569;
+      font-weight: 600;
+    }
+    .guide-header-meta {
+      text-align: right;
+      font-size: 8.5pt;
+      color: #64748b;
+      line-height: 1.35;
+    }
+    .guide-header-meta strong {
+      color: #1e293b;
+    }
+    .guide-intro {
+      background: #f1f5f9;
+      border-left: 4px solid #1d4ed8;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 9pt;
+      color: #334155;
+      margin-bottom: 14px;
+      line-height: 1.4;
+    }
+    .steps-container {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+    .step-item {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 10px 13px;
+      background: #f8fafc;
+      page-break-inside: avoid;
+    }
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 4px;
+    }
+    .step-badge {
+      font-size: 7.5pt;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      padding: 2px 7px;
+      border-radius: 999px;
+    }
+    .badge-1 { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .badge-2 { background: #f0fdfa; color: #0f766e; border: 1px solid #99f6e4; }
+    .badge-3 { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+    .badge-4 { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+    .badge-5 { background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe; }
+    .step-title {
+      font-size: 10.5pt;
+      font-weight: 750;
+      color: #0f172a;
+    }
+    .step-desc {
+      font-size: 9pt;
+      color: #475569;
+      line-height: 1.4;
+    }
+    .step-desc strong {
+      color: #0f172a;
+    }
+    .step-desc em {
+      font-style: normal;
+      color: #1d4ed8;
+      font-weight: 600;
+    }
+    .guide-footer {
+      margin-top: 18px;
+      padding-top: 10px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      font-size: 8.5pt;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <div class="guide-doc">
+    <div class="guide-header">
+      <div class="guide-header-title">
+        <h1>🎵 KanTime | Choir Member Practice Guide</h1>
+        <p>${escapeHtml(targetDate)}</p>
+      </div>
+      <div class="guide-header-meta">
+        <div>Stake Choir Practice Hub</div>
+        ${singerInfo ? `<div>Member: <strong>${singerInfo}</strong></div>` : ''}
+        <div>Date: ${dateStr}</div>
+      </div>
+    </div>
+
+    <div class="guide-intro">
+      Welcome to KanTime! Follow this 5-step guide to personalize your rehearsal routine, practice parts with dynamic audio/sheet resources, and track verified minutes for your choir section.
+    </div>
+
+    <div class="steps-container">
+      <div class="step-item">
+        <div class="step-header">
+          <span class="step-badge badge-1">Step 1</span>
+          <span class="step-title">Set Up Profile &amp; Avatar</span>
+        </div>
+        <div class="step-desc">
+          Select your choir voice section (<strong>Soprano, Alto, Tenor, Bass, or Primary</strong>), enter your full name, and pick an illustrated choir portrait to represent you on the community leaderboards.
+        </div>
+      </div>
+
+      <div class="step-item">
+        <div class="step-header">
+          <span class="step-badge badge-2">Step 2</span>
+          <span class="step-title">Configure Preferences</span>
+        </div>
+        <div class="step-desc">
+          Adjust your rehearsal timer block anywhere from <strong>5 to 60 minutes</strong> (15-minute default) and personalize your target Stake Conference or performance date in Practice Preferences.
+        </div>
+      </div>
+
+      <div class="step-item">
+        <div class="step-header">
+          <span class="step-badge badge-3">Step 3</span>
+          <span class="step-title">Practice &amp; Background Timer</span>
+        </div>
+        <div class="step-desc">
+          Choose your rehearsal anthem and tap <strong>Start Session</strong>. Click <em>"🎼 Interactive Sheet &amp; Audio"</em> or <em>"▶️ Watch Video"</em>—the countdown timer continues accurately in the background while you sing along!
+        </div>
+      </div>
+
+      <div class="step-item">
+        <div class="step-header">
+          <span class="step-badge badge-4">Step 4</span>
+          <span class="step-title">Inactivity Auto-Pause</span>
+        </div>
+        <div class="step-desc">
+          KanTime features automatic idle detection. If no interaction (mouse, touch, or keys) occurs for <strong>5 minutes</strong> during an active session, the timer pauses with an <em>"Are you still practicing?"</em> modal to keep recorded time honest.
+        </div>
+      </div>
+
+      <div class="step-item">
+        <div class="step-header">
+          <span class="step-badge badge-5">Step 5</span>
+          <span class="step-title">Leaderboards &amp; Standings</span>
+        </div>
+        <div class="step-desc">
+          When the countdown reaches 00:00, your rehearsal minutes are submitted automatically to the Stake Choir Sheet, instantly updating the <strong>Top 10 Dedicated Singers</strong> and the <strong>Section Standings</strong>.
+        </div>
+      </div>
+    </div>
+
+    <div class="guide-footer">
+      <div>&copy; ${year} James Phillip De Guzman • Stake Choir Practice Hub</div>
+      <div>Official KanTime Member Handout</div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "0";
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentWindow.document;
+  doc.open();
+  doc.write(printHtml);
+  doc.close();
+
+  setTimeout(() => {
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
+    setTimeout(() => {
+      if (iframe.parentNode) {
+        document.body.removeChild(iframe);
+      }
+    }, 1500);
+  }, 350);
+}
+
 // Initial load
 window.addEventListener("DOMContentLoaded", function () {
+  const footerYear = document.getElementById("footerYear");
+  if (footerYear) {
+    footerYear.innerText = new Date().getFullYear();
+  }
   applyHeaderTargetDate();
   applyTimerDuration(getUserSettings().timerMinutes, false);
   populateSongSelectDropdown();

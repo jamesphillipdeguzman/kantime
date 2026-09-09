@@ -133,6 +133,11 @@
 
     </div>
 
+    <!-- Page Footer -->
+    <footer class="app-footer">
+      <p>&copy; <span id="footerYear"></span> James Phillip De Guzman</p>
+    </footer>
+
   </div>
 
   <div id="toast">Saved!</div>
@@ -292,8 +297,13 @@
         <!-- Tab 3: Tutorial & Guide -->
         <div id="tabPanelTutorial" class="settings-tab-panel" role="tabpanel" style="display: none;">
           <div class="tutorial-guide-intro">
-            <h4>Choir Member Quick Guide</h4>
-            <p>Master your rehearsal routine, background tracking, and choir standings in 5 simple steps.</p>
+            <div class="tutorial-intro-left">
+              <h4>Choir Member Quick Guide</h4>
+              <p>Master your rehearsal routine, background tracking, and choir standings in 5 simple steps.</p>
+            </div>
+            <button type="button" class="btn btn-outline btn-export-pdf" onclick="exportTutorialToPdf()" title="Export or Print this guide as PDF">
+              📄 Export to PDF
+            </button>
           </div>
 
           <div class="tutorial-steps-list">
