@@ -1,0 +1,51 @@
+# Walkthrough: Lightweight In-Browser Real-Time Voice Pitch Detection & Reference Tones
+
+We have implemented **Approach 1**: a lightweight, native Web Audio API pitch detector with autocorrelation, reference pitch pipe tones, and an interactive visual feedback overlay component.
+
+---
+
+## 1. Features Implemented
+
+### 🎤 Native Web Audio Pitch Detection (Pure JavaScript)
+- **Autocorrelation Algorithm**: Evaluates vocal audio in real time using an `AnalyserNode` with normalized autocorrelation, root-mean-square (RMS) noise gating, and parabolic peak interpolation for frequency accuracy.
+- **Musical Note & Cents Deviation Mapping**: Converts raw frequency ($Hz$) to standard scientific pitch notation (e.g., $A3$, $C5$, $E3$) using $12 \times \log_2(f / 440) + 69$ and calculates precise cents deviation ($-50$ to $+50$ cents, with $0$ cents representing perfect pitch).
+- **Graceful Permissions & Mobile WebView Handling**:
+  - Automatically handles user approval and permission denials (`NotAllowedError`), alerting the user with actionable notifications.
+  - Monitors `visibilitychange` to suspend `AudioContext` when the browser tab is minimized or the mobile phone is locked, resuming immediately when active to preserve battery.
+
+### 🎵 Common Starting Reference Pitch Pipe (Oscillators)
+- Dedicated reference tone generator using sine wave oscillators with a smooth linear ramp envelope to avoid audio clicks:
+  - **Soprano (S)**: $C5$ (523.25 Hz)
+  - **Alto (A)**: $A3$ (220.00 Hz)
+  - **Tenor (T)**: $E3$ (164.81 Hz)
+  - **Bass (B)**: $C3$ (130.81 Hz)
+  - **Primary**: $D4$ (293.66 Hz)
+
+### 📊 Persistent Visual Feedback Overlay Component
+- **Minimized Floating Pill**: A non-intrusive bottom-left badge (`🎤 Voice Check`) with live pulsing status indicator when active.
+- **Expanded Pitch Card**:
+  - **Circular Note Badge**: Shows detected pitch and octave (e.g., $E3$, $C5$) with dynamic green/red status rings.
+  - **Hz Readout & Cents Deviation**: Real-time frequency display (e.g., `164.8 Hz`) and signed cents offset (e.g., `+4 cents`).
+  - **Horizontal Cents Gauge**: Smooth needle indicator with flat/sharp zones and a green target zone ($\pm 10$ cents).
+  - **Dynamic Background Colors**:
+    - **Inactive / Neutral**: Transparent / clean glassmorphic card.
+    - **In Tune ($\pm 10$ cents)**: Soft green background `rgba(34, 197, 94, 0.12)`.
+    - **Near Tune ($\pm 11$ to $20$ cents)**: Soft amber background `rgba(245, 158, 11, 0.10)`.
+    - **Significant Deviation ($> 20$ cents)**: Soft red background `rgba(239, 68, 68, 0.10)` without obscuring text.
+
+---
+
+## 2. Visual Verification
+
+The implementation was tested on a mobile viewport ($390 \times 844$) across all interaction states:
+
+### 1. Expanded Pitch Checker Card
+![Pitch Widget Expanded](file:///C:/Users/PC/.gemini/antigravity-ide/brain/66b94934-a191-4d2a-872b-7abdd5d53c20/pitch_widget_expanded_1788930482746.png)
+
+### 2. In-Tune Visual State ($\pm 10$ cents)
+Translucent green background `rgba(34, 197, 94, 0.12)`, center needle alignment, and in-tune badge confirmation:
+![In Tune State](file:///C:/Users/PC/.gemini/antigravity-ide/brain/66b94934-a191-4d2a-872b-7abdd5d53c20/pitch_in_tune_state_1788930499059.png)
+
+### 3. Off-Pitch / Deviation State ($> 20$ cents)
+Translucent red background `rgba(239, 68, 68, 0.10)`, flat/sharp indicator offset, and guiding feedback prompt:
+![Off Pitch State](file:///C:/Users/PC/.gemini/antigravity-ide/brain/66b94934-a191-4d2a-872b-7abdd5d53c20/pitch_off_pitch_state_1788930505458.png)
