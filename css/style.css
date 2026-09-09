@@ -89,13 +89,20 @@ body::before {
 
 /* Header & Branding */
 header {
-  background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%);
+  position: relative;
+  background-color: #1e3a8a;
+  background-image: 
+    linear-gradient(135deg, rgba(15, 23, 42, 0.76) 0%, rgba(30, 58, 138, 0.80) 50%, rgba(29, 78, 216, 0.74) 100%),
+    url("../images/kantime-bg.jpg");
+  background-position: center 22%;
+  background-size: cover;
+  background-repeat: no-repeat;
   color: #ffffff;
   padding: calc(24px + env(safe-area-inset-top, 0px)) 16px 20px;
   text-align: center;
-  position: relative;
   box-shadow: 0 4px 20px -2px rgba(29, 78, 216, 0.25);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  overflow: hidden;
 }
 
 .header-inner {
@@ -171,15 +178,17 @@ header h1 {
   display: flex;
   align-items: center;
   gap: 6px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 header p {
   font-size: 0.85rem;
-  opacity: 0.92;
+  opacity: 0.95;
   margin-top: 3px;
   font-weight: 500;
   letter-spacing: 0.01em;
   color: #dbeafe;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 /* Layout Container */
