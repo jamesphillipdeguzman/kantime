@@ -108,6 +108,13 @@
         </select>
 
         <div class="timer-display" id="timerDisplay">15:00</div>
+
+        <!-- Encouraging Choir Quote & Milestone Banner -->
+        <div id="encouragementBanner" class="encouragement-banner" style="display: none;">
+          <span class="encouragement-icon" id="encouragementIcon">🎵</span>
+          <span class="encouragement-text" id="encouragementText">"The song of the righteous is a prayer unto Him."</span>
+        </div>
+
         <p id="practiceInstructionSubtext" style="font-size: 0.78rem; text-align: center; color: var(--text-muted); margin-bottom: 12px;">
           Hit Start, practice your parts, and complete the 15-minute countdown to record your session.
         </p>
@@ -185,6 +192,28 @@
     </div>
   </div>
 
+  <!-- Session Completion & Milestone Celebration Modal -->
+  <div id="completionModal" class="modal-backdrop" onclick="closeCompletionModalOnBackdrop(event)" role="dialog" aria-modal="true" aria-labelledby="completionModalTitle">
+    <div class="modal-box completion-modal-box">
+      <div class="completion-content">
+        <div class="completion-badge-wrap">
+          <div class="completion-celebration-icon" id="completionCelebrationIcon">🎉</div>
+        </div>
+        <h3 id="completionModalTitle">Rehearsal Complete!</h3>
+        <p class="completion-duration-badge" id="completionDurationBadge">⭐ 15 Minutes Logged</p>
+        <p class="completion-message" id="completionCelebrationMessage">
+          "Thank you for sharing your time and talent today! Every note lifts the entire choir."
+        </p>
+        <div class="completion-streak-pill" id="completionStreakPill" style="display: none;">
+          🔥 <strong id="completionStreakCount">3 sessions this week</strong> — thank you for your dedication!
+        </div>
+        <div class="completion-actions">
+          <button type="button" class="btn btn-primary" id="completionConfirmBtn" onclick="closeCompletionModal()">Awesome / Continue</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Personal Settings / Preferences / Profile Modal -->
   <div id="settingsModal" class="modal-backdrop" onclick="closeSettingsOnBackdrop(event)" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
     <div class="modal-box settings-modal-box">
@@ -194,7 +223,7 @@
       </div>
 
       <!-- Settings Navigation Tabs (3 Tabs) -->
-      <div class="settings-nav-tabs" role="tablist">
+      <div class="settings-nav-tabs" role="tablist" aria-label="Settings navigation tabs">
         <button type="button" class="settings-tab-btn active" id="tabBtnProfile" role="tab" aria-selected="true" onclick="switchSettingsTab('profile')">👤 Profile &amp; Voice</button>
         <button type="button" class="settings-tab-btn" id="tabBtnPreferences" role="tab" aria-selected="false" onclick="switchSettingsTab('preferences')">⚙️ Preferences &amp; Repertoire</button>
         <button type="button" class="settings-tab-btn" id="tabBtnTutorial" role="tab" aria-selected="false" onclick="switchSettingsTab('tutorial')">📖 Tutorial &amp; Guide</button>
@@ -203,7 +232,7 @@
       <div class="modal-body settings-modal-body">
 
         <!-- Tab 1: Profile & Voice (Switch Voice / Change Name) -->
-        <div id="tabPanelProfile" class="settings-tab-panel active" role="tabpanel">
+        <div id="tabPanelProfile" class="settings-tab-panel tab-content active" role="tabpanel">
           <div class="settings-section">
             <label for="settingMemberName">Full Name</label>
             <input type="text" id="settingMemberName" placeholder="e.g. Juan dela Cruz">
@@ -239,7 +268,7 @@
         </div>
 
         <!-- Tab 2: Preferences & Repertoire -->
-        <div id="tabPanelPreferences" class="settings-tab-panel" role="tabpanel" style="display: none;">
+        <div id="tabPanelPreferences" class="settings-tab-panel tab-content" role="tabpanel" style="display: none;">
           <div class="settings-section">
             <label for="settingTimerDuration">Practice Timer Duration</label>
             <select id="settingTimerDuration" onchange="handleTimerDurationChange(this.value)">
@@ -304,7 +333,7 @@
         </div>
 
         <!-- Tab 3: Tutorial & Guide -->
-        <div id="tabPanelTutorial" class="settings-tab-panel" role="tabpanel" style="display: none;">
+        <div id="tabPanelTutorial" class="settings-tab-panel tab-content" role="tabpanel" style="display: none;">
           <div class="tutorial-guide-intro">
             <div class="tutorial-intro-left">
               <h4>Choir Member Quick Guide</h4>

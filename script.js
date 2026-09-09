@@ -536,6 +536,7 @@ function handleProfileSubmit() {
 
   showToast("Profile updated!");
   loadLeaderboard();
+  initEncouragementBanner();
 
   // Smoothly scroll down to the practice workspace
   const practiceWorkspace = document.getElementById("practiceWorkspace");
@@ -850,12 +851,175 @@ function checkInactivityOnRestore() {
   return false;
 }
 
+// --- ENCOURAGING CHOIR QUOTES & MILESTONE SYSTEM ---
+const CHOIR_ENCOURAGEMENT_QUOTES = [
+  "The song of the righteous is a prayer unto Him.",
+  "Every note you practice lifts the entire choir.",
+  "Tenors & Basses, Sopranos & Altos—united in one voice.",
+  "Consistency turns good music into sacred praise.",
+  "You don't have to be perfect; you just have to sing with heart.",
+  "Thank you for sharing your time and talent today!",
+  "Music has the power to invite the Spirit into every heart.",
+  "Faithful rehearsal brings celestial harmony on Sunday.",
+  "Lift up your voice with strength, be not afraid!",
+  "A prepared choir is a choir that ministers with power."
+];
+
+const HALFWAY_ENCOURAGEMENT_QUOTES = [
+  "Halfway there! Your voice makes a difference!",
+  "50% completed! Sounding wonderful—keep it going!",
+  "Halfway point reached! Your dedication blesses the choir!",
+  "Over the hump! Every minute of practice counts!"
+];
+
+const CELEBRATION_MESSAGES = [
+  "Thank you for sharing your time and talent today! Every note lifts the entire choir.",
+  "Sacred music begins with faithful practice. Thank you for your dedication!",
+  "Your devotion to choir rehearsal strengthens our whole congregation.",
+  "Well done! Beautiful harmony is built one faithful practice session at a time."
+];
+
+let isHalfwayTriggered = false;
+
+function getSessionHistory() {
+  try {
+    const raw = localStorage.getItem("kantime_session_history");
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function recordCompletedSession(mins) {
+  const history = getSessionHistory();
+  const now = Date.now();
+  history.push({ timestamp: now, minutes: mins });
+  if (history.length > 100) history.splice(0, history.length - 100);
+  localStorage.setItem("kantime_session_history", JSON.stringify(history));
+}
+
+function getWeekSessionStats() {
+  const history = getSessionHistory();
+  const oneWeekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+  const weekSessions = history.filter(item => item.timestamp >= oneWeekAgo);
+  return {
+    totalSessions: history.length,
+    weekCount: weekSessions.length
+  };
+}
+
+function showEncouragementBanner(text, icon = "🎵", mode = "normal") {
+  const banner = document.getElementById("encouragementBanner");
+  const iconEl = document.getElementById("encouragementIcon");
+  const textEl = document.getElementById("encouragementText");
+  if (!banner || !textEl) return;
+
+  banner.className = "encouragement-banner" + (mode !== "normal" ? " " + mode : "");
+  if (iconEl) iconEl.innerText = icon;
+  textEl.innerText = `"${text}"`;
+  banner.style.display = "inline-flex";
+}
+
+function hideEncouragementBanner() {
+  const banner = document.getElementById("encouragementBanner");
+  if (banner) banner.style.display = "none";
+}
+
+function initEncouragementBanner() {
+  const banner = document.getElementById("encouragementBanner");
+  if (!banner) return;
+
+  const savedTargetEnd = localStorage.getItem("kantime_target_end");
+  const savedPaused = localStorage.getItem("kantime_paused_remaining");
+  const curMins = getUserSettings().timerMinutes || 15;
+  const totalSecs = curMins * 60;
+
+  if (savedTargetEnd) {
+    const diff = Math.max(0, Math.ceil((Number(savedTargetEnd) - Date.now()) / 1000));
+    if (diff <= totalSecs / 2) {
+      isHalfwayTriggered = true;
+      showEncouragementBanner("Halfway there! Your voice makes a difference!", "✨", "halfway");
+      return;
+    }
+  } else if (savedPaused && Number(savedPaused) < totalSecs) {
+    if (Number(savedPaused) <= totalSecs / 2) {
+      isHalfwayTriggered = true;
+      showEncouragementBanner("Halfway there! Your voice makes a difference!", "✨", "halfway");
+      return;
+    }
+  }
+
+  // Pre-session welcome state: acknowledge streak if member has >= 2 sessions this week
+  const stats = getWeekSessionStats();
+  if (stats && stats.weekCount >= 2) {
+    showEncouragementBanner(`${stats.weekCount} sessions this week—thank you for your dedication!`, "🔥", "normal");
+  } else {
+    const quote = CHOIR_ENCOURAGEMENT_QUOTES[Math.floor(Math.random() * CHOIR_ENCOURAGEMENT_QUOTES.length)];
+    showEncouragementBanner(quote, "🎵", "normal");
+  }
+}
+
+function openCompletionModal(mins, stats) {
+  const modal = document.getElementById("completionModal");
+  if (!modal) {
+    alert(`🎉 Session Complete! You've logged ${mins} minutes of solid practice!`);
+    return;
+  }
+
+  const badge = document.getElementById("completionDurationBadge");
+  if (badge) badge.innerText = `⭐ ${mins} Minutes Logged`;
+
+  const msgEl = document.getElementById("completionCelebrationMessage");
+  if (msgEl) {
+    const praise = CELEBRATION_MESSAGES[Math.floor(Math.random() * CELEBRATION_MESSAGES.length)];
+    msgEl.innerText = `"${praise}"`;
+  }
+
+  const streakPill = document.getElementById("completionStreakPill");
+  const streakCount = document.getElementById("completionStreakCount");
+  if (streakPill && streakCount) {
+    if (stats && stats.weekCount >= 2) {
+      streakCount.innerText = `${stats.weekCount} sessions this week`;
+      streakPill.style.display = "inline-flex";
+    } else {
+      streakPill.style.display = "none";
+    }
+  }
+
+  modal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeCompletionModal() {
+  const modal = document.getElementById("completionModal");
+  if (modal) modal.classList.remove("active");
+  document.body.style.overflow = "";
+}
+
+function closeCompletionModalOnBackdrop(e) {
+  if (e.target.id === "completionModal") {
+    closeCompletionModal();
+  }
+}
+
 function updateTimerTick() {
   if (!targetEndTime) return;
   const now = Date.now();
   const diffMs = targetEndTime - now;
   timeRemaining = Math.max(0, Math.ceil(diffMs / 1000));
   document.getElementById("timerDisplay").innerText = formatTime(timeRemaining);
+
+  const curMins = getUserSettings().timerMinutes || 15;
+  const totalSecs = curMins * 60;
+
+  // Dynamic Trigger: Halfway Mark (50%)
+  if (!isHalfwayTriggered && timeRemaining <= (totalSecs / 2) && timeRemaining > 0) {
+    isHalfwayTriggered = true;
+    localStorage.setItem("kantime_halfway_triggered", "true");
+    const halfwayQuote = HALFWAY_ENCOURAGEMENT_QUOTES[Math.floor(Math.random() * HALFWAY_ENCOURAGEMENT_QUOTES.length)];
+    showEncouragementBanner(halfwayQuote, "✨", "halfway");
+    showToast("✨ Halfway there! Your voice makes a difference! 🎶");
+  }
 
   if (timeRemaining <= 0) {
     completeTimerSession();
@@ -877,19 +1041,33 @@ function completeTimerSession() {
   targetEndTime = null;
   timerDuration = currentDurationMins * 60;
   timeRemaining = timerDuration;
+  isHalfwayTriggered = false;
   localStorage.removeItem("kantime_target_end");
   localStorage.removeItem("kantime_target_song");
   localStorage.removeItem("kantime_paused_remaining");
   localStorage.removeItem("kantime_last_activity");
+  localStorage.removeItem("kantime_halfway_triggered");
 
   document.getElementById("timerDisplay").innerText = formatTime(timeRemaining);
 
   const btn = document.getElementById("timerBtn");
-  btn.innerText = `Start ${currentDurationMins}m Session`;
-  btn.classList.remove("btn-outline");
-  btn.classList.add("btn-primary");
+  if (btn) {
+    btn.innerText = `Start ${currentDurationMins}m Session`;
+    btn.classList.remove("btn-outline");
+    btn.classList.add("btn-primary");
+  }
 
-  alert(`🎉 Session Complete! You've logged ${currentDurationMins} minutes of solid practice!`);
+  // Record completed session in history for consistency tracking
+  recordCompletedSession(currentDurationMins);
+  const stats = getWeekSessionStats();
+
+  // Dynamic Trigger: Session Complete Milestone Banner
+  const celebrationPraise = CELEBRATION_MESSAGES[Math.floor(Math.random() * CELEBRATION_MESSAGES.length)];
+  showEncouragementBanner(celebrationPraise, "🎉", "milestone");
+
+  // Dynamic Trigger: Session Complete Celebration Modal
+  openCompletionModal(currentDurationMins, stats);
+
   submitPracticeSession(currentDurationMins);
 }
 
@@ -950,6 +1128,8 @@ function restoreTimerState() {
       btn.classList.add("btn-primary");
     }
   }
+
+  initEncouragementBanner();
 }
 
 function toggleTimer() {
@@ -984,6 +1164,21 @@ function toggleTimer() {
     btn.innerText = "Pause Session";
     btn.classList.remove("btn-primary");
     btn.classList.add("btn-outline");
+
+    // Dynamic Encouragement Trigger: Session Start
+    const totalSecs = currentDurationMins * 60;
+    if (timeRemaining > (totalSecs / 2)) {
+      isHalfwayTriggered = false;
+      const stats = getWeekSessionStats();
+      if (stats.weekCount >= 3 && Math.random() < 0.35) {
+        showEncouragementBanner(`${stats.weekCount} sessions this week—thank you for your dedication!`, "🔥", "normal");
+      } else {
+        const randomQuote = CHOIR_ENCOURAGEMENT_QUOTES[Math.floor(Math.random() * CHOIR_ENCOURAGEMENT_QUOTES.length)];
+        showEncouragementBanner(randomQuote, "🎵", "normal");
+      }
+    } else {
+      showEncouragementBanner("Halfway there! Your voice makes a difference!", "✨", "halfway");
+    }
 
     updateTimerTick();
     timerInterval = setInterval(updateTimerTick, 500);
@@ -1291,6 +1486,9 @@ function switchSettingsTab(tabName) {
       if (isCurrent) {
         btn.classList.add("active");
         btn.setAttribute("aria-selected", "true");
+        try {
+          btn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+        } catch (e) {}
       } else {
         btn.classList.remove("active");
         btn.setAttribute("aria-selected", "false");

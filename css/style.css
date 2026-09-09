@@ -415,8 +415,64 @@ input[type="text"]::placeholder {
   box-shadow: inset 0 2px 4px rgba(29, 78, 216, 0.04), 0 2px 8px rgba(29, 78, 216, 0.08);
   width: 100%;
   max-width: 280px;
-  margin: 8px auto 12px;
+  margin: 8px auto 10px;
   transition: all 0.25s ease;
+}
+
+/* Encouraging Choir Quote & Milestone Banner */
+.encouragement-banner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #f0fdf4;
+  border: 1px solid #dcfce7;
+  color: #166534;
+  padding: 7px 14px;
+  border-radius: 20px;
+  font-size: 0.79rem;
+  font-weight: 500;
+  max-width: 100%;
+  margin: 0 auto 10px;
+  text-align: center;
+  line-height: 1.35;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.08);
+  animation: bannerFadeIn 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.encouragement-banner .encouragement-text {
+  font-style: italic;
+}
+
+.encouragement-banner.halfway {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1e40af;
+  box-shadow: 0 2px 6px rgba(29, 78, 216, 0.12);
+}
+
+.encouragement-banner.milestone {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.12);
+}
+
+.encouragement-icon {
+  font-style: normal;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+@keyframes bannerFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Button System */
@@ -1024,6 +1080,96 @@ input[type="text"]::placeholder {
   border: 0;
 }
 
+/* Session Completion & Milestone Celebration Modal */
+.completion-modal-box {
+  max-width: 420px;
+  text-align: center;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.completion-content {
+  padding: 30px 22px 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
+}
+
+.completion-badge-wrap {
+  margin-bottom: 12px;
+}
+
+.completion-celebration-icon {
+  font-size: 3rem;
+  line-height: 1;
+  display: inline-block;
+  animation: bounceCelebration 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes bounceCelebration {
+  0% { transform: scale(0.3) rotate(-15deg); opacity: 0; }
+  60% { transform: scale(1.15) rotate(8deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.completion-content h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 6px;
+  letter-spacing: -0.015em;
+}
+
+.completion-duration-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 0.82rem;
+  font-weight: 750;
+  border-radius: var(--radius-full);
+  margin-bottom: 12px;
+}
+
+.completion-message {
+  font-size: 0.88rem;
+  color: #334155;
+  font-style: italic;
+  line-height: 1.45;
+  margin-bottom: 14px;
+  max-width: 320px;
+}
+
+.completion-streak-pill {
+  font-size: 0.82rem;
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  padding: 6px 14px;
+  border-radius: 20px;
+  margin-bottom: 18px;
+  line-height: 1.4;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.completion-actions {
+  width: 100%;
+}
+
+.completion-actions .btn {
+  width: 100%;
+  min-height: 48px;
+  font-size: 0.95rem;
+}
+
 /* Personal Settings Modal Styles */
 .settings-modal-box {
   max-width: 480px;
@@ -1032,45 +1178,80 @@ input[type="text"]::placeholder {
   flex-direction: column;
 }
 
+/* Touch-friendly segmented pill tab bar */
 .settings-nav-tabs {
   display: flex;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  gap: 8px;
+  padding: 8px 12px 12px 12px;
   background: #f8fafc;
-  border-bottom: 1px solid var(--border);
-  padding: 4px 6px 0;
-  gap: 3px;
+  border-bottom: 1px solid #e2e8f0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-padding-inline: 12px;
 }
 
 .settings-nav-tabs::-webkit-scrollbar {
   display: none;
 }
 
-.settings-tab-btn {
-  flex: 1 0 auto;
-  padding: 9px 10px;
-  background: transparent;
-  border: none;
-  border-bottom: 2.5px solid transparent;
-  font-size: 0.81rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.18s ease;
-  white-space: nowrap;
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  touch-action: manipulation;
+.settings-nav-tabs::after {
+  content: "";
+  flex: 0 0 8px;
 }
 
-.settings-tab-btn:hover {
-  color: var(--text);
+.settings-tab-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.settings-tab-btn:hover:not(.active) {
+  background: #e2e8f0;
+  color: #1e293b;
+  border-color: #cbd5e1;
+}
+
+.settings-tab-btn:active:not(.active) {
+  transform: scale(0.97);
 }
 
 .settings-tab-btn.active {
-  color: var(--primary);
-  border-bottom-color: var(--primary);
-  background: #ffffff;
+  background: #1e40af;
+  color: #ffffff;
+  border-color: #1e40af;
+  font-weight: 650;
+  box-shadow: 0 2px 8px rgba(30, 64, 175, 0.28);
+  opacity: 1;
+}
+
+.settings-tab-btn.active * {
+  color: #ffffff;
+  opacity: 1;
+}
+
+/* Modal Body Separation: Guarantee zero visual overlap between tab pills and inputs */
+.settings-tab-panel,
+.tab-content {
+  margin-top: 12px;
 }
 
 .settings-section-divider {
