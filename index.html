@@ -171,30 +171,61 @@
     </div>
   </div>
 
-  <!-- Personal Settings / Preferences Modal -->
+  <!-- Personal Settings / Preferences / Profile Modal -->
   <div id="settingsModal" class="modal-backdrop" onclick="closeSettingsOnBackdrop(event)" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
     <div class="modal-box settings-modal-box">
       <div class="modal-header">
-        <h3 id="settingsModalTitle">⚙️ Practice Preferences</h3>
+        <h3 id="settingsModalTitle">⚙️ Practice Settings & Guide</h3>
         <button class="modal-close-btn" type="button" onclick="closeSettingsModal()" aria-label="Close settings">&times;</button>
       </div>
 
-      <!-- Settings Navigation Tabs -->
+      <!-- Settings Navigation Tabs (3 Tabs) -->
       <div class="settings-nav-tabs" role="tablist">
-        <button type="button" class="settings-tab-btn active" id="tabBtnPreferences" role="tab" aria-selected="true" onclick="switchSettingsTab('preferences')">⚙️ Preferences</button>
-        <button type="button" class="settings-tab-btn" id="tabBtnRepertoire" role="tab" aria-selected="false" onclick="switchSettingsTab('repertoire')">🎵 Repertoire & Parts</button>
+        <button type="button" class="settings-tab-btn active" id="tabBtnProfile" role="tab" aria-selected="true" onclick="switchSettingsTab('profile')">👤 Profile &amp; Voice</button>
+        <button type="button" class="settings-tab-btn" id="tabBtnPreferences" role="tab" aria-selected="false" onclick="switchSettingsTab('preferences')">⚙️ Preferences &amp; Repertoire</button>
+        <button type="button" class="settings-tab-btn" id="tabBtnTutorial" role="tab" aria-selected="false" onclick="switchSettingsTab('tutorial')">📖 Tutorial &amp; Guide</button>
       </div>
 
       <div class="modal-body settings-modal-body">
 
-        <!-- Tab 1: Practice Preferences -->
-        <div id="tabPanelPreferences" class="settings-tab-panel active" role="tabpanel">
+        <!-- Tab 1: Profile & Voice (Switch Voice / Change Name) -->
+        <div id="tabPanelProfile" class="settings-tab-panel active" role="tabpanel">
           <div class="settings-section">
-            <label for="settingTargetDate">Stake Conference / Target Event</label>
-            <input type="text" id="settingTargetDate" placeholder="e.g. Stake Choir Prep • Oct 24–25" oninput="handleTargetDateInput(this.value)">
-            <p class="settings-hint">Updates the top header subtitle in real-time on your device.</p>
+            <label for="settingMemberName">Full Name</label>
+            <input type="text" id="settingMemberName" placeholder="e.g. Juan dela Cruz">
           </div>
 
+          <div class="settings-section">
+            <label for="settingMemberSection">Voice Part / Choir</label>
+            <select id="settingMemberSection">
+              <option value="">-- Select Your Voice --</option>
+              <option value="Soprano">Soprano</option>
+              <option value="Alto">Alto</option>
+              <option value="Tenor">Tenor</option>
+              <option value="Bass">Bass</option>
+              <option value="Primary">Primary</option>
+            </select>
+          </div>
+
+          <div class="settings-section">
+            <div class="avatar-picker-wrapper" style="margin-top: 4px;">
+              <label class="avatar-picker-label">
+                <span>Avatar Portrait (Optional)</span>
+                <span class="optional">Tap to choose</span>
+              </label>
+              <div class="avatar-picker" id="settingAvatarPicker">
+                <!-- Populated dynamically by renderSettingAvatarPicker() with 8 portraits + default -->
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 14px;">
+            <button type="button" class="btn btn-primary" id="saveProfileSettingsBtn" onclick="saveProfileFromSettings()">Save Profile &amp; Voice</button>
+          </div>
+        </div>
+
+        <!-- Tab 2: Preferences & Repertoire -->
+        <div id="tabPanelPreferences" class="settings-tab-panel" role="tabpanel" style="display: none;">
           <div class="settings-section">
             <label for="settingTimerDuration">Practice Timer Duration</label>
             <select id="settingTimerDuration" onchange="handleTimerDurationChange(this.value)">
@@ -208,10 +239,15 @@
             </select>
             <p class="settings-hint">Sets your rehearsal countdown block and minutes logged upon completion.</p>
           </div>
-        </div>
 
-        <!-- Tab 2: Repertoire & Parts Editor -->
-        <div id="tabPanelRepertoire" class="settings-tab-panel" role="tabpanel" style="display: none;">
+          <div class="settings-section">
+            <label for="settingTargetDate">Stake Conference / Target Event</label>
+            <input type="text" id="settingTargetDate" placeholder="e.g. Stake Choir Prep • Oct 24–25" oninput="handleTargetDateInput(this.value)">
+            <p class="settings-hint">Updates the top header subtitle in real-time on your device.</p>
+          </div>
+
+          <div class="settings-section-divider"></div>
+
           <div class="repertoire-header-row">
             <h4>Custom Repertoire (<span id="repertoireCount">0</span>)</h4>
             <button type="button" class="btn-link" id="toggleAddSongBtn" onclick="openSongForm()">➕ Add Song</button>
@@ -253,12 +289,67 @@
           </div>
         </div>
 
+        <!-- Tab 3: Tutorial & Guide -->
+        <div id="tabPanelTutorial" class="settings-tab-panel" role="tabpanel" style="display: none;">
+          <div class="tutorial-guide-intro">
+            <h4>Choir Member Quick Guide</h4>
+            <p>Master your rehearsal routine, background tracking, and choir standings in 5 simple steps.</p>
+          </div>
+
+          <div class="tutorial-steps-list">
+            <!-- Step 1 -->
+            <div class="tutorial-step-card">
+              <div class="step-header">
+                <span class="step-badge step-badge-1">Step 1</span>
+                <h5>Set Up Profile &amp; Avatar</h5>
+              </div>
+              <p>Select your choir voice section (<strong>Soprano, Alto, Tenor, Bass, or Primary</strong>), enter your name, and choose an illustrated choir portrait to represent you on the community boards.</p>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="tutorial-step-card">
+              <div class="step-header">
+                <span class="step-badge step-badge-2">Step 2</span>
+                <h5>Configure Preferences</h5>
+              </div>
+              <p>Adjust your rehearsal timer block anywhere from <strong>5 to 60 minutes</strong> (15 min default) and personalize your target Stake Conference or event date to stay focused.</p>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="tutorial-step-card">
+              <div class="step-header">
+                <span class="step-badge step-badge-3">Step 3</span>
+                <h5>Practice &amp; Background Timer</h5>
+              </div>
+              <p>Choose your anthem from the dropdown and tap <strong>Start Session</strong>. Click <em>"🎼 Interactive Sheet &amp; Audio"</em> or <em>"▶️ Watch Video"</em>—the countdown timer continues accurately in the background while you sing along!</p>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="tutorial-step-card">
+              <div class="step-header">
+                <span class="step-badge step-badge-4">Step 4</span>
+                <h5>Inactivity Auto-Pause</h5>
+              </div>
+              <p>KanTime features automatic idle detection. If no interaction (mouse, touch, or keys) occurs for <strong>5 minutes</strong> during an active session, the timer pauses with an <em>"Are you still practicing?"</em> modal to keep recorded time honest.</p>
+            </div>
+
+            <!-- Step 5 -->
+            <div class="tutorial-step-card">
+              <div class="step-header">
+                <span class="step-badge step-badge-5">Step 5</span>
+                <h5>Leaderboards &amp; Standings</h5>
+              </div>
+              <p>When the countdown reaches 00:00, your rehearsal minutes are submitted to the Stake Choir Sheet, instantly updating the <strong>Top 10 Dedicated Singers</strong> and the <strong>Section Standings</strong>.</p>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- Settings Modal Footer -->
       <div class="settings-modal-footer">
         <button type="button" class="btn-link btn-danger-link" onclick="resetUserSettingsToDefault()">🔄 Reset to Choir Defaults</button>
-        <button type="button" class="btn btn-primary" style="width: auto; min-height: 38px; padding: 6px 18px;" onclick="closeSettingsModal()">Done</button>
+        <button type="button" class="btn btn-primary" style="width: auto; min-height: 38px; padding: 6px 18px;" onclick="closeSettingsModal()">Done / Save</button>
       </div>
     </div>
   </div>

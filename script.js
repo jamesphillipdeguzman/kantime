@@ -99,6 +99,75 @@ function selectAvatar(filename) {
   }
 }
 
+// --- SETTINGS MODAL AVATAR PICKER ---
+let selectedSettingAvatarFile = "";
+
+function handleSettingAvatarKeyDown(e, filename) {
+  if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    selectSettingAvatar(filename);
+  }
+}
+
+function renderSettingAvatarPicker(currentAvatar) {
+  const container = document.getElementById("settingAvatarPicker");
+  if (!container) return;
+
+  selectedSettingAvatarFile = currentAvatar !== undefined ? currentAvatar : (localStorage.getItem("choir_avatar") || "");
+
+  let html = `
+    <div class="avatar-option ${!selectedSettingAvatarFile ? 'selected' : ''}" 
+         id="setting-avatar-opt-default" 
+         onclick="selectSettingAvatar('')" 
+         onkeydown="handleSettingAvatarKeyDown(event, '')"
+         role="button" 
+         tabindex="0"
+         aria-label="Default avatar (Music Note)"
+         title="No Avatar (Default 🎵)">
+      <div class="avatar-circle avatar-circle-default">🎵</div>
+      <span class="avatar-option-name">Default</span>
+    </div>
+  `;
+
+  CHOIR_AVATARS.forEach(av => {
+    const isSelected = selectedSettingAvatarFile === av.file;
+    html += `
+      <div class="avatar-option ${isSelected ? 'selected' : ''}" 
+           id="setting-avatar-opt-${av.file.replace(/[^a-zA-Z0-9_-]/g, '')}" 
+           onclick="selectSettingAvatar('${av.file}')" 
+           onkeydown="handleSettingAvatarKeyDown(event, '${av.file}')"
+           role="button" 
+           tabindex="0"
+           aria-label="${av.label} (${av.category})"
+           title="${av.label} (${av.category})">
+        <img class="avatar-circle" src="${getAvatarImgSrc(av.file)}" alt="${av.label}" loading="lazy">
+        <span class="avatar-option-name">${av.label}</span>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function selectSettingAvatar(filename) {
+  if (selectedSettingAvatarFile === filename && filename !== "") {
+    selectedSettingAvatarFile = "";
+  } else {
+    selectedSettingAvatarFile = filename;
+  }
+
+  const options = document.querySelectorAll("#settingAvatarPicker .avatar-option");
+  options.forEach(opt => opt.classList.remove("selected"));
+
+  if (!selectedSettingAvatarFile) {
+    const defaultOpt = document.getElementById("setting-avatar-opt-default");
+    if (defaultOpt) defaultOpt.classList.add("selected");
+  } else {
+    const activeOpt = document.getElementById(`setting-avatar-opt-${selectedSettingAvatarFile.replace(/[^a-zA-Z0-9_-]/g, '')}`);
+    if (activeOpt) activeOpt.classList.add("selected");
+  }
+}
+
 
 // Generate Leaderboard avatar HTML with fallback
 function getLeaderboardAvatarHtml(avatarFile, singerName) {
@@ -393,7 +462,7 @@ function loadProfile() {
   populateSongSelectDropdown();
 
   const savedName = localStorage.getItem("choir_name");
-  const savedSection = localStorage.getItem("choir_section");
+  const savedSection = localStorage.getItem("choir_voice") || localStorage.getItem("choir_section");
   const savedAvatar = localStorage.getItem("choir_avatar") || "";
   const profileCard = document.getElementById("profileCard");
   const activeBanner = document.getElementById("activeProfileBanner");
@@ -444,6 +513,7 @@ function handleProfileSubmit() {
 
   localStorage.setItem("choir_name", name);
   localStorage.setItem("choir_section", section);
+  localStorage.setItem("choir_voice", section);
   if (avatar) {
     localStorage.setItem("choir_avatar", avatar);
   } else {
@@ -474,31 +544,70 @@ function handleProfileSubmit() {
   }
 }
 
+function saveProfileFromSettings() {
+  const nameInput = document.getElementById("settingMemberName");
+  const sectionSelect = document.getElementById("settingMemberSection");
+  const name = nameInput ? nameInput.value.trim() : "";
+  const section = sectionSelect ? sectionSelect.value : "";
+  const avatar = selectedSettingAvatarFile;
+
+  if (!name) {
+    alert("Please enter your full name!");
+    if (nameInput) nameInput.focus();
+    return false;
+  }
+  if (!section) {
+    alert("Please select your choir voice part (Soprano, Alto, Tenor, Bass, or Primary)!");
+    if (sectionSelect) sectionSelect.focus();
+    return false;
+  }
+
+  localStorage.setItem("choir_name", name);
+  localStorage.setItem("choir_section", section);
+  localStorage.setItem("choir_voice", section);
+  if (avatar) {
+    localStorage.setItem("choir_avatar", avatar);
+  } else {
+    localStorage.removeItem("choir_avatar");
+  }
+
+  // Synchronize in-page form inputs & avatar if present
+  const pageNameInput = document.getElementById("memberName");
+  if (pageNameInput) pageNameInput.value = name;
+  const pageSecSelect = document.getElementById("memberSection");
+  if (pageSecSelect) pageSecSelect.value = section;
+  renderAvatarPicker(avatar);
+
+  updateActiveProfileDisplay(name, section, avatar);
+
+  // If page was in setup mode, reveal dashboard and banner
+  const profileCard = document.getElementById("profileCard");
+  if (profileCard) profileCard.style.display = "none";
+  const activeBanner = document.getElementById("activeProfileBanner");
+  if (activeBanner) activeBanner.style.display = "flex";
+  const mainDashboard = document.getElementById("mainDashboard");
+  if (mainDashboard) mainDashboard.style.display = "block";
+
+  const targetSelect = document.getElementById("targetSong");
+  const currentSong = (targetSelect && targetSelect.value) ? targetSelect.value : (localStorage.getItem("kantime_target_song") || "");
+  if (currentSong) renderSelectedSongResource(currentSong);
+
+  loadLeaderboard();
+  showToast("Profile & Voice updated! ✨");
+  return true;
+}
+
 function switchProfile() {
   const inactModal = document.getElementById("inactivityModal");
   if (inactModal) inactModal.classList.remove("active");
   isIdleModalOpen = false;
 
-  const savedAvatar = localStorage.getItem("choir_avatar") || "";
-  renderAvatarPicker(savedAvatar);
-
-  document.getElementById("profileCard").style.display = "block";
-  document.getElementById("activeProfileBanner").style.display = "none";
-  document.getElementById("mainDashboard").style.display = "none";
-
-  const saveBtn = document.getElementById("saveProfileBtn");
-  if (saveBtn) saveBtn.innerText = "Save Changes";
-
-  const cancelBtn = document.getElementById("cancelProfileBtn");
-  if (cancelBtn) cancelBtn.style.display = "inline-flex";
-
-  document.getElementById("memberName").focus();
-  document.getElementById("profileCard").scrollIntoView({ behavior: "smooth", block: "start" });
+  openSettingsModal('profile');
 }
 
 function cancelProfileEdit() {
   const savedName = localStorage.getItem("choir_name");
-  const savedSection = localStorage.getItem("choir_section");
+  const savedSection = localStorage.getItem("choir_voice") || localStorage.getItem("choir_section");
   const savedAvatar = localStorage.getItem("choir_avatar") || "";
 
   if (savedName && savedSection) {
@@ -1081,12 +1190,25 @@ function closeModalOnBackdrop(e) {
 }
 
 // --- PERSONAL SETTINGS & REPERTOIRE EDITOR MODAL ---
-function openSettingsModal() {
+function openSettingsModal(defaultTab = 'profile') {
   const modal = document.getElementById("settingsModal");
   if (!modal) return;
 
-  const settings = getUserSettings();
+  // 1. Populate Profile Tab inputs
+  const savedName = localStorage.getItem("choir_name") || "";
+  const savedVoice = localStorage.getItem("choir_voice") || localStorage.getItem("choir_section") || "";
+  const savedAvatar = localStorage.getItem("choir_avatar") || "";
 
+  const nameInput = document.getElementById("settingMemberName");
+  if (nameInput) nameInput.value = savedName;
+
+  const sectionSelect = document.getElementById("settingMemberSection");
+  if (sectionSelect) sectionSelect.value = savedVoice;
+
+  renderSettingAvatarPicker(savedAvatar);
+
+  // 2. Populate Preferences & Repertoire Tab inputs
+  const settings = getUserSettings();
   const targetDateInput = document.getElementById("settingTargetDate");
   if (targetDateInput) {
     targetDateInput.value = settings.targetDate || "";
@@ -1099,13 +1221,30 @@ function openSettingsModal() {
 
   closeSongForm();
   renderRepertoireList();
-  switchSettingsTab("preferences");
+
+  // 3. Switch to target tab (defaults to 'profile' or 'preferences')
+  switchSettingsTab(defaultTab || 'profile');
 
   modal.classList.add("active");
   document.body.style.overflow = "hidden";
 }
 
 function closeSettingsModal() {
+  // Check if user made unsaved profile changes in Settings and auto-commit if valid
+  const nameInput = document.getElementById("settingMemberName");
+  const sectionSelect = document.getElementById("settingMemberSection");
+  if (nameInput && sectionSelect) {
+    const curName = nameInput.value.trim();
+    const curSec = sectionSelect.value;
+    const savedName = localStorage.getItem("choir_name") || "";
+    const savedSec = localStorage.getItem("choir_voice") || localStorage.getItem("choir_section") || "";
+    const savedAv = localStorage.getItem("choir_avatar") || "";
+
+    if (curName && curSec && (curName !== savedName || curSec !== savedSec || selectedSettingAvatarFile !== savedAv)) {
+      saveProfileFromSettings();
+    }
+  }
+
   // Ensure any newly selected duration value is applied
   const timerDurSelect = document.getElementById("settingTimerDuration");
   if (timerDurSelect) {
@@ -1128,34 +1267,45 @@ function closeSettingsOnBackdrop(e) {
 }
 
 function switchSettingsTab(tabName) {
-  const prefTabBtn = document.getElementById("tabBtnPreferences");
-  const repTabBtn = document.getElementById("tabBtnRepertoire");
-  const prefPanel = document.getElementById("tabPanelPreferences");
-  const repPanel = document.getElementById("tabPanelRepertoire");
+  const tabs = ["profile", "preferences", "tutorial"];
+  const target = tabs.includes(tabName) ? tabName : "profile";
 
-  if (tabName === "preferences") {
-    if (prefTabBtn) {
-      prefTabBtn.classList.add("active");
-      prefTabBtn.setAttribute("aria-selected", "true");
+  const tabBtns = {
+    profile: document.getElementById("tabBtnProfile"),
+    preferences: document.getElementById("tabBtnPreferences"),
+    tutorial: document.getElementById("tabBtnTutorial")
+  };
+
+  const tabPanels = {
+    profile: document.getElementById("tabPanelProfile"),
+    preferences: document.getElementById("tabPanelPreferences"),
+    tutorial: document.getElementById("tabPanelTutorial")
+  };
+
+  tabs.forEach(t => {
+    const btn = tabBtns[t];
+    const panel = tabPanels[t];
+    const isCurrent = t === target;
+
+    if (btn) {
+      if (isCurrent) {
+        btn.classList.add("active");
+        btn.setAttribute("aria-selected", "true");
+      } else {
+        btn.classList.remove("active");
+        btn.setAttribute("aria-selected", "false");
+      }
     }
-    if (repTabBtn) {
-      repTabBtn.classList.remove("active");
-      repTabBtn.setAttribute("aria-selected", "false");
+
+    if (panel) {
+      panel.style.display = isCurrent ? "block" : "none";
+      if (isCurrent) {
+        panel.classList.add("active");
+      } else {
+        panel.classList.remove("active");
+      }
     }
-    if (prefPanel) prefPanel.style.display = "block";
-    if (repPanel) repPanel.style.display = "none";
-  } else {
-    if (prefTabBtn) {
-      prefTabBtn.classList.remove("active");
-      prefTabBtn.setAttribute("aria-selected", "false");
-    }
-    if (repTabBtn) {
-      repTabBtn.classList.add("active");
-      repTabBtn.setAttribute("aria-selected", "true");
-    }
-    if (prefPanel) prefPanel.style.display = "none";
-    if (repPanel) repPanel.style.display = "block";
-  }
+  });
 }
 
 function handleTargetDateInput(val) {
