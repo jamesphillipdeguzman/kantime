@@ -1383,6 +1383,20 @@ let activeRefOscillator = null;
 let activeRefGain = null;
 let activeRefTimeout = null;
 
+// Pitch Smoothing (Anti-Jitter / Damping) & Lock-In State
+const PITCH_EMA_ALPHA = 0.20; // low-pass filter alpha (0.15 - 0.25)
+let smoothedPitchHz = 0;
+let pitchFrameBuffer = []; // rolling median buffer (last 4 frames)
+let jumpCandidateHz = null;
+let jumpCandidateCount = 0;
+let lastDisplayedCents = null;
+
+// Pitch Lock-In & Chime State
+let pitchLockStartTime = null;
+let isPitchLocked = false;
+let pitchOffTargetStartTime = null;
+let lastLockChimeTime = 0;
+
 function getPitchAudioContext() {
   if (!pitchAudioContext) {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -1613,6 +1627,13 @@ function updatePitchToggleUI(active) {
 }
 
 function resetPitchDisplay() {
+  unlockPitch();
+  smoothedPitchHz = 0;
+  pitchFrameBuffer = [];
+  jumpCandidateHz = null;
+  jumpCandidateCount = 0;
+  lastDisplayedCents = null;
+
   const card = document.getElementById("pitchWidgetCard");
   const noteBadge = document.getElementById("pitchNoteBadge");
   const noteVal = document.getElementById("pitchNoteValue");
@@ -1620,12 +1641,20 @@ function resetPitchDisplay() {
   const centsVal = document.getElementById("pitchCentsReadout");
   const needle = document.getElementById("centsNeedle");
   const prompt = document.getElementById("pitchFeedbackPrompt");
+  const gaugeTrack = document.querySelector(".cents-gauge-track");
 
   if (card) {
-    card.classList.remove("state-in-tune", "state-near-tune", "state-off-pitch");
+    card.classList.remove("state-in-tune", "state-near-tune", "state-off-pitch", "pitch-locked");
   }
   if (noteBadge) {
-    noteBadge.classList.remove("in-tune", "off-pitch");
+    noteBadge.classList.remove("in-tune", "off-pitch", "pitch-locked");
+  }
+  if (gaugeTrack) {
+    gaugeTrack.classList.remove("pitch-locked");
+  }
+  if (needle) {
+    needle.classList.remove("pitch-locked");
+    needle.style.left = "50%";
   }
   if (noteVal) noteVal.innerText = "--";
   if (hzVal) hzVal.innerText = "0.0 Hz";
@@ -1633,8 +1662,100 @@ function resetPitchDisplay() {
     centsVal.innerText = "-- cents";
     centsVal.classList.remove("in-tune");
   }
-  if (needle) needle.style.left = "50%";
   if (prompt) prompt.innerText = 'Tap "Start" to check your pitch in real time.';
+}
+
+function triggerPitchLock(fullNote) {
+  const card = document.getElementById("pitchWidgetCard");
+  const noteBadge = document.getElementById("pitchNoteBadge");
+  const gaugeTrack = document.querySelector(".cents-gauge-track");
+  const needle = document.getElementById("centsNeedle");
+  const centsVal = document.getElementById("pitchCentsReadout");
+  const prompt = document.getElementById("pitchFeedbackPrompt");
+
+  if (card) {
+    card.classList.remove("state-near-tune", "state-off-pitch");
+    card.classList.add("state-in-tune", "pitch-locked");
+  }
+  if (noteBadge) {
+    noteBadge.classList.remove("off-pitch");
+    noteBadge.classList.add("in-tune", "pitch-locked");
+  }
+  if (gaugeTrack) {
+    gaugeTrack.classList.add("pitch-locked");
+  }
+  if (needle) {
+    needle.classList.add("pitch-locked");
+    needle.style.left = "50%"; // Snap directly to target center (0 cents)
+  }
+  if (centsVal) {
+    centsVal.innerText = "🎯 0 cents (Locked)";
+    centsVal.classList.add("in-tune");
+  }
+  if (prompt) {
+    prompt.innerText = "Locked in! Perfect pitch 🎯";
+  }
+
+  playPitchLockChime();
+}
+
+function unlockPitch() {
+  if (!isPitchLocked && !pitchLockStartTime) return;
+  isPitchLocked = false;
+  pitchLockStartTime = null;
+  pitchOffTargetStartTime = null;
+
+  const card = document.getElementById("pitchWidgetCard");
+  const noteBadge = document.getElementById("pitchNoteBadge");
+  const gaugeTrack = document.querySelector(".cents-gauge-track");
+  const needle = document.getElementById("centsNeedle");
+
+  if (card) card.classList.remove("pitch-locked");
+  if (noteBadge) noteBadge.classList.remove("pitch-locked");
+  if (gaugeTrack) gaugeTrack.classList.remove("pitch-locked");
+  if (needle) needle.classList.remove("pitch-locked");
+}
+
+// Synthesize pleasant, warm two-note success chime (C6 at 1046 Hz -> E6 at 1318 Hz)
+function playPitchLockChime() {
+  const now = performance.now();
+  if (now - lastLockChimeTime < 2500) return; // 2.5s debounce cooldown
+  lastLockChimeTime = now;
+
+  const audioCtx = getPitchAudioContext();
+  if (!audioCtx) return;
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+
+  const t0 = audioCtx.currentTime;
+
+  // Bell Tone 1: C6 (1046.50 Hz)
+  const osc1 = audioCtx.createOscillator();
+  const gain1 = audioCtx.createGain();
+  osc1.type = "sine";
+  osc1.frequency.setValueAtTime(1046.50, t0);
+  gain1.gain.setValueAtTime(0.0001, t0);
+  gain1.gain.linearRampToValueAtTime(0.12, t0 + 0.05); // 0.05s attack
+  gain1.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.40); // 0.35s decay
+  osc1.connect(gain1);
+  gain1.connect(audioCtx.destination);
+  osc1.start(t0);
+  osc1.stop(t0 + 0.42);
+
+  // Bell Tone 2: E6 (1318.51 Hz) - swelling warmly right after C6
+  const t1 = t0 + 0.06;
+  const osc2 = audioCtx.createOscillator();
+  const gain2 = audioCtx.createGain();
+  osc2.type = "sine";
+  osc2.frequency.setValueAtTime(1318.51, t1);
+  gain2.gain.setValueAtTime(0.0001, t1);
+  gain2.gain.linearRampToValueAtTime(0.14, t1 + 0.05); // 0.05s attack
+  gain2.gain.exponentialRampToValueAtTime(0.0001, t1 + 0.42); // 0.35s decay
+  osc2.connect(gain2);
+  gain2.connect(audioCtx.destination);
+  osc2.start(t1);
+  osc2.stop(t1 + 0.45);
 }
 
 function pitchAnalysisLoop() {
@@ -1706,47 +1827,155 @@ function updatePitchUI(freq) {
   const centsVal = document.getElementById("pitchCentsReadout");
   const needle = document.getElementById("centsNeedle");
   const prompt = document.getElementById("pitchFeedbackPrompt");
+  const now = performance.now();
 
   if (freq === -1) {
-    if (card) {
+    if (isPitchLocked) {
+      if (!pitchOffTargetStartTime) {
+        pitchOffTargetStartTime = now;
+      } else if (now - pitchOffTargetStartTime > 200) {
+        unlockPitch();
+      }
+    } else {
+      unlockPitch();
+    }
+
+    // Reset smoothing & jump candidate on silence / below RMS threshold
+    smoothedPitchHz = 0;
+    pitchFrameBuffer = [];
+    jumpCandidateHz = null;
+    jumpCandidateCount = 0;
+    lastDisplayedCents = null;
+
+    if (card && !isPitchLocked) {
       card.classList.remove("state-in-tune", "state-near-tune", "state-off-pitch");
     }
-    if (noteBadge) {
+    if (noteBadge && !isPitchLocked) {
       noteBadge.classList.remove("in-tune", "off-pitch");
     }
-    if (centsVal) centsVal.classList.remove("in-tune");
-    if (prompt && isPitchDetecting) {
+    if (centsVal && !isPitchLocked) centsVal.classList.remove("in-tune");
+    if (prompt && isPitchDetecting && !isPitchLocked) {
       const voicePart = localStorage.getItem("choir_voice") || "your part";
       prompt.innerText = `Singing your ${voicePart} part? Watching pitch...`;
     }
     return;
   }
 
-  const n = 12 * (Math.log(freq / 440) / Math.LN2) + 69;
+  // 1. Octave / Erratic Jump Filter (> 1.5 semitones)
+  if (smoothedPitchHz > 0) {
+    const semitoneDiff = Math.abs(12 * Math.log2(freq / smoothedPitchHz));
+    if (semitoneDiff > 1.5) {
+      // Check if singer intentionally changed to a new note (sustained for 3 consecutive frames)
+      if (jumpCandidateHz !== null && Math.abs(12 * Math.log2(freq / jumpCandidateHz)) <= 0.8) {
+        jumpCandidateCount++;
+      } else {
+        jumpCandidateHz = freq;
+        jumpCandidateCount = 1;
+      }
+
+      if (jumpCandidateCount >= 3) {
+        // Confirmed intentional note shift
+        smoothedPitchHz = freq;
+        pitchFrameBuffer = [freq];
+        jumpCandidateHz = null;
+        jumpCandidateCount = 0;
+        unlockPitch();
+      } else {
+        // Transient octave glitch or erratic jump — ignore this frame
+        return;
+      }
+    } else {
+      jumpCandidateHz = null;
+      jumpCandidateCount = 0;
+    }
+  } else {
+    smoothedPitchHz = freq;
+    pitchFrameBuffer = [freq];
+  }
+
+  // 2. Exponential Moving Average (EMA) smoothing
+  smoothedPitchHz = (PITCH_EMA_ALPHA * freq) + ((1 - PITCH_EMA_ALPHA) * smoothedPitchHz);
+
+  // 3. Rolling Median Buffer (last 4 frames) to eliminate micro-jitter and sub-cent vibrato
+  pitchFrameBuffer.push(smoothedPitchHz);
+  if (pitchFrameBuffer.length > 4) pitchFrameBuffer.shift();
+  const sortedBuf = [...pitchFrameBuffer].sort((a, b) => a - b);
+  const effectiveHz = sortedBuf[Math.floor(sortedBuf.length / 2)];
+
+  // 4. Frequency to Note & Cents calculation
+  const n = 12 * (Math.log(effectiveHz / 440) / Math.LN2) + 69;
   const roundedNote = Math.round(n);
-  const cents = Math.round((n - roundedNote) * 100);
+  const rawCents = Math.round((n - roundedNote) * 100);
 
   const noteName = MUSICAL_NOTE_NAMES[((roundedNote % 12) + 12) % 12];
   const octave = Math.floor(roundedNote / 12) - 1;
   const fullNote = `${noteName}${octave}`;
+  const absCents = Math.abs(rawCents);
 
+  // 5. Pitch Lock-In Detection: within ±8 cents held continuously for at least 350ms
+  if (absCents <= 8) {
+    pitchOffTargetStartTime = null;
+    if (!pitchLockStartTime) {
+      pitchLockStartTime = now;
+    } else if (!isPitchLocked && (now - pitchLockStartTime >= 350)) {
+      isPitchLocked = true;
+      triggerPitchLock(fullNote);
+    }
+  } else {
+    pitchLockStartTime = null;
+    if (isPitchLocked) {
+      if (!pitchOffTargetStartTime) {
+        pitchOffTargetStartTime = now;
+      } else if (now - pitchOffTargetStartTime > 200) {
+        unlockPitch();
+      }
+    }
+  }
+
+  // 6. Deadzone damping on cents needle (suppress < 1.0c micro-fluctuations when unlocked)
+  let displayCents = rawCents;
+  if (lastDisplayedCents !== null && !isPitchLocked) {
+    if (Math.abs(rawCents - lastDisplayedCents) < 1.0) {
+      displayCents = lastDisplayedCents;
+    }
+  }
+  lastDisplayedCents = displayCents;
+
+  // 7. Update UI Elements
   if (noteVal) noteVal.innerText = fullNote;
-  if (hzVal) hzVal.innerText = `${freq.toFixed(1)} Hz`;
+  if (hzVal) hzVal.innerText = `${effectiveHz.toFixed(1)} Hz`;
 
-  const clampedCents = Math.max(-50, Math.min(50, cents));
+  if (isPitchLocked) {
+    if (needle) needle.style.left = "50%"; // Locked at exact center
+    if (centsVal) {
+      centsVal.innerText = "🎯 0 cents (Locked)";
+      centsVal.classList.add("in-tune");
+    }
+    if (prompt) prompt.innerText = "Locked in! Perfect pitch 🎯";
+    if (card) {
+      card.classList.remove("state-near-tune", "state-off-pitch");
+      card.classList.add("state-in-tune", "pitch-locked");
+    }
+    if (noteBadge) {
+      noteBadge.classList.remove("off-pitch");
+      noteBadge.classList.add("in-tune", "pitch-locked");
+    }
+    return;
+  }
+
+  // Normal / Unlocked UI rendering
+  const clampedCents = Math.max(-50, Math.min(50, displayCents));
   const needlePct = clampedCents + 50;
   if (needle) needle.style.left = `${needlePct}%`;
 
-  const absCents = Math.abs(cents);
-  const centsSign = cents > 0 ? "+" : "";
-
+  const centsSign = displayCents > 0 ? "+" : "";
   if (centsVal) {
-    centsVal.innerText = `${centsSign}${cents} cents`;
+    centsVal.innerText = `${centsSign}${displayCents} cents`;
   }
 
   if (card && noteBadge && centsVal && prompt) {
-    card.classList.remove("state-in-tune", "state-near-tune", "state-off-pitch");
-    noteBadge.classList.remove("in-tune", "off-pitch");
+    card.classList.remove("state-in-tune", "state-near-tune", "state-off-pitch", "pitch-locked");
+    noteBadge.classList.remove("in-tune", "off-pitch", "pitch-locked");
     centsVal.classList.remove("in-tune");
 
     if (absCents <= 10) {
@@ -1756,12 +1985,12 @@ function updatePitchUI(freq) {
       prompt.innerText = `Spot on! In tune (${fullNote}) ✨`;
     } else if (absCents <= 20) {
       card.classList.add("state-near-tune");
-      const dir = cents < 0 ? "flat" : "sharp";
-      prompt.innerText = `Close! Slightly ${dir} (${centsSign}${cents}¢)`;
+      const dir = displayCents < 0 ? "flat" : "sharp";
+      prompt.innerText = `Close! Slightly ${dir} (${centsSign}${displayCents}¢)`;
     } else {
       card.classList.add("state-off-pitch");
       noteBadge.classList.add("off-pitch");
-      const dir = cents < 0 ? "Flat" : "Sharp";
+      const dir = displayCents < 0 ? "Flat" : "Sharp";
       prompt.innerText = `${dir} by ${absCents}¢ — guide voice toward center`;
     }
   }

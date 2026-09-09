@@ -151,7 +151,18 @@
 
     <!-- Page Footer -->
     <footer class="app-footer">
-      <p>&copy; <span id="footerYear"></span> James Phillip De Guzman</p>
+      <div class="privacy-disclaimer" role="note" aria-label="Privacy Notice">
+        <div class="privacy-disclaimer-header">
+          <span class="privacy-icon" aria-hidden="true">🛡️</span>
+          <span class="privacy-badge">100% Client-Side Privacy</span>
+        </div>
+        <p class="privacy-disclaimer-text">
+          No sensitive data is collected or stored on external servers. Your name, practice records, preferences, and custom repertoire live
+          <strong>strictly in your device's local storage</strong>. Audio for pitch detection is processed entirely in-browser and is
+          <strong>never recorded or transmitted</strong>.
+        </p>
+      </div>
+      <p class="footer-credit">&copy; <span id="footerYear"></span> James Phillip De Guzman</p>
     </footer>
 
   <!-- Fixed Persistent Voice Pitch Checker Overlay (Corner Card) -->
@@ -227,7 +238,7 @@
 
   <div id="toast">Saved!</div>
 
-  <script src="script.js"></script>
+  <script src="script.js?v=pitch_lock_1"></script>
 
   <!-- In-App Resource Viewer Modal -->
   <div id="resourceModal" class="modal-backdrop" onclick="closeModalOnBackdrop(event)">
