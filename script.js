@@ -2795,10 +2795,15 @@ function exportTutorialToPdf() {
 
   // ALL layout via inline styles – no CSS class dependencies that could be
   // overridden by dark-mode rules or theme variables.
+  // POSITIONING: Use left:-9999px (off-screen left) NOT top:scrollHeight+5000px.
+  // Reason: body overflow:hidden (set when modals are open) clips absolute children
+  // that extend below scrollHeight, producing 0-height layout and blank PDF.
+  // Left-offset is unaffected by overflow:hidden on the Y axis and keeps the
+  // element fully renderable in the browser's layout engine.
   Object.assign(staging.style, {
     position: 'absolute',
-    top: (document.documentElement.scrollHeight + 5000) + 'px',
-    left: '0',
+    top: '0',
+    left: '-9999px',
     width: A4_PX + 'px',
     maxWidth: A4_PX + 'px',
     zIndex: '0',
@@ -2884,9 +2889,14 @@ function exportTutorialToPdf() {
 
   // ─── Phase 4: Export with validation ─────────────────────────────────────
   const doExport = () => {
-    // Force browser reflow before measuring
+    // ── Diagnostic logging (regression audit) ──────────────────────────────
+    console.log('[KanTime PDF] Target element:', staging);
+    console.log('[KanTime PDF] innerHTML length:', staging.innerHTML.length);
+    console.log('[KanTime PDF] Offset Width/Height:', staging.offsetWidth + 'x' + staging.offsetHeight);
+    console.log('[KanTime PDF] scrollHeight:', staging.scrollHeight);
+    // ───────────────────────────────────────────────────────────────────────
+
     const h = staging.scrollHeight;
-    console.log('[KanTime PDF] staging dimensions:', staging.offsetWidth, '×', h);
 
     if (staging.offsetWidth === 0 || h === 0) {
       console.error('[KanTime PDF] Staging container has zero dimensions – aborting.');
@@ -2904,9 +2914,10 @@ function exportTutorialToPdf() {
         useCORS: true,
         allowTaint: false,
         scrollX: 0,
-        scrollY: -window.scrollY,
+        scrollY: 0,
         windowWidth: A4_PX,
-        windowHeight: h + 100
+        windowHeight: h + 100,
+        ignoreElements: (el) => el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.tagName === 'SELECT'
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
@@ -3648,10 +3659,12 @@ function exportVocalDrillsToPdf() {
   const staging = document.createElement("div");
   staging.id = "pdfIsolatedVocalExportContainer";
 
+  // POSITIONING: Use left:-9999px — immune to body overflow:hidden.
+  // See exportTutorialToPdf for full rationale.
   Object.assign(staging.style, {
     position: 'absolute',
-    top: (document.documentElement.scrollHeight + 5000) + 'px',
-    left: '0',
+    top: '0',
+    left: '-9999px',
     width: A4_PX + 'px',
     maxWidth: A4_PX + 'px',
     zIndex: '0',
@@ -3813,8 +3826,14 @@ function exportVocalDrillsToPdf() {
 
   // ─── Phase 4: Export with dimension validation ────────────────────────────
   const doExport = () => {
+    // ── Diagnostic logging (regression audit) ──────────────────────────────
+    console.log('[KanTime Vocal PDF] Target element:', staging);
+    console.log('[KanTime Vocal PDF] innerHTML length:', staging.innerHTML.length);
+    console.log('[KanTime Vocal PDF] Offset Width/Height:', staging.offsetWidth + 'x' + staging.offsetHeight);
+    console.log('[KanTime Vocal PDF] scrollHeight:', staging.scrollHeight);
+    // ───────────────────────────────────────────────────────────────────────
+
     const h = staging.scrollHeight;
-    console.log('[KanTime Vocal PDF] staging dimensions:', staging.offsetWidth, '×', h);
 
     if (staging.offsetWidth === 0 || h === 0) {
       console.error('[KanTime Vocal PDF] Zero-size container – aborting.');
@@ -3832,9 +3851,10 @@ function exportVocalDrillsToPdf() {
         useCORS: true,
         allowTaint: false,
         scrollX: 0,
-        scrollY: -window.scrollY,
+        scrollY: 0,
         windowWidth: A4_PX,
-        windowHeight: h + 100
+        windowHeight: h + 100,
+        ignoreElements: (el) => el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.tagName === 'SELECT'
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
