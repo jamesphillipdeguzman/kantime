@@ -2,7 +2,7 @@
 // KanTime PWA Service Worker (Cache-First Offline Strategy)
 // ==========================================================================
 
-const CACHE_NAME = "kantime-pwa-v1";
+const CACHE_NAME = "kantime-pwa-v2.5.0";
 
 const PRECACHE_ASSETS = [
   "./",

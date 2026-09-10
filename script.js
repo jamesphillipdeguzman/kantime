@@ -2,6 +2,9 @@
 // KanTime | Stake Choir Practice Hub - Main Application Script
 // ==========================================================================
 
+// --- APPLICATION VERSION ---
+const APP_VERSION = "2.5.0";
+
 // --- APPS SCRIPT WEB APP URL ---
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6r8JCXFOeuDqk8mlrTFAY5G5jOUOcoljMIC-ow1tlStLj3EVBpEWE_q9iT_sRngEa/exec";
 
@@ -2276,6 +2279,11 @@ function openSettingsModal(defaultTab = 'profile') {
     timerDurSelect.value = settings.timerMinutes || 15;
   }
 
+  const metronomeSettingCheckbox = document.getElementById("settingShowMetronome");
+  if (metronomeSettingCheckbox) {
+    metronomeSettingCheckbox.checked = (localStorage.getItem("metronome_visible") === "true");
+  }
+
   closeSongForm();
   renderRepertoireList();
 
@@ -3404,6 +3412,92 @@ function toggleMetronomeCollapse() {
   }
 }
 
+// --- METRONOME VISIBILITY & WORKSPACE INTEGRATION ---
+function showMetronomeWidget() {
+  const widget = document.getElementById("metronomeWidget");
+  const btn = document.getElementById("toggleMetronomeVisibilityBtn");
+  const checkbox = document.getElementById("settingShowMetronome");
+  if (!widget) return;
+
+  widget.style.display = "block";
+  localStorage.setItem("metronome_visible", "true");
+
+  if (btn) {
+    btn.classList.add("active");
+    btn.setAttribute("aria-expanded", "true");
+  }
+  if (checkbox) {
+    checkbox.checked = true;
+  }
+  widget.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function hideMetronomeWidget() {
+  const widget = document.getElementById("metronomeWidget");
+  const btn = document.getElementById("toggleMetronomeVisibilityBtn");
+  const checkbox = document.getElementById("settingShowMetronome");
+  if (!widget) return;
+
+  widget.style.display = "none";
+  localStorage.setItem("metronome_visible", "false");
+
+  if (isMetronomeRunning) {
+    stopMetronome();
+  }
+
+  if (btn) {
+    btn.classList.remove("active");
+    btn.setAttribute("aria-expanded", "false");
+  }
+  if (checkbox) {
+    checkbox.checked = false;
+  }
+}
+
+function toggleMetronomeVisibility() {
+  const widget = document.getElementById("metronomeWidget");
+  if (!widget) return;
+  const isHidden = (widget.style.display === "none" || getComputedStyle(widget).display === "none");
+  if (isHidden) {
+    showMetronomeWidget();
+  } else {
+    hideMetronomeWidget();
+  }
+}
+
+function handleSettingMetronomeToggle(checked) {
+  if (checked) {
+    showMetronomeWidget();
+  } else {
+    hideMetronomeWidget();
+  }
+}
+
+function initMetronomeVisibility() {
+  const saved = localStorage.getItem("metronome_visible");
+  const widget = document.getElementById("metronomeWidget");
+  const btn = document.getElementById("toggleMetronomeVisibilityBtn");
+  const checkbox = document.getElementById("settingShowMetronome");
+  if (!widget) return;
+
+  // STRICT RULE: Metronome is hidden unless user explicitly enabled it previously
+  if (saved === "true") {
+    widget.style.display = "block";
+    if (btn) {
+      btn.classList.add("active");
+      btn.setAttribute("aria-expanded", "true");
+    }
+    if (checkbox) checkbox.checked = true;
+  } else {
+    widget.style.display = "none";
+    if (btn) {
+      btn.classList.remove("active");
+      btn.setAttribute("aria-expanded", "false");
+    }
+    if (checkbox) checkbox.checked = false;
+  }
+}
+
 // Auto-pause metronome when backgrounding or switching tabs
 document.addEventListener("visibilitychange", () => {
   if (document.hidden && isMetronomeRunning) {
@@ -3507,6 +3601,7 @@ window.addEventListener("DOMContentLoaded", function () {
   restoreTimerState();
   updateMetronomeBeatDots();
   updateMetronomeUI();
+  initMetronomeVisibility();
   initTutorialLang();
   syncOfflinePracticeQueue();
 });

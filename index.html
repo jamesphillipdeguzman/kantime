@@ -42,7 +42,7 @@
       <div class="header-brand">
         <img src="images/kantime-logo.png" alt="KanTime Logo" class="header-logo" onerror="this.style.display='none'">
         <div class="header-text">
-          <h1>KanTime</h1>
+          <h1>KanTime <span class="app-version-badge" title="KanTime v2.5.0">v2.5.0</span></h1>
           <p id="headerSubtitle">Stake Choir Prep • Oct 24–25</p>
         </div>
       </div>
@@ -118,10 +118,16 @@
       <div class="card" id="practiceWorkspace">
         <div class="workspace-header-row">
           <h2>⏱️ <span id="practiceDurationTitle">15</span>-Minute Practice Session</h2>
-          <button type="button" class="btn-vocal-tips" onclick="openVocalTipsModal()" title="Vocal Warm-Ups &amp; Singing Tips" aria-label="Open Vocal Warm-Ups &amp; Singing Tips">
-            <span class="vocal-tips-icon">ℹ️</span>
-            <span class="vocal-tips-text">Vocal Tips &amp; Warm-Ups</span>
-          </button>
+          <div class="workspace-header-actions">
+            <button type="button" class="btn-tool-pill" id="toggleMetronomeVisibilityBtn" onclick="toggleMetronomeVisibility()" title="Show/hide rehearsal metronome" aria-label="Toggle Metronome">
+              <span class="tool-icon">⏱️</span>
+              <span class="tool-text">Metronome</span>
+            </button>
+            <button type="button" class="btn-vocal-tips" onclick="openVocalTipsModal()" title="Vocal Warm-Ups &amp; Singing Tips" aria-label="Open Vocal Warm-Ups &amp; Singing Tips">
+              <span class="vocal-tips-icon">ℹ️</span>
+              <span class="vocal-tips-text">Vocal Tips</span>
+            </button>
+          </div>
         </div>
         <label for="targetSong">Select Song to Rehearse</label>
         <select id="targetSong" onchange="handleSongSelectionChange()">
@@ -157,10 +163,10 @@
         <button class="btn btn-primary" id="timerBtn" onclick="toggleTimer()">Start Practice</button>
       </div>
 
-      <!-- Built-in In-Browser Metronome Tool -->
-      <div class="card metronome-card" id="metronomeWidget">
-        <div class="metronome-header" onclick="toggleMetronomeCollapse()" role="button" tabindex="0" aria-expanded="true">
-          <div class="metronome-header-left">
+      <!-- Built-in In-Browser Metronome Tool (Hidden by default unless user shows it) -->
+      <div class="card metronome-card fade-in" id="metronomeWidget" style="display: none;">
+        <div class="metronome-header">
+          <div class="metronome-header-left" onclick="toggleMetronomeCollapse()" role="button" tabindex="0" aria-expanded="true" style="cursor: pointer; flex: 1;">
             <span class="metronome-header-icon">⏱️</span>
             <div>
               <h3 class="metronome-title">In-Browser Metronome</h3>
@@ -169,7 +175,8 @@
           </div>
           <div class="metronome-header-right">
             <span class="metronome-badge" id="metronomeHeaderBadge">100 BPM • 4/4</span>
-            <button type="button" class="metronome-collapse-btn" id="metronomeCollapseBtn" aria-label="Toggle Metronome Controls">▼</button>
+            <button type="button" class="metronome-collapse-btn" id="metronomeCollapseBtn" onclick="toggleMetronomeCollapse()" aria-label="Toggle Metronome Controls" title="Collapse/Expand Metronome">▼</button>
+            <button type="button" class="metronome-close-btn" id="metronomeCloseBtn" onclick="hideMetronomeWidget()" aria-label="Hide Metronome" title="Hide Metronome">&times;</button>
           </div>
         </div>
 
@@ -258,7 +265,7 @@
           <strong>never recorded or transmitted</strong>.
         </p>
       </div>
-      <p class="footer-credit">&copy; <span id="footerYear"></span> James Phillip De Guzman</p>
+      <p class="footer-credit">&copy; <span id="footerYear"></span> James Phillip De Guzman • <span class="footer-version-tag">KanTime v2.5.0</span></p>
     </footer>
 
   <!-- Fixed Persistent Voice Pitch Checker Overlay (Corner Card) -->
@@ -335,7 +342,7 @@
   <div id="toast">Saved!</div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="script.js?v=pitch_lock_1"></script>
+  <script src="script.js?v=2.5.0"></script>
 
   <!-- In-App Resource Viewer Modal -->
   <div id="resourceModal" class="modal-backdrop" onclick="closeModalOnBackdrop(event)">
@@ -395,7 +402,10 @@
   <div id="settingsModal" class="modal-backdrop" onclick="closeSettingsOnBackdrop(event)" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
     <div class="modal-box settings-modal-box">
       <div class="modal-header">
-        <h3 id="settingsModalTitle">⚙️ Practice Settings & Guide</h3>
+        <div class="settings-modal-title-wrap">
+          <h3 id="settingsModalTitle">⚙️ Practice Settings & Guide</h3>
+          <span class="settings-header-version">v2.5.0</span>
+        </div>
         <button class="modal-close-btn" type="button" onclick="closeSettingsModal()" aria-label="Close settings">&times;</button>
       </div>
 
@@ -482,6 +492,16 @@
               </button>
             </div>
             <p class="settings-hint">Choose your preferred appearance or automatically follow your device's system dark mode.</p>
+          </div>
+
+          <!-- Rehearsal Tools Visibility Section -->
+          <div class="settings-section">
+            <label>Rehearsal Tools</label>
+            <label class="setting-checkbox-row" for="settingShowMetronome">
+              <input type="checkbox" id="settingShowMetronome" onchange="handleSettingMetronomeToggle(this.checked)">
+              <span>Show Metronome tool on rehearsal workspace</span>
+            </label>
+            <p class="settings-hint">Keep the metronome hidden to reduce clutter or show it for tempo and rhythm practice.</p>
           </div>
 
           <div class="settings-section-divider"></div>
