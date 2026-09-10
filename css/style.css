@@ -3304,3 +3304,295 @@ input[type="text"].input-invalid {
 .metronome-toggle-btn.running:hover {
   background: #b91c1c !important;
 }
+
+/* ==========================================================================
+   Vocal Warm-Ups & Singing Tips Styles
+   ========================================================================== */
+.workspace-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.workspace-header-row h2 {
+  margin-bottom: 0;
+}
+
+.btn-vocal-tips {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--card-bg-subtle);
+  border: 1px solid var(--border);
+  color: var(--primary);
+  font-size: 0.76rem;
+  font-weight: 750;
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.btn-vocal-tips:hover {
+  background: var(--primary-light);
+  border-color: var(--primary-border);
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.btn-vocal-tips:active {
+  transform: scale(0.96);
+}
+
+.btn-vocal-tips .vocal-tips-icon {
+  font-size: 0.85rem;
+}
+
+/* Vocal Tips Modal Window */
+.vocal-tips-modal-box {
+  max-width: 620px;
+  max-height: 88vh;
+}
+
+.vocal-tips-title-wrap {
+  text-align: left;
+}
+
+.vocal-tips-title-wrap h3 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0;
+}
+
+.vocal-tips-subtitle {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin: 2px 0 0;
+}
+
+/* Category Filter Pills */
+.vocal-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--card-bg-subtle);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.vocal-filter-bar::-webkit-scrollbar {
+  height: 4px;
+}
+
+.vocal-filter-bar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+.vocal-filter-pill {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 750;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.18s ease;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.vocal-filter-pill:hover {
+  color: var(--primary);
+  border-color: var(--primary-border);
+  background: var(--primary-light);
+}
+
+.vocal-filter-pill.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 1px 4px rgba(29, 78, 216, 0.3);
+}
+
+/* Modal Body & Section Cards */
+.vocal-tips-modal-body {
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.vocal-section-card {
+  background: var(--card-bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  transition: all 0.2s ease;
+}
+
+.vocal-section-header {
+  margin-bottom: 10px;
+}
+
+.vocal-section-header h4 {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text);
+  margin: 4px 0 0;
+}
+
+.vocal-section-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.badge-tension { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.badge-breath { background: #ecfeff; color: #0891b2; border: 1px solid #a5f3fc; }
+.badge-sovt { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+.badge-resonance { background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+.badge-diction { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+.badge-blend { background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
+
+/* Drill Items */
+.vocal-drill-item {
+  border-top: 1px solid var(--border-light);
+  padding-top: 10px;
+  margin-top: 10px;
+}
+
+.vocal-drill-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.vocal-drill-name {
+  font-size: 0.86rem;
+  font-weight: 750;
+  color: var(--text);
+}
+
+.vocal-drill-cues {
+  font-size: 0.81rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Reference Pitch Button */
+.btn-pitch-ref {
+  background: var(--card-bg);
+  border: 1px solid var(--primary-border);
+  color: var(--primary);
+  font-size: 0.72rem;
+  font-weight: 750;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.btn-pitch-ref:hover {
+  background: var(--primary-light);
+  border-color: var(--primary);
+}
+
+.btn-pitch-ref.playing {
+  background: var(--primary) !important;
+  color: #ffffff !important;
+  border-color: var(--primary) !important;
+  animation: pulsePitch 1s infinite alternate;
+}
+
+@keyframes pulsePitch {
+  from { box-shadow: 0 0 2px var(--primary); }
+  to { box-shadow: 0 0 8px var(--primary); }
+}
+
+/* Golden Rules Box */
+.vocal-golden-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.golden-rule {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+}
+
+.golden-rule strong {
+  color: var(--text);
+}
+
+.vocal-tips-modal-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  background: var(--card-bg-subtle);
+}
+
+/* Dark Theme Overrides for Vocal Tips */
+[data-theme="dark"] .vocal-section-card {
+  background: var(--card-bg-subtle);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .btn-pitch-ref {
+  background: var(--card-bg);
+  border-color: var(--border);
+  color: var(--primary);
+}
+
+[data-theme="dark"] .golden-rule {
+  background: var(--card-bg);
+  border-color: var(--border);
+  border-left-color: var(--accent);
+}
+
+[data-theme="dark"] .vocal-filter-pill {
+  background: var(--card-bg);
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .vocal-filter-pill.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+}

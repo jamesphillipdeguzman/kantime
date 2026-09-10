@@ -339,12 +339,12 @@ function applyTimerDuration(minutes, resetReadyClock = true) {
       const disp = document.getElementById("timerDisplay");
       if (disp) disp.innerText = formatTime(timeRemaining);
       if (btn) {
-        btn.innerText = `Start ${mins}m Session`;
+        btn.innerText = "Start Practice";
         btn.classList.remove("btn-outline");
         btn.classList.add("btn-primary");
       }
     } else {
-      if (btn) btn.innerText = `Resume ${mins}m Session`;
+      if (btn) btn.innerText = "Resume Practice";
     }
   }
 
@@ -903,7 +903,7 @@ function triggerInactivityTimeout() {
   const curMins = getUserSettings().timerMinutes || 15;
   const btn = document.getElementById("timerBtn");
   if (btn) {
-    btn.innerText = `Resume ${curMins}m Session`;
+    btn.innerText = "Resume Practice";
     btn.classList.remove("btn-outline");
     btn.classList.add("btn-primary");
   }
@@ -963,7 +963,7 @@ function dismissInactivityModal(resumeSession) {
 
       const btn = document.getElementById("timerBtn");
       if (btn) {
-        btn.innerText = "Pause Session";
+        btn.innerText = "Pause Practice";
         btn.classList.remove("btn-primary");
         btn.classList.add("btn-outline");
       }
@@ -1016,7 +1016,7 @@ function checkInactivityOnRestore() {
     const curMins = getUserSettings().timerMinutes || 15;
     const btn = document.getElementById("timerBtn");
     if (btn) {
-      btn.innerText = `Resume ${curMins}m Session`;
+      btn.innerText = "Resume Practice";
       btn.classList.remove("btn-outline");
       btn.classList.add("btn-primary");
     }
@@ -1229,7 +1229,7 @@ function completeTimerSession() {
 
   const btn = document.getElementById("timerBtn");
   if (btn) {
-    btn.innerText = `Start ${currentDurationMins}m Session`;
+    btn.innerText = "Start Practice";
     btn.classList.remove("btn-outline");
     btn.classList.add("btn-primary");
   }
@@ -1280,7 +1280,7 @@ function restoreTimerState() {
       timeRemaining = Math.max(0, Math.ceil((targetEndTime - now) / 1000));
       document.getElementById("timerDisplay").innerText = formatTime(timeRemaining);
 
-      btn.innerText = "Pause Session";
+      btn.innerText = "Pause Practice";
       btn.classList.remove("btn-primary");
       btn.classList.add("btn-outline");
 
@@ -1300,14 +1300,14 @@ function restoreTimerState() {
     if (savedPaused && Number(savedPaused) > 0 && Number(savedPaused) < timerDuration) {
       timeRemaining = Number(savedPaused);
       document.getElementById("timerDisplay").innerText = formatTime(timeRemaining);
-      btn.innerText = `Resume ${currentDurationMins}m Session`;
+      btn.innerText = "Resume Practice";
       btn.classList.remove("btn-outline");
       btn.classList.add("btn-primary");
     } else {
       timerDuration = currentDurationMins * 60;
       timeRemaining = timerDuration;
       document.getElementById("timerDisplay").innerText = formatTime(timeRemaining);
-      btn.innerText = `Start ${currentDurationMins}m Session`;
+      btn.innerText = "Start Practice";
       btn.classList.remove("btn-outline");
       btn.classList.add("btn-primary");
     }
@@ -1338,7 +1338,7 @@ function toggleTimer() {
     localStorage.setItem("kantime_paused_remaining", timeRemaining);
 
     document.getElementById("timerDisplay").innerText = formatTime(timeRemaining);
-    btn.innerText = `Resume ${currentDurationMins}m Session`;
+    btn.innerText = "Resume Practice";
     btn.classList.remove("btn-outline");
     btn.classList.add("btn-primary");
 
@@ -1351,7 +1351,7 @@ function toggleTimer() {
     localStorage.setItem("kantime_target_song", document.getElementById("targetSong").value);
     localStorage.removeItem("kantime_paused_remaining");
 
-    btn.innerText = "Pause Session";
+    btn.innerText = "Pause Practice";
     btn.classList.remove("btn-primary");
     btn.classList.add("btn-outline");
 
@@ -3410,6 +3410,85 @@ document.addEventListener("visibilitychange", () => {
     stopMetronome();
   }
 });
+
+// ==========================================================================
+// VOCAL WARM-UPS & SINGING TIPS MODAL LOGIC
+// ==========================================================================
+function openVocalTipsModal() {
+  const modal = document.getElementById("vocalTipsModal");
+  if (!modal) return;
+  modal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeVocalTipsModal() {
+  const modal = document.getElementById("vocalTipsModal");
+  if (!modal) return;
+  modal.classList.remove("active");
+  document.body.style.overflow = "";
+}
+
+function closeVocalTipsOnBackdrop(e) {
+  if (e.target.id === "vocalTipsModal") {
+    closeVocalTipsModal();
+  }
+}
+
+function filterVocalCategory(cat) {
+  const pills = document.querySelectorAll(".vocal-filter-pill");
+  pills.forEach(p => {
+    p.classList.toggle("active", p.getAttribute("data-cat") === cat);
+  });
+
+  const cards = document.querySelectorAll(".vocal-section-card");
+  cards.forEach(card => {
+    if (cat === "all" || card.getAttribute("data-cat") === cat) {
+      card.style.display = "block";
+    } else {
+      card.style.display = "none";
+    }
+  });
+}
+
+function playVocalReferencePitch(freq = 261.63, btnEl = null) {
+  const audioCtx = getPitchAudioContext();
+  if (!audioCtx) {
+    showToast("Audio is not supported in this browser.");
+    return;
+  }
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+  stopReferenceTone();
+
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+    const now = audioCtx.currentTime;
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.exponentialRampToValueAtTime(0.32, now + 0.08);
+    gain.gain.setValueAtTime(0.32, now + 1.8);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 2.4);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 2.45);
+
+    activeRefOscillator = osc;
+    activeRefGain = gain;
+
+    if (btnEl) {
+      btnEl.classList.add("playing");
+      setTimeout(() => btnEl.classList.remove("playing"), 2400);
+    }
+  } catch (err) {
+    console.warn("Reference pitch error:", err);
+  }
+}
 
 // Initial load
 window.addEventListener("DOMContentLoaded", function () {
