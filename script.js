@@ -83,13 +83,11 @@ function renderAvatarPicker(currentAvatar) {
 // Select an avatar (or deselect if clicking the selected one again)
 function selectAvatar(filename) {
   if (selectedAvatarFile === filename && filename !== "") {
-    // Tapping currently selected avatar toggles back to default/none
     selectedAvatarFile = "";
   } else {
     selectedAvatarFile = filename;
   }
 
-  // Update visual selection states
   const options = document.querySelectorAll(".avatar-option");
   options.forEach(opt => opt.classList.remove("selected"));
 
@@ -170,7 +168,6 @@ function selectSettingAvatar(filename) {
     if (activeOpt) activeOpt.classList.add("selected");
   }
 }
-
 
 // Generate Leaderboard avatar HTML with fallback
 function getLeaderboardAvatarHtml(avatarFile, singerName) {
@@ -274,7 +271,6 @@ function getUserSettings() {
     const parsed = JSON.parse(stored);
     let songs = Array.isArray(parsed.songs) && parsed.songs.length > 0 ? parsed.songs : DEFAULT_USER_SETTINGS.songs;
 
-    // Merge default audioTracks and localSheetUrl for bundled songs if missing
     songs = songs.map(s => {
       const def = DEFAULT_USER_SETTINGS.songs.find(d => d.id === s.id || d.title === s.title);
       if (def) {
@@ -307,8 +303,8 @@ function applyHeaderTargetDate() {
   }
 }
 
-// --- PRACTICE TIMER STATE & DURATION (CONFIGURABLE & TIMESTAMP-PERSISTED) ---
-let timerDuration = 15 * 60; // Dynamic practice duration in seconds (defaults to 15m)
+// --- PRACTICE TIMER STATE & DURATION ---
+let timerDuration = 15 * 60;
 let timeRemaining = timerDuration;
 let targetEndTime = null;
 let timerInterval = null;
@@ -330,7 +326,6 @@ function applyTimerDuration(minutes, resetReadyClock = true) {
     subtextEl.innerText = `Hit Start, practice your parts, and complete the ${mins}-minute countdown to record your session.`;
   }
 
-  // Update timer display and button if timer is in ready state
   if (!timerInterval && !targetEndTime) {
     const savedPaused = localStorage.getItem("kantime_paused_remaining");
     const btn = document.getElementById("timerBtn");
@@ -358,13 +353,11 @@ function updateDurationSelectorUI(mins, isLocked) {
   const currentMins = Number(mins) || getUserSettings().timerMinutes || 15;
   const locked = Boolean(isLocked);
 
-  // Synchronize Settings modal dropdown if present
   const settingsSelect = document.getElementById("settingTimerDuration");
   if (settingsSelect && Number(settingsSelect.value) !== currentMins) {
     settingsSelect.value = currentMins;
   }
 
-  // Synchronize quick-duration pills
   const pills = document.querySelectorAll(".quick-duration-pill");
   pills.forEach(pill => {
     const pillMins = Number(pill.getAttribute("data-mins"));
@@ -432,7 +425,6 @@ function getSongResource(songKeyOrTitle) {
   return found;
 }
 
-// Helper to check if rehearsal session is active (countdown running or paused with progress)
 function isPracticeSessionActive() {
   const isRunning = Boolean(timerInterval || targetEndTime);
   const pausedVal = localStorage.getItem("kantime_paused_remaining");
@@ -455,7 +447,6 @@ function renderSelectedSongResource(songKey) {
   const sessionActive = isPracticeSessionActive();
   const isOffline = !navigator.onLine;
 
-  // 🔒 GATED STATE: Prior to timer start or upon reset/completion, hide interactive materials & show prompt
   if (!sessionActive) {
     container.innerHTML = `
       <div class="song-item ${isPrimary} fade-in">
@@ -476,10 +467,8 @@ function renderSelectedSongResource(songKey) {
     return;
   }
 
-  // 🔓 UNLOCKED STATE: Session is active (running or paused) — reveal interactive sheet music, player, and part rehearsal links
   let actionsHtml = "";
 
-  // Local Sheet Music PDF (cached offline in kantime-resources/)
   if (song.localSheetUrl) {
     actionsHtml += `<button class="btn-link" type="button" onclick="openResourceModal('${escapeHtml(song.title)} (Local Sheet)', '${escapeHtml(song.localSheetUrl)}', 'doc')">🎼 Preview Sheet (Offline PDF) <span class="badge-cached-offline">Offline Ready</span></button> `;
   }
@@ -502,7 +491,6 @@ function renderSelectedSongResource(songKey) {
     actionsHtml += `<button class="btn-link ${isOffline ? 'link-disabled-offline' : ''}" type="button" onclick="${isOffline ? "showToast('YouTube streaming requires an active internet connection.')" : `openResourceModal('${escapeHtml(song.title)} (Video)', '${escapeHtml(embedUrl)}', 'video')`}">▶️ Watch Video${offlineBadge}</button> `;
   }
 
-  // Bundled Local Audio Tracks Player (<audio> tags referencing bundled mp3s)
   let localAudioHtml = "";
   if (song.audioTracks && song.audioTracks.length > 0) {
     let pillsHtml = "";
@@ -577,7 +565,6 @@ function handleSongSelectionChange() {
   renderSelectedSongResource(selectedSong);
 }
 
-
 // --- PROFILE STORAGE & GATED DASHBOARD ACCESS ---
 function updateActiveProfileDisplay(name, section, avatar) {
   const activeName = document.getElementById("activeProfileName");
@@ -590,7 +577,6 @@ function updateActiveProfileDisplay(name, section, avatar) {
     activeBadge.setAttribute("data-voice", section);
   }
 
-  // 40x40px avatar badge in header banner
   if (avatarWrap) {
     if (avatar && avatar.trim()) {
       const src = getAvatarImgSrc(avatar);
@@ -690,7 +676,7 @@ function handleProfileSubmit() {
 
   document.getElementById("profileCard").style.display = "none";
   document.getElementById("activeProfileBanner").style.display = "flex";
-  
+
   const dashboard = document.getElementById("mainDashboard");
   dashboard.style.display = "block";
 
@@ -708,7 +694,6 @@ function handleProfileSubmit() {
   if (pitchWidget) pitchWidget.style.display = "block";
   updatePitchTargetVoice();
 
-  // Smoothly scroll down to the practice workspace
   const practiceWorkspace = document.getElementById("practiceWorkspace");
   if (practiceWorkspace) {
     practiceWorkspace.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -747,7 +732,6 @@ function saveProfileFromSettings() {
     localStorage.removeItem("choir_avatar");
   }
 
-  // Synchronize in-page form inputs & avatar if present
   const pageNameInput = document.getElementById("memberName");
   if (pageNameInput) pageNameInput.value = name;
   const pageSecSelect = document.getElementById("memberSection");
@@ -756,7 +740,6 @@ function saveProfileFromSettings() {
 
   updateActiveProfileDisplay(name, section, avatar);
 
-  // If page was in setup mode, reveal dashboard and banner
   const profileCard = document.getElementById("profileCard");
   if (profileCard) profileCard.style.display = "none";
   const activeBanner = document.getElementById("activeProfileBanner");
@@ -813,8 +796,8 @@ function validateUser() {
   return true;
 }
 
-// --- INACTIVITY / IDLE DETECTION SYSTEM (Typing.com style) ---
-const IDLE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes (300,000 ms)
+// --- INACTIVITY / IDLE DETECTION SYSTEM ---
+const IDLE_TIMEOUT_MS = 5 * 60 * 1000;
 const IDLE_EVENTS = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
 let idleTimerId = null;
 let lastActivityTime = Date.now();
@@ -831,17 +814,14 @@ function getFirstName(fullName) {
 
 function handleUserInteraction() {
   const now = Date.now();
-  // Throttle interaction checks to max once per second
   if (now - lastThrottleTime < 1000) return;
   lastThrottleTime = now;
 
-  // Do not reset while the inactivity modal is open
   if (isIdleModalOpen) return;
 
   lastActivityTime = now;
   localStorage.setItem("kantime_last_activity", now);
 
-  // If practice timer is currently running, reset the 5m countdown
   if (timerInterval && targetEndTime) {
     if (idleTimerId) {
       clearTimeout(idleTimerId);
@@ -851,7 +831,7 @@ function handleUserInteraction() {
 }
 
 function startIdleTracking() {
-  if (!timerInterval && !targetEndTime) return; // Only track while active practice session is running
+  if (!timerInterval && !targetEndTime) return;
 
   lastActivityTime = Date.now();
   localStorage.setItem("kantime_last_activity", lastActivityTime);
@@ -884,10 +864,8 @@ function stopIdleTracking() {
 }
 
 function triggerInactivityTimeout() {
-  // Only trigger when timer is active
   if (!timerInterval && !targetEndTime) return;
 
-  // 1. Pause active practice countdown timer (preserve remaining time)
   if (timerInterval) {
     clearInterval(timerInterval);
     timerInterval = null;
@@ -903,7 +881,6 @@ function triggerInactivityTimeout() {
   const timerDisp = document.getElementById("timerDisplay");
   if (timerDisp) timerDisp.innerText = formatTime(timeRemaining);
 
-  const curMins = getUserSettings().timerMinutes || 15;
   const btn = document.getElementById("timerBtn");
   if (btn) {
     btn.innerText = "Resume Practice";
@@ -912,8 +889,6 @@ function triggerInactivityTimeout() {
   }
 
   stopIdleTracking();
-
-  // 2. Open inactivity modal
   openInactivityModal();
 }
 
@@ -957,7 +932,6 @@ function dismissInactivityModal(resumeSession) {
   document.body.style.overflow = "";
 
   if (resumeSession) {
-    // Resume countdown timer
     if (timeRemaining > 0) {
       targetEndTime = Date.now() + (timeRemaining * 1000);
       localStorage.setItem("kantime_target_end", targetEndTime);
@@ -977,7 +951,6 @@ function dismissInactivityModal(resumeSession) {
       showToast("Resumed! Keep going! 🎶");
     }
   } else {
-    // Keep session paused
     stopIdleTracking();
     showToast("Session paused.");
   }
@@ -997,9 +970,7 @@ function checkInactivityOnRestore() {
   const savedLastActivity = Number(localStorage.getItem("kantime_last_activity") || now);
   const elapsedSinceActivity = now - savedLastActivity;
 
-  // If user was away / inactive for >= 5 minutes while timer was running
   if (elapsedSinceActivity >= IDLE_TIMEOUT_MS) {
-    // Session is credited only up to the 5-minute inactivity boundary
     const idlePauseTime = savedLastActivity + IDLE_TIMEOUT_MS;
     const remainingMs = Math.max(0, Number(savedTargetEnd) - idlePauseTime);
     timeRemaining = Math.max(0, Math.ceil(remainingMs / 1000));
@@ -1016,7 +987,6 @@ function checkInactivityOnRestore() {
     const timerDisp = document.getElementById("timerDisplay");
     if (timerDisp) timerDisp.innerText = formatTime(timeRemaining);
 
-    const curMins = getUserSettings().timerMinutes || 15;
     const btn = document.getElementById("timerBtn");
     if (btn) {
       btn.innerText = "Resume Practice";
@@ -1129,7 +1099,6 @@ function initEncouragementBanner() {
     }
   }
 
-  // Pre-session welcome state: acknowledge streak if member has >= 2 sessions this week
   const stats = getWeekSessionStats();
   if (stats && stats.weekCount >= 2) {
     showEncouragementBanner(`${stats.weekCount} sessions this week—thank you for your dedication!`, "🔥", "normal");
@@ -1192,7 +1161,6 @@ function updateTimerTick() {
   const curMins = getUserSettings().timerMinutes || 15;
   const totalSecs = curMins * 60;
 
-  // Dynamic Trigger: Halfway Mark (50%)
   if (!isHalfwayTriggered && timeRemaining <= (totalSecs / 2) && timeRemaining > 0) {
     isHalfwayTriggered = true;
     localStorage.setItem("kantime_halfway_triggered", "true");
@@ -1238,21 +1206,15 @@ function completeTimerSession() {
   }
 
   updateDurationSelectorUI(currentDurationMins, false);
-
-  // Record completed session in history for consistency tracking
   recordCompletedSession(currentDurationMins);
   const stats = getWeekSessionStats();
 
-  // Dynamic Trigger: Session Complete Milestone Banner
   const celebrationPraise = CELEBRATION_MESSAGES[Math.floor(Math.random() * CELEBRATION_MESSAGES.length)];
   showEncouragementBanner(celebrationPraise, "🎉", "milestone");
 
-  // Dynamic Trigger: Session Complete Celebration Modal
   openCompletionModal(currentDurationMins, stats);
-
   submitPracticeSession(currentDurationMins);
 
-  // Return song resource section to hidden/prompt state
   const currentSong = document.getElementById("targetSong") ? document.getElementById("targetSong").value : "";
   renderSelectedSongResource(currentSong);
 }
@@ -1269,7 +1231,6 @@ function restoreTimerState() {
   }
 
   if (savedTargetEnd) {
-    // Check if idle timeout elapsed while tab was inactive or backgrounded
     if (checkInactivityOnRestore()) {
       return;
     }
@@ -1278,7 +1239,6 @@ function restoreTimerState() {
     const now = Date.now();
 
     if (now < savedEndTime) {
-      // Timer is running
       targetEndTime = savedEndTime;
       timeRemaining = Math.max(0, Math.ceil((targetEndTime - now) / 1000));
       document.getElementById("timerDisplay").innerText = formatTime(timeRemaining);
@@ -1297,7 +1257,6 @@ function restoreTimerState() {
       completeTimerSession();
     }
   } else {
-    // Paused state
     stopIdleTracking();
     const savedPaused = localStorage.getItem("kantime_paused_remaining");
     if (savedPaused && Number(savedPaused) > 0 && Number(savedPaused) < timerDuration) {
@@ -1317,7 +1276,6 @@ function restoreTimerState() {
     updateDurationSelectorUI(currentDurationMins, false);
   }
 
-  // Restore resource state (unlocked if running/paused, gated if session not started)
   const currentSong = document.getElementById("targetSong") ? document.getElementById("targetSong").value : "";
   renderSelectedSongResource(currentSong);
 
@@ -1330,7 +1288,6 @@ function toggleTimer() {
   const currentDurationMins = getUserSettings().timerMinutes || 15;
   const btn = document.getElementById("timerBtn");
   if (timerInterval) {
-    // Pause timer
     clearInterval(timerInterval);
     timerInterval = null;
     if (targetEndTime) {
@@ -1348,7 +1305,6 @@ function toggleTimer() {
     stopIdleTracking();
     updateDurationSelectorUI(currentDurationMins, false);
   } else {
-    // Start or Resume timer
     targetEndTime = Date.now() + (timeRemaining * 1000);
     localStorage.setItem("kantime_target_end", targetEndTime);
     localStorage.setItem("kantime_target_song", document.getElementById("targetSong").value);
@@ -1358,10 +1314,8 @@ function toggleTimer() {
     btn.classList.remove("btn-primary");
     btn.classList.add("btn-outline");
 
-    // Reveal interactive sheet music, player, and part rehearsal links smoothly upon timer start
     renderSelectedSongResource(document.getElementById("targetSong").value);
 
-    // Dynamic Encouragement Trigger: Session Start
     const totalSecs = currentDurationMins * 60;
     if (timeRemaining > (totalSecs / 2)) {
       isHalfwayTriggered = false;
@@ -1384,7 +1338,6 @@ function toggleTimer() {
   }
 }
 
-// Tab and browser focus handlers
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) {
     restoreTimerState();
@@ -1394,7 +1347,6 @@ window.addEventListener("focus", () => {
   restoreTimerState();
 });
 
-
 function showToast(msg) {
   const t = document.getElementById("toast");
   if (!t) return;
@@ -1403,7 +1355,7 @@ function showToast(msg) {
   setTimeout(() => { t.style.display = "none"; }, 3000);
 }
 
-// --- SUBMIT PRACTICE LOG TO GOOGLE SHEETS (WITH OFFLINE QUEUE) ---
+// --- SUBMIT PRACTICE LOG TO GOOGLE SHEETS ---
 function submitPracticeSession(minutes) {
   const name = document.getElementById("memberName").value.trim();
   const section = document.getElementById("memberSection").value;
@@ -1445,7 +1397,7 @@ function submitPracticeSession(minutes) {
     });
 }
 
-// --- LOAD LEADERBOARDS (TOP 10 & SECTIONS) ---
+// --- LOAD LEADERBOARDS ---
 function loadLeaderboard() {
   if (!navigator.onLine) {
     const topSingersEl = document.getElementById("topSingersList");
@@ -1475,9 +1427,7 @@ function loadLeaderboard() {
         return;
       }
 
-      // 1. Group by Individual Singer
       const singerTotals = {};
-      // 2. Group by Section
       const sectionTotals = { "Soprano": 0, "Alto": 0, "Tenor": 0, "Bass": 0, "Primary": 0 };
 
       data.forEach(entry => {
@@ -1487,14 +1437,13 @@ function loadLeaderboard() {
         const av = (entry.avatar || "").trim();
 
         if (!singerTotals[trimmedName]) {
-          singerTotals[trimmedName] = { 
-            name: trimmedName, 
-            section: sec, 
-            avatar: av, 
-            totalMins: 0 
+          singerTotals[trimmedName] = {
+            name: trimmedName,
+            section: sec,
+            avatar: av,
+            totalMins: 0
           };
         } else {
-          // Update avatar if a later entry has one recorded
           if (av) {
             singerTotals[trimmedName].avatar = av;
           }
@@ -1506,7 +1455,6 @@ function loadLeaderboard() {
         }
       });
 
-      // Render Top 10 Singers with 28x28px circular avatars
       const sortedSingers = Object.values(singerTotals).sort((a, b) => b.totalMins - a.totalMins).slice(0, 10);
       const currentUserName = (localStorage.getItem("choir_name") || "").trim().toLowerCase();
       const currentUserAvatar = localStorage.getItem("choir_avatar") || "";
@@ -1517,7 +1465,6 @@ function loadLeaderboard() {
         const medal = idx === 0 ? "🥇 " : idx === 1 ? "🥈 " : idx === 2 ? "🥉 " : "";
         const hours = (s.totalMins / 60).toFixed(1);
 
-        // Fallback to local avatar if current signed-in user hasn't logged a new session with avatar yet
         let avatarToShow = s.avatar;
         if (!avatarToShow && currentUserName && s.name.toLowerCase() === currentUserName) {
           avatarToShow = currentUserAvatar;
@@ -1539,7 +1486,6 @@ function loadLeaderboard() {
       });
       if (topSingersEl) topSingersEl.innerHTML = singersHtml;
 
-      // Render Section Standings
       const sortedSections = Object.entries(sectionTotals).sort((a, b) => b[1] - a[1]);
       let sectionHtml = "";
       sortedSections.forEach(([sec, mins], idx) => {
@@ -1589,15 +1535,13 @@ let activeRefOscillator = null;
 let activeRefGain = null;
 let activeRefTimeout = null;
 
-// Pitch Smoothing (Anti-Jitter / Damping) & Lock-In State
-const PITCH_EMA_ALPHA = 0.20; // low-pass filter alpha (0.15 - 0.25)
+const PITCH_EMA_ALPHA = 0.20;
 let smoothedPitchHz = 0;
-let pitchFrameBuffer = []; // rolling median buffer (last 4 frames)
+let pitchFrameBuffer = [];
 let jumpCandidateHz = null;
 let jumpCandidateCount = 0;
 let lastDisplayedCents = null;
 
-// Pitch Lock-In & Chime State
 let pitchLockStartTime = null;
 let isPitchLocked = false;
 let pitchOffTargetStartTime = null;
@@ -1613,7 +1557,6 @@ function getPitchAudioContext() {
   return pitchAudioContext;
 }
 
-// 1. Reference Starting Pitches (Pitch Pipe Oscillators)
 function playReferenceTone(part) {
   const ref = REFERENCE_PITCHES[part] || REFERENCE_PITCHES.Tenor;
   const audioCtx = getPitchAudioContext();
@@ -1673,17 +1616,16 @@ function stopReferenceTone() {
     try {
       activeRefOscillator.stop();
       activeRefOscillator.disconnect();
-    } catch (e) {}
+    } catch (e) { }
     activeRefOscillator = null;
   }
   if (activeRefGain) {
-    try { activeRefGain.disconnect(); } catch (e) {}
+    try { activeRefGain.disconnect(); } catch (e) { }
     activeRefGain = null;
   }
   document.querySelectorAll(".pitch-ref-btn").forEach(btn => btn.classList.remove("playing"));
 }
 
-// 2. Widget UI Expansion & Collapse
 function expandPitchWidget() {
   const mini = document.getElementById("pitchWidgetMinimized");
   const card = document.getElementById("pitchWidgetCard");
@@ -1723,7 +1665,6 @@ function updatePitchTargetVoice() {
   });
 }
 
-// 3. Real-Time Pitch Detection & Autocorrelation
 function togglePitchDetection() {
   if (isPitchDetecting) {
     stopPitchDetection();
@@ -1793,7 +1734,7 @@ function stopPitchDetection() {
   if (pitchMediaStream) {
     try {
       pitchMediaStream.getTracks().forEach(track => track.stop());
-    } catch (e) {}
+    } catch (e) { }
     pitchMediaStream = null;
   }
 
@@ -1892,7 +1833,7 @@ function triggerPitchLock(fullNote) {
   }
   if (needle) {
     needle.classList.add("pitch-locked");
-    needle.style.left = "50%"; // Snap directly to target center (0 cents)
+    needle.style.left = "50%";
   }
   if (centsVal) {
     centsVal.innerText = "🎯 0 cents (Locked)";
@@ -1922,10 +1863,9 @@ function unlockPitch() {
   if (needle) needle.classList.remove("pitch-locked");
 }
 
-// Synthesize pleasant, warm two-note success chime (C6 at 1046 Hz -> E6 at 1318 Hz)
 function playPitchLockChime() {
   const now = performance.now();
-  if (now - lastLockChimeTime < 2500) return; // 2.5s debounce cooldown
+  if (now - lastLockChimeTime < 2500) return;
   lastLockChimeTime = now;
 
   const audioCtx = getPitchAudioContext();
@@ -1936,28 +1876,26 @@ function playPitchLockChime() {
 
   const t0 = audioCtx.currentTime;
 
-  // Bell Tone 1: C6 (1046.50 Hz)
   const osc1 = audioCtx.createOscillator();
   const gain1 = audioCtx.createGain();
   osc1.type = "sine";
   osc1.frequency.setValueAtTime(1046.50, t0);
   gain1.gain.setValueAtTime(0.0001, t0);
-  gain1.gain.linearRampToValueAtTime(0.12, t0 + 0.05); // 0.05s attack
-  gain1.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.40); // 0.35s decay
+  gain1.gain.linearRampToValueAtTime(0.12, t0 + 0.05);
+  gain1.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.40);
   osc1.connect(gain1);
   gain1.connect(audioCtx.destination);
   osc1.start(t0);
   osc1.stop(t0 + 0.42);
 
-  // Bell Tone 2: E6 (1318.51 Hz) - swelling warmly right after C6
   const t1 = t0 + 0.06;
   const osc2 = audioCtx.createOscillator();
   const gain2 = audioCtx.createGain();
   osc2.type = "sine";
   osc2.frequency.setValueAtTime(1318.51, t1);
   gain2.gain.setValueAtTime(0.0001, t1);
-  gain2.gain.linearRampToValueAtTime(0.14, t1 + 0.05); // 0.05s attack
-  gain2.gain.exponentialRampToValueAtTime(0.0001, t1 + 0.42); // 0.35s decay
+  gain2.gain.linearRampToValueAtTime(0.14, t1 + 0.05);
+  gain2.gain.exponentialRampToValueAtTime(0.0001, t1 + 0.42);
   osc2.connect(gain2);
   gain2.connect(audioCtx.destination);
   osc2.start(t1);
@@ -1975,7 +1913,6 @@ function pitchAnalysisLoop() {
   pitchAnimFrameId = requestAnimationFrame(pitchAnalysisLoop);
 }
 
-// Normalized Autocorrelation algorithm with energy confidence check & parabolic peak refinement
 function autoCorrelate(buf, sampleRate) {
   const SIZE = buf.length;
   let sumOfSquares = 0;
@@ -2024,7 +1961,6 @@ function autoCorrelate(buf, sampleRate) {
   return sampleRate / exactPeriod;
 }
 
-// Frequency to Note mapping, cents gauge (-50 to +50), and dynamic feedback colors
 function updatePitchUI(freq) {
   const card = document.getElementById("pitchWidgetCard");
   const noteBadge = document.getElementById("pitchNoteBadge");
@@ -2046,7 +1982,6 @@ function updatePitchUI(freq) {
       unlockPitch();
     }
 
-    // Reset smoothing & jump candidate on silence / below RMS threshold
     smoothedPitchHz = 0;
     pitchFrameBuffer = [];
     jumpCandidateHz = null;
@@ -2067,11 +2002,9 @@ function updatePitchUI(freq) {
     return;
   }
 
-  // 1. Octave / Erratic Jump Filter (> 1.5 semitones)
   if (smoothedPitchHz > 0) {
     const semitoneDiff = Math.abs(12 * Math.log2(freq / smoothedPitchHz));
     if (semitoneDiff > 1.5) {
-      // Check if singer intentionally changed to a new note (sustained for 3 consecutive frames)
       if (jumpCandidateHz !== null && Math.abs(12 * Math.log2(freq / jumpCandidateHz)) <= 0.8) {
         jumpCandidateCount++;
       } else {
@@ -2080,14 +2013,12 @@ function updatePitchUI(freq) {
       }
 
       if (jumpCandidateCount >= 3) {
-        // Confirmed intentional note shift
         smoothedPitchHz = freq;
         pitchFrameBuffer = [freq];
         jumpCandidateHz = null;
         jumpCandidateCount = 0;
         unlockPitch();
       } else {
-        // Transient octave glitch or erratic jump — ignore this frame
         return;
       }
     } else {
@@ -2099,16 +2030,13 @@ function updatePitchUI(freq) {
     pitchFrameBuffer = [freq];
   }
 
-  // 2. Exponential Moving Average (EMA) smoothing
   smoothedPitchHz = (PITCH_EMA_ALPHA * freq) + ((1 - PITCH_EMA_ALPHA) * smoothedPitchHz);
 
-  // 3. Rolling Median Buffer (last 4 frames) to eliminate micro-jitter and sub-cent vibrato
   pitchFrameBuffer.push(smoothedPitchHz);
   if (pitchFrameBuffer.length > 4) pitchFrameBuffer.shift();
   const sortedBuf = [...pitchFrameBuffer].sort((a, b) => a - b);
   const effectiveHz = sortedBuf[Math.floor(sortedBuf.length / 2)];
 
-  // 4. Frequency to Note & Cents calculation
   const n = 12 * (Math.log(effectiveHz / 440) / Math.LN2) + 69;
   const roundedNote = Math.round(n);
   const rawCents = Math.round((n - roundedNote) * 100);
@@ -2118,7 +2046,6 @@ function updatePitchUI(freq) {
   const fullNote = `${noteName}${octave}`;
   const absCents = Math.abs(rawCents);
 
-  // 5. Pitch Lock-In Detection: within ±8 cents held continuously for at least 350ms
   if (absCents <= 8) {
     pitchOffTargetStartTime = null;
     if (!pitchLockStartTime) {
@@ -2138,7 +2065,6 @@ function updatePitchUI(freq) {
     }
   }
 
-  // 6. Deadzone damping on cents needle (suppress < 1.0c micro-fluctuations when unlocked)
   let displayCents = rawCents;
   if (lastDisplayedCents !== null && !isPitchLocked) {
     if (Math.abs(rawCents - lastDisplayedCents) < 1.0) {
@@ -2147,12 +2073,11 @@ function updatePitchUI(freq) {
   }
   lastDisplayedCents = displayCents;
 
-  // 7. Update UI Elements
   if (noteVal) noteVal.innerText = fullNote;
   if (hzVal) hzVal.innerText = `${effectiveHz.toFixed(1)} Hz`;
 
   if (isPitchLocked) {
-    if (needle) needle.style.left = "50%"; // Locked at exact center
+    if (needle) needle.style.left = "50%";
     if (centsVal) {
       centsVal.innerText = "🎯 0 cents (Locked)";
       centsVal.classList.add("in-tune");
@@ -2169,7 +2094,6 @@ function updatePitchUI(freq) {
     return;
   }
 
-  // Normal / Unlocked UI rendering
   const clampedCents = Math.max(-50, Math.min(50, displayCents));
   const needlePct = clampedCents + 50;
   if (needle) needle.style.left = `${needlePct}%`;
@@ -2202,7 +2126,6 @@ function updatePitchUI(freq) {
   }
 }
 
-// Mobile WebView lifecycle: suspend AudioContext on hidden, resume on active
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
     if (pitchAudioContext && pitchAudioContext.state === "running") {
@@ -2254,7 +2177,6 @@ function openSettingsModal(defaultTab = 'profile') {
   const modal = document.getElementById("settingsModal");
   if (!modal) return;
 
-  // 1. Populate Profile Tab inputs
   const savedName = localStorage.getItem("choir_name") || "";
   const savedVoice = localStorage.getItem("choir_voice") || localStorage.getItem("choir_section") || "";
   const savedAvatar = localStorage.getItem("choir_avatar") || "";
@@ -2267,7 +2189,6 @@ function openSettingsModal(defaultTab = 'profile') {
 
   renderSettingAvatarPicker(savedAvatar);
 
-  // 2. Populate Preferences & Repertoire Tab inputs
   const settings = getUserSettings();
   const targetDateInput = document.getElementById("settingTargetDate");
   if (targetDateInput) {
@@ -2287,7 +2208,6 @@ function openSettingsModal(defaultTab = 'profile') {
   closeSongForm();
   renderRepertoireList();
 
-  // 3. Switch to target tab (defaults to 'profile' or 'preferences')
   switchSettingsTab(defaultTab || 'profile');
 
   const settingNameInput = document.getElementById("settingMemberName");
@@ -2302,7 +2222,6 @@ function openSettingsModal(defaultTab = 'profile') {
 }
 
 function closeSettingsModal() {
-  // Check if user made unsaved profile changes in Settings and auto-commit if valid
   const nameInput = document.getElementById("settingMemberName");
   const sectionSelect = document.getElementById("settingMemberSection");
   if (nameInput && sectionSelect) {
@@ -2317,7 +2236,6 @@ function closeSettingsModal() {
     }
   }
 
-  // Ensure any newly selected duration value is applied
   const timerDurSelect = document.getElementById("settingTimerDuration");
   if (timerDurSelect) {
     const selectedMins = Number(timerDurSelect.value) || 15;
@@ -2365,7 +2283,7 @@ function switchSettingsTab(tabName) {
         btn.setAttribute("aria-selected", "true");
         try {
           btn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
-        } catch (e) {}
+        } catch (e) { }
       } else {
         btn.classList.remove("active");
         btn.setAttribute("aria-selected", "false");
@@ -2399,12 +2317,10 @@ function handleTimerDurationChange(val) {
   const settings = getUserSettings();
   const oldMins = settings.timerMinutes || 15;
 
-  // If already matches current ready clock duration and not running, no-op
   if (newMins === oldMins && timeRemaining === newMins * 60 && !timerInterval && !targetEndTime) {
     return;
   }
 
-  // If a session is currently running or paused with active progress, confirm reset
   const isRunning = Boolean(timerInterval || targetEndTime);
   const pausedVal = localStorage.getItem("kantime_paused_remaining");
   const hasPausedProgress = Boolean(pausedVal && Number(pausedVal) > 0 && Number(pausedVal) < timerDuration);
@@ -2496,7 +2412,6 @@ function openSongForm(songId) {
   if (!formCard) return;
 
   if (songId) {
-    // Edit existing piece
     const settings = getUserSettings();
     const song = settings.songs.find(s => s.id === songId);
     if (!song) return;
@@ -2508,7 +2423,6 @@ function openSongForm(songId) {
     videoInput.value = song.videoUrl || "";
     sheetInput.value = song.sheetUrl || "";
   } else {
-    // Add new piece
     idInput.value = "";
     heading.innerText = `➕ Add New Repertoire Piece`;
     titleInput.value = "";
@@ -2547,7 +2461,6 @@ function saveSongFromForm() {
   const settings = getUserSettings();
 
   if (songId) {
-    // Update existing
     const idx = settings.songs.findIndex(s => s.id === songId);
     if (idx !== -1) {
       settings.songs[idx] = {
@@ -2559,7 +2472,6 @@ function saveSongFromForm() {
       };
     }
   } else {
-    // Add new song
     const newId = "song_" + Date.now();
     settings.songs.push({
       id: newId,
@@ -2576,7 +2488,6 @@ function saveSongFromForm() {
   renderRepertoireList();
   populateSongSelectDropdown();
 
-  // If currently selected piece was edited or if it's the only one, update player
   const targetSelect = document.getElementById("targetSong");
   if (targetSelect) {
     if (!targetSelect.value || targetSelect.value === title) {
@@ -2618,7 +2529,6 @@ function resetUserSettingsToDefault() {
   localStorage.removeItem("kantime_user_settings");
   closeSongForm();
 
-  // Apply default settings
   const defaults = getUserSettings();
   applyHeaderTargetDate();
   applyTimerDuration(defaults.timerMinutes, true);
@@ -2631,7 +2541,6 @@ function resetUserSettingsToDefault() {
     renderSelectedSongResource(defaults.songs[0].title);
   }
 
-  // Update Settings form inputs
   const targetDateInput = document.getElementById("settingTargetDate");
   if (targetDateInput) targetDateInput.value = defaults.targetDate;
 
@@ -2742,7 +2651,6 @@ function applyTutorialLang(lang) {
   const strings = TUTORIAL_I18N[lang];
   if (!strings) return;
 
-  // Swap all data-i18n text nodes inside the tutorial tab panel
   const panel = document.getElementById("tabPanelTutorial");
   if (panel) {
     panel.querySelectorAll("[data-i18n]").forEach(function (el) {
@@ -2753,13 +2661,12 @@ function applyTutorialLang(lang) {
     });
   }
 
-  // Update the active pill highlight
   document.querySelectorAll(".lang-pill").forEach(function (btn) {
     btn.classList.toggle("active", btn.getAttribute("data-lang") === lang);
   });
 }
 
-// --- EXPORT TUTORIAL GUIDE TO PDF (MOBILE-OPTIMIZED VIA HTML2PDF) ---
+// --- EXPORT TUTORIAL GUIDE TO PDF (FIXED STAGING COORDINATES) ---
 function exportTutorialToPdf() {
   const exportBtn = document.querySelector(".btn-export-pdf");
   const origBtnContent = exportBtn ? exportBtn.innerHTML : "";
@@ -2783,30 +2690,19 @@ function exportTutorialToPdf() {
   const lang = currentTutorialLang || "en";
   const s = TUTORIAL_I18N[lang] || TUTORIAL_I18N.en;
 
-  // ─── Phase 1: Build the staging container ─────────────────────────────────
-  // CRITICAL: Use position:absolute placed far below the page (NOT position:fixed
-  // with z-index:-9999). Fixed + negative z-index causes html2canvas to capture
-  // the element behind the page background layer → blank 0×0 canvas → 3 KB PDF.
-  // Absolute placement with a large top offset keeps the element out of the
-  // visible viewport while remaining fully renderable by the browser engine.
   const A4_PX = 794; // A4 at 96 DPI
   const staging = document.createElement("div");
   staging.id = "pdfIsolatedExportContainer";
 
-  // ALL layout via inline styles – no CSS class dependencies that could be
-  // overridden by dark-mode rules or theme variables.
-  // POSITIONING: Use left:-9999px (off-screen left) NOT top:scrollHeight+5000px.
-  // Reason: body overflow:hidden (set when modals are open) clips absolute children
-  // that extend below scrollHeight, producing 0-height layout and blank PDF.
-  // Left-offset is unaffected by overflow:hidden on the Y axis and keeps the
-  // element fully renderable in the browser's layout engine.
+  // FIXED POSITIONING: Placed at (0,0) with negative z-index so html2canvas renders
+  // directly inside the viewport coordinate frame without clipping.
   Object.assign(staging.style, {
-    position: 'absolute',
+    position: 'fixed',
     top: '0',
-    left: '-9999px',
+    left: '0',
     width: A4_PX + 'px',
     maxWidth: A4_PX + 'px',
-    zIndex: '0',
+    zIndex: '2147483647',
     background: '#ffffff',
     backgroundColor: '#ffffff',
     color: '#0f172a',
@@ -2821,13 +2717,12 @@ function exportTutorialToPdf() {
     pointerEvents: 'none'
   });
 
-  // ─── Phase 2: Build PDF HTML using only inline styles ────────────────────
   const BADGE_COLORS = [
-    { bg:'#eff6ff', fg:'#1d4ed8', border:'#bfdbfe', left:'#3b82f6' },
-    { bg:'#f0fdfa', fg:'#0f766e', border:'#99f6e4', left:'#14b8a6' },
-    { bg:'#ecfdf5', fg:'#059669', border:'#a7f3d0', left:'#10b981' },
-    { bg:'#fffbeb', fg:'#b45309', border:'#fde68a', left:'#f59e0b' },
-    { bg:'#f5f3ff', fg:'#6d28d9', border:'#ddd6fe', left:'#8b5cf6' }
+    { bg: '#eff6ff', fg: '#1d4ed8', border: '#bfdbfe', left: '#3b82f6' },
+    { bg: '#f0fdfa', fg: '#0f766e', border: '#99f6e4', left: '#14b8a6' },
+    { bg: '#ecfdf5', fg: '#059669', border: '#a7f3d0', left: '#10b981' },
+    { bg: '#fffbeb', fg: '#b45309', border: '#fde68a', left: '#f59e0b' },
+    { bg: '#f5f3ff', fg: '#6d28d9', border: '#ddd6fe', left: '#8b5cf6' }
   ];
 
   const stepsList = [
@@ -2844,7 +2739,7 @@ function exportTutorialToPdf() {
     stepsHtml += `
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid ${c.left};border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:8px;page-break-inside:avoid;break-inside:avoid;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-          <span style="background:${c.bg};color:${c.fg};border:1px solid ${c.border};font-size:6.5pt;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;padding:2px 8px;border-radius:999px;white-space:nowrap;">${escapeHtml(step.label || 'Step ' + (i+1))}</span>
+          <span style="background:${c.bg};color:${c.fg};border:1px solid ${c.border};font-size:6.5pt;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;padding:2px 8px;border-radius:999px;white-space:nowrap;">${escapeHtml(step.label || 'Step ' + (i + 1))}</span>
           <span style="font-size:10pt;font-weight:800;color:#0f172a;margin:0;">${escapeHtml(step.title || '')}</span>
         </div>
         <p style="font-size:8.5pt;color:#475569;line-height:1.45;margin:0;">${escapeHtml(step.desc || '')}</p>
@@ -2877,7 +2772,6 @@ function exportTutorialToPdf() {
 
   document.body.appendChild(staging);
 
-  // ─── Phase 3: Restore function ───────────────────────────────────────────
   let cleaned = false;
   const cleanup = () => {
     if (!cleaned) {
@@ -2887,14 +2781,11 @@ function exportTutorialToPdf() {
     }
   };
 
-  // ─── Phase 4: Export with validation ─────────────────────────────────────
   const doExport = () => {
-    // ── Diagnostic logging (regression audit) ──────────────────────────────
     console.log('[KanTime PDF] Target element:', staging);
     console.log('[KanTime PDF] innerHTML length:', staging.innerHTML.length);
     console.log('[KanTime PDF] Offset Width/Height:', staging.offsetWidth + 'x' + staging.offsetHeight);
     console.log('[KanTime PDF] scrollHeight:', staging.scrollHeight);
-    // ───────────────────────────────────────────────────────────────────────
 
     const h = staging.scrollHeight;
 
@@ -2916,7 +2807,7 @@ function exportTutorialToPdf() {
         scrollX: 0,
         scrollY: 0,
         windowWidth: A4_PX,
-        windowHeight: h + 100,
+        windowHeight: h + 50,
         ignoreElements: (el) => el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.tagName === 'SELECT'
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -2933,7 +2824,6 @@ function exportTutorialToPdf() {
     });
   };
 
-  // Two rAF + 200 ms settle: ensures fonts, layout & emojis are fully painted
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       setTimeout(() => {
@@ -2946,12 +2836,11 @@ function exportTutorialToPdf() {
           script.onerror = () => { cleanup(); showToast('PDF library unavailable.'); _printTutorialFallback(); };
           document.head.appendChild(script);
         }
-      }, 200);
+      }, 250);
     });
   });
 }
 
-// --- @media print fallback: isolate only the tutorial panel on the main window ---
 function _printTutorialFallback() {
   const panel = document.getElementById("tabPanelTutorial");
   if (!panel) { window.print(); return; }
@@ -2961,7 +2850,6 @@ function _printTutorialFallback() {
 
   window.print();
 
-  // Restore UI after the print dialog is dismissed
   setTimeout(function () {
     panel.classList.remove("tutorial-print-area");
     document.body.classList.remove("printing-tutorial");
@@ -2975,7 +2863,7 @@ function selectAudioTrack(trackSrc, pillEl) {
     const wasPlaying = !audioEl.paused;
     audioEl.src = trackSrc;
     if (wasPlaying) {
-      audioEl.play().catch(() => {});
+      audioEl.play().catch(() => { });
     }
   }
   const pills = document.querySelectorAll(".audio-part-pill");
@@ -3037,7 +2925,6 @@ function updateOnlineStatus() {
     banner.style.display = isOffline ? "flex" : "none";
   }
 
-  // Refresh active repertoire view to show/hide "Requires Internet" badges
   const targetSongEl = document.getElementById("targetSong");
   if (targetSongEl && targetSongEl.value) {
     renderSelectedSongResource(targetSongEl.value);
@@ -3150,7 +3037,6 @@ function applyTheme(mode, persist = true) {
   const resolved = resolveTheme(mode);
   document.documentElement.setAttribute("data-theme", resolved);
 
-  // Update quick toggle button in header
   const quickBtn = document.getElementById("themeQuickToggleBtn");
   if (quickBtn) {
     quickBtn.innerText = resolved === "dark" ? "☀️" : "🌙";
@@ -3158,7 +3044,6 @@ function applyTheme(mode, persist = true) {
     quickBtn.setAttribute("aria-label", quickBtn.title);
   }
 
-  // Update mobile status bar theme color
   const metaTheme = document.querySelector("meta[name='theme-color']");
   if (metaTheme) {
     metaTheme.setAttribute("content", resolved === "dark" ? "#090d16" : "#1e40af");
@@ -3206,7 +3091,7 @@ function initThemeSystem() {
 }
 
 // ==========================================================================
-// IN-BROWSER METRONOME ENGINE (Web Audio API Lookahead Scheduler)
+// IN-BROWSER METRONOME ENGINE
 // ==========================================================================
 let metronomeAudioCtx = null;
 let isMetronomeRunning = false;
@@ -3286,7 +3171,6 @@ function scheduleMetronomeNote(beatNumber, time) {
     const gain = metronomeAudioCtx.createGain();
     const isDownbeat = (beatNumber === 0);
 
-    // High crisp woodblock ping for beat 1, lower blip for subsequent beats
     osc.type = "sine";
     osc.frequency.setValueAtTime(isDownbeat ? 1200 : 800, time);
 
@@ -3299,7 +3183,6 @@ function scheduleMetronomeNote(beatNumber, time) {
     osc.start(time);
     osc.stop(time + (isDownbeat ? 0.05 : 0.035));
 
-    // Schedule visual beat pulse synced with audio
     const delayMs = Math.max(0, (time - metronomeAudioCtx.currentTime) * 1000);
     setTimeout(() => {
       if (isMetronomeRunning) {
@@ -3363,7 +3246,6 @@ function stopMetronome() {
     metronomeTimerId = null;
   }
 
-  // Clear any active beat dots
   const container = document.getElementById("metronomeBeatDots");
   if (container) {
     const dots = container.querySelectorAll(".metronome-beat-dot");
@@ -3454,13 +3336,11 @@ function toggleMetronomeCollapse() {
     header.setAttribute("aria-expanded", !isCollapsed ? "true" : "false");
   }
 
-  // Auto-pause when collapsing to conserve battery
   if (isCollapsed && isMetronomeRunning) {
     stopMetronome();
   }
 }
 
-// --- METRONOME VISIBILITY & WORKSPACE INTEGRATION ---
 function showMetronomeWidget() {
   const widget = document.getElementById("metronomeWidget");
   const btn = document.getElementById("toggleMetronomeVisibilityBtn");
@@ -3528,7 +3408,6 @@ function initMetronomeVisibility() {
   const checkbox = document.getElementById("settingShowMetronome");
   if (!widget) return;
 
-  // STRICT RULE: Metronome is hidden unless user explicitly enabled it previously
   if (saved === "true") {
     widget.style.display = "block";
     if (btn) {
@@ -3546,7 +3425,6 @@ function initMetronomeVisibility() {
   }
 }
 
-// Auto-pause metronome when backgrounding or switching tabs
 document.addEventListener("visibilitychange", () => {
   if (document.hidden && isMetronomeRunning) {
     stopMetronome();
@@ -3632,7 +3510,7 @@ function playVocalReferencePitch(freq = 261.63, btnEl = null) {
   }
 }
 
-// --- EXPORT ALL VOCAL WARM-UP DRILLS TO PDF (MOBILE-OPTIMIZED VIA HTML2PDF) ---
+// --- EXPORT ALL VOCAL WARM-UP DRILLS TO PDF (FIXED STAGING COORDINATES) ---
 function exportVocalDrillsToPdf() {
   const btnFooter = document.getElementById("btnExportVocalPdf");
   const btnHeader = document.getElementById("btnExportVocalPdfHeader");
@@ -3652,22 +3530,19 @@ function exportVocalDrillsToPdf() {
   const memberVoice = localStorage.getItem("choir_voice") || localStorage.getItem("choir_section") || "";
   const singerInfo = memberName ? `${memberName} (${memberVoice || 'Choir Singer'})` : "";
 
-  // ─── Phase 1: Build staging container ────────────────────────────────────
-  // Use position:absolute far below page (NOT position:fixed + z-index:-9999).
-  // Fixed + negative z-index → html2canvas captures element behind page background → blank canvas → 3 KB PDF.
   const A4_PX = 794;
   const staging = document.createElement("div");
   staging.id = "pdfIsolatedVocalExportContainer";
 
-  // POSITIONING: Use left:-9999px — immune to body overflow:hidden.
-  // See exportTutorialToPdf for full rationale.
+  // FIXED POSITIONING: Placed at (0,0) with negative z-index so html2canvas renders
+  // directly inside the viewport coordinate frame without clipping.
   Object.assign(staging.style, {
-    position: 'absolute',
+    position: 'fixed',
     top: '0',
-    left: '-9999px',
+    left: '0',
     width: A4_PX + 'px',
     maxWidth: A4_PX + 'px',
-    zIndex: '0',
+    zIndex: '2147483647',
     background: '#ffffff',
     backgroundColor: '#ffffff',
     color: '#0f172a',
@@ -3682,14 +3557,13 @@ function exportVocalDrillsToPdf() {
     pointerEvents: 'none'
   });
 
-  // ─── Phase 2: Build drill HTML with only inline styles ───────────────────
   const CAT_COLORS = {
-    tension:   { left:'#2563eb', badgeBg:'#eff6ff', badgeFg:'#1d4ed8', badgeBorder:'#bfdbfe' },
-    breath:    { left:'#0891b2', badgeBg:'#ecfeff', badgeFg:'#0891b2', badgeBorder:'#a5f3fc' },
-    sovt:      { left:'#d97706', badgeBg:'#fffbeb', badgeFg:'#d97706', badgeBorder:'#fde68a' },
-    resonance: { left:'#7c3aed', badgeBg:'#f5f3ff', badgeFg:'#7c3aed', badgeBorder:'#ddd6fe' },
-    diction:   { left:'#059669', badgeBg:'#ecfdf5', badgeFg:'#059669', badgeBorder:'#a7f3d0' },
-    blend:     { left:'#e11d48', badgeBg:'#fff1f2', badgeFg:'#e11d48', badgeBorder:'#fecdd3' }
+    tension: { left: '#2563eb', badgeBg: '#eff6ff', badgeFg: '#1d4ed8', badgeBorder: '#bfdbfe' },
+    breath: { left: '#0891b2', badgeBg: '#ecfeff', badgeFg: '#0891b2', badgeBorder: '#a5f3fc' },
+    sovt: { left: '#d97706', badgeBg: '#fffbeb', badgeFg: '#d97706', badgeBorder: '#fde68a' },
+    resonance: { left: '#7c3aed', badgeBg: '#f5f3ff', badgeFg: '#7c3aed', badgeBorder: '#ddd6fe' },
+    diction: { left: '#059669', badgeBg: '#ecfdf5', badgeFg: '#059669', badgeBorder: '#a7f3d0' },
+    blend: { left: '#e11d48', badgeBg: '#fff1f2', badgeFg: '#e11d48', badgeBorder: '#fecdd3' }
   };
 
   const sectionsData = [
@@ -3813,7 +3687,6 @@ function exportVocalDrillsToPdf() {
 
   document.body.appendChild(staging);
 
-  // ─── Phase 3: Cleanup ────────────────────────────────────────────────────
   let cleaned = false;
   const cleanup = () => {
     if (!cleaned) {
@@ -3824,14 +3697,11 @@ function exportVocalDrillsToPdf() {
     }
   };
 
-  // ─── Phase 4: Export with dimension validation ────────────────────────────
   const doExport = () => {
-    // ── Diagnostic logging (regression audit) ──────────────────────────────
     console.log('[KanTime Vocal PDF] Target element:', staging);
     console.log('[KanTime Vocal PDF] innerHTML length:', staging.innerHTML.length);
     console.log('[KanTime Vocal PDF] Offset Width/Height:', staging.offsetWidth + 'x' + staging.offsetHeight);
     console.log('[KanTime Vocal PDF] scrollHeight:', staging.scrollHeight);
-    // ───────────────────────────────────────────────────────────────────────
 
     const h = staging.scrollHeight;
 
@@ -3853,7 +3723,7 @@ function exportVocalDrillsToPdf() {
         scrollX: 0,
         scrollY: 0,
         windowWidth: A4_PX,
-        windowHeight: h + 100,
+        windowHeight: h + 50,
         ignoreElements: (el) => el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.tagName === 'SELECT'
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -3870,7 +3740,6 @@ function exportVocalDrillsToPdf() {
     });
   };
 
-  // Two rAF + 200 ms settle
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       setTimeout(() => {
@@ -3883,7 +3752,7 @@ function exportVocalDrillsToPdf() {
           script.onerror = () => { cleanup(); showToast('PDF library unavailable.'); window.print(); };
           document.head.appendChild(script);
         }
-      }, 200);
+      }, 250);
     });
   });
 }
