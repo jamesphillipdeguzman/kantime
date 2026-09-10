@@ -3886,247 +3886,1008 @@ function playVocalReferencePitch(freq = 261.63, btnEl = null) {
 function exportVocalDrillsToPdf() {
   const btnFooter = document.getElementById("btnExportVocalPdf");
   const btnHeader = document.getElementById("btnExportVocalPdfHeader");
+
   const origFooterText = btnFooter ? btnFooter.innerHTML : "";
   const origHeaderText = btnHeader ? btnHeader.innerHTML : "";
 
-  if (btnFooter) { btnFooter.disabled = true; btnFooter.innerHTML = "⏳ Exporting PDF..."; }
-  if (btnHeader) { btnHeader.disabled = true; btnHeader.innerHTML = "⏳..."; }
+  if (btnFooter) {
+    btnFooter.disabled = true;
+    btnFooter.innerHTML = "⏳ Exporting PDF...";
+  }
+
+  if (btnHeader) {
+    btnHeader.disabled = true;
+    btnHeader.innerHTML = "⏳...";
+  }
 
   showToast("Generating Vocal Warm-Ups PDF... 📄");
 
   const settings = getUserSettings();
-  const targetDate = settings.targetDate || "Stake Choir Prep • Oct 24–25";
+  const targetDate =
+    settings.targetDate || "Stake Choir Prep • Oct 24–25";
+
   const year = new Date().getFullYear();
-  const dateStr = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+
+  const dateStr = new Date().toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric"
+  });
+
   const memberName = localStorage.getItem("choir_name") || "";
-  const memberVoice = localStorage.getItem("choir_voice") || localStorage.getItem("choir_section") || "";
-  const singerInfo = memberName ? `${memberName} (${memberVoice || 'Choir Singer'})` : "";
+
+  const memberVoice =
+    localStorage.getItem("choir_voice") ||
+    localStorage.getItem("choir_section") ||
+    "";
+
+  const singerInfo = memberName
+    ? `${memberName} (${memberVoice || "Choir Singer"})`
+    : "";
 
   const A4_PX = 794;
+
+  /*
+   * ---------------------------------------------------------
+   * ISOLATED PDF CONTAINER
+   * ---------------------------------------------------------
+   *
+   * Same rendering strategy as the working tutorial export.
+   * IMPORTANT:
+   * Keep this element visible and inside the viewport.
+   */
+
   const staging = document.createElement("div");
   staging.id = "pdfIsolatedVocalExportContainer";
 
-  // FIXED POSITIONING: Placed at (0,0) with negative z-index so html2canvas renders
-  // directly inside the viewport coordinate frame without clipping.
   Object.assign(staging.style, {
-    position: 'fixed',
-    top: '0',
-    left: '0',
-    width: A4_PX + 'px',
-    maxWidth: A4_PX + 'px',
-    zIndex: '2147483647',
-    background: '#ffffff',
-    backgroundColor: '#ffffff',
-    color: '#0f172a',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
-    fontSize: '13px',
-    lineHeight: '1.5',
-    padding: '28px 32px',
-    boxSizing: 'border-box',
-    display: 'block',
-    visibility: 'visible',
-    opacity: '1',
-    pointerEvents: 'none'
+    position: "fixed",
+    top: "0",
+    left: "0",
+
+    width: A4_PX + "px",
+    maxWidth: A4_PX + "px",
+
+    /* Keep it in the visible rendering tree */
+    zIndex: "2147483647",
+
+    background: "#ffffff",
+    backgroundColor: "#ffffff",
+    color: "#0f172a",
+
+    fontFamily:
+      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+
+    fontSize: "13px",
+    lineHeight: "1.5",
+
+    padding: "28px 32px",
+    boxSizing: "border-box",
+
+    display: "block",
+    visibility: "visible",
+    opacity: "1",
+
+    pointerEvents: "none"
   });
 
+  /*
+   * ---------------------------------------------------------
+   * CATEGORY COLORS
+   * ---------------------------------------------------------
+   */
+
   const CAT_COLORS = {
-    tension: { left: '#2563eb', badgeBg: '#eff6ff', badgeFg: '#1d4ed8', badgeBorder: '#bfdbfe' },
-    breath: { left: '#0891b2', badgeBg: '#ecfeff', badgeFg: '#0891b2', badgeBorder: '#a5f3fc' },
-    sovt: { left: '#d97706', badgeBg: '#fffbeb', badgeFg: '#d97706', badgeBorder: '#fde68a' },
-    resonance: { left: '#7c3aed', badgeBg: '#f5f3ff', badgeFg: '#7c3aed', badgeBorder: '#ddd6fe' },
-    diction: { left: '#059669', badgeBg: '#ecfdf5', badgeFg: '#059669', badgeBorder: '#a7f3d0' },
-    blend: { left: '#e11d48', badgeBg: '#fff1f2', badgeFg: '#e11d48', badgeBorder: '#fecdd3' }
+    tension: {
+      left: "#2563eb",
+      badgeBg: "#eff6ff",
+      badgeFg: "#1d4ed8",
+      badgeBorder: "#bfdbfe"
+    },
+
+    breath: {
+      left: "#0891b2",
+      badgeBg: "#ecfeff",
+      badgeFg: "#0891b2",
+      badgeBorder: "#a5f3fc"
+    },
+
+    sovt: {
+      left: "#d97706",
+      badgeBg: "#fffbeb",
+      badgeFg: "#d97706",
+      badgeBorder: "#fde68a"
+    },
+
+    resonance: {
+      left: "#7c3aed",
+      badgeBg: "#f5f3ff",
+      badgeFg: "#7c3aed",
+      badgeBorder: "#ddd6fe"
+    },
+
+    diction: {
+      left: "#059669",
+      badgeBg: "#ecfdf5",
+      badgeFg: "#059669",
+      badgeBorder: "#a7f3d0"
+    },
+
+    blend: {
+      left: "#e11d48",
+      badgeBg: "#fff1f2",
+      badgeFg: "#e11d48",
+      badgeBorder: "#fecdd3"
+    }
   };
+
+  /*
+   * ---------------------------------------------------------
+   * VOCAL DRILL DATA
+   * ---------------------------------------------------------
+   */
 
   const sectionsData = [
     {
-      key: 'tension', badge: "⏱️ 1 Min • Physical Prep",
+      key: "tension",
+      badge: "⏱️ 1 Min • Physical Prep",
       title: "Section 1: Physical Prep & Tension Release",
+
       drills: [
-        { name: "1. Shoulder Drops & Gentle Neck Rolls", pitch: "", cues: "Release neck and trapezius stiffness that constricts throat resonance. Roll shoulders backwards 5 times with deep, relaxed breaths, followed by slow side-to-side chin tilts. Keep your chest elevated and collarbones wide." },
-        { name: "2. Gentle Jaw Drops & Chewing Motions", pitch: "", cues: "Drop the jaw vertically with loose, relaxed facial muscles as if yawning or gently chewing. Massage masseter muscles with fingertips to disengage jaw clenching. Creates maximum vertical space in the oral cavity for tall, resonant vowels." }
+        {
+          name: "1. Shoulder Drops & Gentle Neck Rolls",
+          pitch: "",
+          cues:
+            "Release neck and trapezius stiffness that constricts throat resonance. Roll shoulders backwards 5 times with deep, relaxed breaths, followed by slow side-to-side chin tilts. Keep your chest elevated and collarbones wide."
+        },
+
+        {
+          name: "2. Gentle Jaw Drops & Chewing Motions",
+          pitch: "",
+          cues:
+            "Drop the jaw vertically with loose, relaxed facial muscles as if yawning or gently chewing. Massage masseter muscles with fingertips to disengage jaw clenching. Creates maximum vertical space in the oral cavity for tall, resonant vowels."
+        }
       ]
     },
+
     {
-      key: 'breath', badge: "💨 Breath Support • Core Control",
+      key: "breath",
+      badge: "💨 Breath Support • Core Control",
       title: "Section 2: Breath Support & Core Control",
+
       drills: [
-        { name: "1. 4-7-8 Breathing Count (Inhale 4, Suspend 7, Exhale 8)", pitch: "", cues: "Inhale silently through the nose for 4 counts, expanding lower ribs and back (avoid shoulder raising). Suspend breath gently for 7 counts without throat tension. Exhale through pursed lips for 8 smooth, steady counts. Builds breath endurance and calms performance jitters." },
-        { name: "2. Rhythmic \"Sss / Shh / Tss\" Diaphragm Pulses", pitch: "", cues: "Pulse short, unvoiced consonant bursts: \"Sss! Shh! Tss!\" on sharp, energetic core contractions. Keep the throat completely open and silent while the lower abdomen works like a bellows. Engages the transverse abdominis for crisp phrase attacks." }
+        {
+          name: "1. 4-7-8 Breathing Count (Inhale 4, Suspend 7, Exhale 8)",
+          pitch: "",
+          cues:
+            'Inhale silently through the nose for 4 counts, expanding lower ribs and back (avoid shoulder raising). Suspend breath gently for 7 counts without throat tension. Exhale through pursed lips for 8 smooth, steady counts. Builds breath endurance and calms performance jitters.'
+        },
+
+        {
+          name: '2. Rhythmic "Sss / Shh / Tss" Diaphragm Pulses',
+          pitch: "",
+          cues:
+            'Pulse short, unvoiced consonant bursts: "Sss! Shh! Tss!" on sharp, energetic core contractions. Keep the throat completely open and silent while the lower abdomen works like a bellows. Engages the transverse abdominis for crisp phrase attacks.'
+        }
       ]
     },
+
     {
-      key: 'sovt', badge: "🐝 SOVT • Low Pressure",
+      key: "sovt",
+      badge: "🐝 SOVT • Low Pressure",
       title: "Section 3: Low-Pressure & Gentle Resonance (SOVT)",
+
       drills: [
-        { name: "1. Lip Trills (Lip Bubbles) & Pitch Sirens", pitch: "Starting Pitch: Middle C (261.6 Hz)", cues: "Blow relaxed air through loose lips to produce a steady bubble sound (\"brrr\"). Glide smoothly upward an octave and back down without breaking connection or pushing air. Balances subglottic vocal fold pressure and gently warms thin vocal cord edges without strain." },
-        { name: "2. Gentle \"Mmm\" & \"Nnn\" Humming (5-4-3-2-1 Pattern)", pitch: "", cues: "Hum a quiet 5-note descending scale (5-4-3-2-1) feeling buzzing vibrations directly behind the front upper teeth and nose bridge. Imagine buzzing a kazoo in the mask of your face. Disengages throat clutching and shifts tone into the natural acoustic resonators." }
+        {
+          name: "1. Lip Trills (Lip Bubbles) & Pitch Sirens",
+          pitch: "Starting Pitch: Middle C (261.6 Hz)",
+          cues:
+            'Blow relaxed air through loose lips to produce a steady bubble sound ("brrr"). Glide smoothly upward an octave and back down without breaking connection or pushing air. Balances subglottic vocal fold pressure and gently warms thin vocal cord edges without strain.'
+        },
+
+        {
+          name: '2. Gentle "Mmm" & "Nnn" Humming (5-4-3-2-1 Pattern)',
+          pitch: "",
+          cues:
+            'Hum a quiet 5-note descending scale (5-4-3-2-1) feeling buzzing vibrations directly behind the front upper teeth and nose bridge. Imagine buzzing a kazoo in the mask of your face. Disengages throat clutching and shifts tone into the natural acoustic resonators.'
+        }
       ]
     },
+
     {
-      key: 'resonance', badge: "🎯 Resonance • Forward Focus",
+      key: "resonance",
+      badge: "🎯 Resonance • Forward Focus",
       title: "Section 4: Forward Placement & Resonance",
+
       drills: [
-        { name: "1. \"Mee - May - Mah - Moh - Moo\" (1-2-3-2-1 Pattern)", pitch: "Starting Pitch: Middle C (261.6 Hz)", cues: "Sing a 5-tone arched pattern (1-2-3-2-1) using pure Italian vowels, maintaining bright ring (\"chiaroscuro\") across all vowels. Keep each vowel placed right behind the front teeth without falling back into the throat. Connects bright consonant placement to open, warm vowel spaces." },
-        { name: "2. \"Ng - Ah\" Vocal Placement Drill", pitch: "", cues: "Sustain an unvoiced \"Ng\" (as in \"sing\") feeling the soft palate touch the back of the tongue, then drop the jaw into \"Ah\" without losing the forward ring. Transitions the focused buzzing placement of the nasal consonant directly into open choral vowel sound." }
+        {
+          name: '1. "Mee - May - Mah - Moh - Moo" (1-2-3-2-1 Pattern)',
+          pitch: "Starting Pitch: Middle C (261.6 Hz)",
+          cues:
+            'Sing a 5-tone arched pattern (1-2-3-2-1) using pure Italian vowels, maintaining bright ring ("chiaroscuro") across all vowels. Keep each vowel placed right behind the front teeth without falling back into the throat. Connects bright consonant placement to open, warm vowel spaces.'
+        },
+
+        {
+          name: '2. "Ng - Ah" Vocal Placement Drill',
+          pitch: "",
+          cues:
+            'Sustain an unvoiced "Ng" (as in "sing") feeling the soft palate touch the back of the tongue, then drop the jaw into "Ah" without losing the forward ring. Transitions the focused buzzing placement of the nasal consonant directly into open choral vowel sound.'
+        }
       ]
     },
+
     {
-      key: 'diction', badge: "🗣️ Articulation • Diction",
+      key: "diction",
+      badge: "🗣️ Articulation • Diction",
       title: "Section 5: Articulation & Agility",
+
       drills: [
-        { name: "1. Crisp Staccato \"Hah-Hah-Hah\" Arpeggios (1-3-5-3-1)", pitch: "Starting Pitch: Middle C (261.6 Hz)", cues: "Sing 1-3-5-3-1 arpeggios on light, detached \"Hah-Hah-Hah\" syllables, bouncing from the abdominal wall. Keep glottal attacks soft by initiating with gentle \"H\" aspirations. Unifies vowel attack speed across choir sections on rapid rhythmic passages." },
-        { name: "2. \"Tip of the Tongue, the Teeth, and the Lips\"", pitch: "", cues: "Chant repeatedly on a single pitch: \"The tip of the tongue, the teeth, and the lips.\" Exaggerate consonant contact using only the tongue and lips without moving the jaw. Makes congregation lyrics crisp and intelligible in reverent chapels." },
-        { name: "3. \"B-D-G-P-T-K\" Plosive Consonants", pitch: "", cues: "Pulse rhythmic pairs: \"B-D-G, P-T-K\" on crisp unvoiced beats. Focus on energetic consonant releases without wasting extra breath. Trains clean consonant attacks that unify all voice parts at the ends of phrases." }
+        {
+          name: '1. Crisp Staccato "Hah-Hah-Hah" Arpeggios (1-3-5-3-1)',
+          pitch: "Starting Pitch: Middle C (261.6 Hz)",
+          cues:
+            'Sing 1-3-5-3-1 arpeggios on light, detached "Hah-Hah-Hah" syllables, bouncing from the abdominal wall. Keep glottal attacks soft by initiating with gentle "H" aspirations. Unifies vowel attack speed across choir sections on rapid rhythmic passages.'
+        },
+
+        {
+          name: '"Tip of the Tongue, the Teeth, and the Lips"',
+          pitch: "",
+          cues:
+            'Chant repeatedly on a single pitch: "The tip of the tongue, the teeth, and the lips." Exaggerate consonant contact using only the tongue and lips without moving the jaw. Makes congregation lyrics crisp and intelligible in reverent chapels.'
+        },
+
+        {
+          name: '"B-D-G-P-T-K" Plosive Consonants',
+          pitch: "",
+          cues:
+            'Pulse rhythmic pairs: "B-D-G, P-T-K" on crisp unvoiced beats. Focus on energetic consonant releases without wasting extra breath. Trains clean consonant attacks that unify all voice parts at the ends of phrases.'
+        }
       ]
     },
+
     {
-      key: 'blend', badge: "🎶 Choir Blend • Legato",
+      key: "blend",
+      badge: "🎶 Choir Blend • Legato",
       title: "Section 6: Legato & Choir Blending",
+
       drills: [
-        { name: "1. Five-Tone Vowel Chaining (1-2-3-4-5-4-3-2-1)", pitch: "Starting Pitch: Middle C (261.6 Hz)", cues: "Sing 1-2-3-4-5-4-3-2-1 smoothly on \"Ee-Eh-Ah-Oh-Oo\", connecting each note like pearls on a string. Morph smoothly between vowels without re-striking or pushing volume. Keep the mouth tall and the internal space consistent." }
+        {
+          name: "1. Five-Tone Vowel Chaining (1-2-3-4-5-4-3-2-1)",
+          pitch: "Starting Pitch: Middle C (261.6 Hz)",
+          cues:
+            'Sing 1-2-3-4-5-4-3-2-1 smoothly on "Ee-Eh-Ah-Oh-Oo", connecting each note like pearls on a string. Morph smoothly between vowels without re-striking or pushing volume. Keep the mouth tall and the internal space consistent.'
+        }
       ],
+
       goldenRules: [
-        { icon: "📐", title: "Tall Vowels", desc: "Drop your lower jaw vertically rather than spreading wide into horizontal smiles. Preserves warm, reverent choral acoustics." },
-        { icon: "🏛️", title: "Lift the Soft Palate", desc: "Maintain the spacious dome of an internal yawn to eliminate harsh nasal twang and create room for soaring harmonies." },
-        { icon: "👂", title: "Listen to the Blend", desc: "Strive to hear your voice section neighbors more than your own voice. Sacred choral singing is unified prayer in harmony." }
+        {
+          icon: "📐",
+          title: "Tall Vowels",
+          desc:
+            "Drop your lower jaw vertically rather than spreading wide into horizontal smiles. Preserves warm, reverent choral acoustics."
+        },
+
+        {
+          icon: "🏛️",
+          title: "Lift the Soft Palate",
+          desc:
+            "Maintain the spacious dome of an internal yawn to eliminate harsh nasal twang and create room for soaring harmonies."
+        },
+
+        {
+          icon: "👂",
+          title: "Listen to the Blend",
+          desc:
+            "Strive to hear your voice section neighbors more than your own voice. Sacred choral singing is unified prayer in harmony."
+        }
       ]
     }
   ];
 
-  let bodyHtml = '';
-  sectionsData.forEach(sec => {
+  /*
+   * ---------------------------------------------------------
+   * BUILD BODY HTML
+   * ---------------------------------------------------------
+   */
+
+  let bodyHtml = "";
+
+  sectionsData.forEach((sec) => {
     const c = CAT_COLORS[sec.key];
-    let drillsHtml = '';
+
+    let drillsHtml = "";
+
     sec.drills.forEach((d, di) => {
-      const isLast = di === sec.drills.length - 1 && !sec.goldenRules;
+      const isLast =
+        di === sec.drills.length - 1 && !sec.goldenRules;
+
       drillsHtml += `
-          <div style="margin-bottom:${isLast ? '0' : '6px'};padding-bottom:${isLast ? '0' : '6px'};border-bottom:${isLast ? 'none' : '1px dashed #f1f5f9'};">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
-              <span style="font-size:8.5pt;font-weight:700;color:#1e293b;">${escapeHtml(d.name)}</span>
-              ${d.pitch ? `<span style="font-size:6.5pt;font-weight:700;color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe;padding:1px 6px;border-radius:4px;">${escapeHtml(d.pitch)}</span>` : ''}
-            </div>
-            <p style="font-size:7.8pt;color:#475569;line-height:1.4;margin:0;">${escapeHtml(d.cues)}</p>
-          </div>`;
+        <div style="
+          margin-bottom:${isLast ? "0" : "6px"};
+          padding-bottom:${isLast ? "0" : "6px"};
+          border-bottom:${isLast ? "none" : "1px dashed #f1f5f9"};
+          page-break-inside:avoid;
+          break-inside:avoid;
+        ">
+          <div style="
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            margin-bottom:2px;
+          ">
+            <span style="
+              font-size:8.5pt;
+              font-weight:700;
+              color:#1e293b;
+            ">
+              ${escapeHtml(d.name)}
+            </span>
+
+            ${d.pitch
+          ? `
+                  <span style="
+                    font-size:6.5pt;
+                    font-weight:700;
+                    color:#2563eb;
+                    background:#eff6ff;
+                    border:1px solid #bfdbfe;
+                    padding:1px 6px;
+                    border-radius:4px;
+                    white-space:nowrap;
+                  ">
+                    ${escapeHtml(d.pitch)}
+                  </span>
+                `
+          : ""
+        }
+          </div>
+
+          <p style="
+            font-size:7.8pt;
+            color:#475569;
+            line-height:1.4;
+            margin:0;
+          ">
+            ${escapeHtml(d.cues)}
+          </p>
+        </div>
+      `;
     });
 
-    let goldenHtml = '';
+    let goldenHtml = "";
+
     if (sec.goldenRules) {
-      goldenHtml = `<div style="margin-top:8px;">
-          <div style="font-size:8pt;font-weight:700;color:#1e293b;margin-bottom:4px;">Choir Golden Rules for Section Unity:</div>`;
-      sec.goldenRules.forEach(r => {
-        goldenHtml += `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #f59e0b;border-radius:4px;padding:4px 8px;font-size:7.5pt;color:#334155;line-height:1.35;margin-bottom:4px;">
-            <strong style="color:#0f172a;">${r.icon} ${escapeHtml(r.title)}:</strong> ${escapeHtml(r.desc)}
-          </div>`;
+      goldenHtml = `
+        <div style="margin-top:8px;page-break-inside:avoid;break-inside:avoid;">
+          <div style="
+            font-size:8pt;
+            font-weight:700;
+            color:#1e293b;
+            margin-bottom:4px;
+          ">
+            Choir Golden Rules for Section Unity:
+          </div>
+      `;
+
+      sec.goldenRules.forEach((r) => {
+        goldenHtml += `
+          <div style="
+            background:#f8fafc;
+            border:1px solid #e2e8f0;
+            border-left:3px solid #f59e0b;
+            border-radius:4px;
+            padding:4px 8px;
+            font-size:7.5pt;
+            color:#334155;
+            line-height:1.35;
+            margin-bottom:4px;
+            page-break-inside:avoid;
+            break-inside:avoid;
+          ">
+            <strong style="color:#0f172a;">
+              ${r.icon} ${escapeHtml(r.title)}:
+            </strong>
+            ${escapeHtml(r.desc)}
+          </div>
+        `;
       });
-      goldenHtml += '</div>';
+
+      goldenHtml += "</div>";
     }
 
     bodyHtml += `
-        <div style="background:#ffffff;border:1px solid #e2e8f0;border-left:4px solid ${c.left};border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:10px;page-break-inside:avoid;break-inside:avoid;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;border-bottom:1px solid #f1f5f9;padding-bottom:4px;">
-            <span style="background:${c.badgeBg};color:${c.badgeFg};border:1px solid ${c.badgeBorder};font-size:6.5pt;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;padding:2px 7px;border-radius:999px;">${escapeHtml(sec.badge)}</span>
-            <span style="font-size:10pt;font-weight:800;color:#0f172a;">${escapeHtml(sec.title)}</span>
-          </div>
-          <div>${drillsHtml}</div>
-          ${goldenHtml}
-        </div>`;
+      <div style="
+        background:#ffffff;
+        border:1px solid #e2e8f0;
+        border-left:4px solid ${c.left};
+        border-radius:0 8px 8px 0;
+        padding:10px 14px;
+        margin-bottom:10px;
+        page-break-inside:avoid;
+        break-inside:avoid;
+      ">
+        <div style="
+          display:flex;
+          align-items:center;
+          gap:8px;
+          margin-bottom:8px;
+          border-bottom:1px solid #f1f5f9;
+          padding-bottom:4px;
+        ">
+          <span style="
+            background:${c.badgeBg};
+            color:${c.badgeFg};
+            border:1px solid ${c.badgeBorder};
+            font-size:6.5pt;
+            font-weight:800;
+            text-transform:uppercase;
+            letter-spacing:0.5px;
+            padding:2px 7px;
+            border-radius:999px;
+            white-space:nowrap;
+          ">
+            ${escapeHtml(sec.badge)}
+          </span>
+
+          <span style="
+            font-size:10pt;
+            font-weight:800;
+            color:#0f172a;
+          ">
+            ${escapeHtml(sec.title)}
+          </span>
+        </div>
+
+        <div>
+          ${drillsHtml}
+        </div>
+
+        ${goldenHtml}
+      </div>
+    `;
   });
 
+  /*
+   * ---------------------------------------------------------
+   * COMPLETE PDF HTML
+   * ---------------------------------------------------------
+   */
+
   staging.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #1d4ed8;padding-bottom:12px;margin-bottom:14px;">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <span style="font-size:26pt;line-height:1;">🎤</span>
-          <div>
-            <div style="font-size:14pt;font-weight:900;color:#1e3a8a;line-height:1.2;margin:0 0 3px;">KanTime: Vocal Warm-Ups &amp; Singing Tips</div>
-            <div style="font-size:8.5pt;color:#475569;font-weight:600;margin:0;">All 6 Core Choir Drill Categories &bull; ${escapeHtml(targetDate)}</div>
+    <div style="
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom:3px solid #1d4ed8;
+      padding-bottom:12px;
+      margin-bottom:14px;
+    ">
+      <div style="
+        display:flex;
+        align-items:center;
+        gap:12px;
+      ">
+        <span style="
+          font-size:26pt;
+          line-height:1;
+        ">
+          🎤
+        </span>
+
+        <div>
+          <div style="
+            font-size:14pt;
+            font-weight:900;
+            color:#1e3a8a;
+            line-height:1.2;
+            margin:0 0 3px;
+          ">
+            KanTime: Vocal Warm-Ups &amp; Singing Tips
+          </div>
+
+          <div style="
+            font-size:8.5pt;
+            color:#475569;
+            font-weight:600;
+            margin:0;
+          ">
+            All 6 Core Choir Drill Categories &bull;
+            ${escapeHtml(targetDate)}
           </div>
         </div>
-        <div style="text-align:right;font-size:7.5pt;color:#64748b;line-height:1.4;">
-          ${singerInfo ? `<div>Member: <strong style="color:#1e293b;">${escapeHtml(singerInfo)}</strong></div>` : ''}
-          <div>Stake Choir Practice Hub</div>
-          <div>${dateStr}</div>
-        </div>
       </div>
-      <div style="background:#eff6ff;border-left:4px solid #1d4ed8;padding:8px 14px;border-radius:0 6px 6px 0;font-size:8.5pt;color:#1e40af;margin-bottom:14px;line-height:1.45;">
-        Essential drills for tension release, breath support, SOVT registration, resonance, articulation, and choir section blending. Practice these daily before repertoire rehearsals.
+
+      <div style="
+        text-align:right;
+        font-size:7.5pt;
+        color:#64748b;
+        line-height:1.4;
+      ">
+        ${singerInfo
+      ? `
+              <div>
+                Member:
+                <strong style="color:#1e293b;">
+                  ${escapeHtml(singerInfo)}
+                </strong>
+              </div>
+            `
+      : ""
+    }
+
+        <div>Stake Choir Practice Hub</div>
+        <div>${dateStr}</div>
       </div>
-      ${bodyHtml}
-      <div style="margin-top:18px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;font-size:7.5pt;color:#64748b;">
-        <span style="font-weight:600;">Developed for Iloilo Stake Choir | Built by James Phillip De Guzman</span>
-        <span style="color:#94a3b8;">&copy; ${year} KanTime Practice Hub &bull; All Vocal Drills</span>
-      </div>`;
+    </div>
+
+    <div style="
+      background:#eff6ff;
+      border-left:4px solid #1d4ed8;
+      padding:8px 14px;
+      border-radius:0 6px 6px 0;
+      font-size:8.5pt;
+      color:#1e40af;
+      margin-bottom:14px;
+      line-height:1.45;
+    ">
+      Essential drills for tension release, breath support, SOVT registration,
+      resonance, articulation, and choir section blending.
+      Practice these daily before repertoire rehearsals.
+    </div>
+
+    ${bodyHtml}
+
+    <div style="
+      margin-top:18px;
+      padding-top:10px;
+      border-top:1px solid #e2e8f0;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      font-size:7.5pt;
+      color:#64748b;
+    ">
+      <span style="font-weight:600;">
+        Developed for Iloilo Stake Choir | Built by James Phillip De Guzman
+      </span>
+
+      <span style="color:#94a3b8;">
+        &copy; ${year} KanTime Practice Hub &bull; All Vocal Drills
+      </span>
+    </div>
+  `;
 
   document.body.appendChild(staging);
 
+  /*
+   * ---------------------------------------------------------
+   * CLEANUP
+   * ---------------------------------------------------------
+   */
+
   let cleaned = false;
+
   const cleanup = () => {
-    if (!cleaned) {
-      cleaned = true;
-      if (staging.parentNode) staging.parentNode.removeChild(staging);
-      if (btnFooter) { btnFooter.disabled = false; btnFooter.innerHTML = origFooterText; }
-      if (btnHeader) { btnHeader.disabled = false; btnHeader.innerHTML = origHeaderText; }
+    if (cleaned) return;
+
+    cleaned = true;
+
+    if (staging.parentNode) {
+      staging.parentNode.removeChild(staging);
+    }
+
+    if (btnFooter) {
+      btnFooter.disabled = false;
+      btnFooter.innerHTML = origFooterText;
+    }
+
+    if (btnHeader) {
+      btnHeader.disabled = false;
+      btnHeader.innerHTML = origHeaderText;
     }
   };
 
-  const doExport = () => {
-    console.log('[KanTime Vocal PDF] Target element:', staging);
-    console.log('[KanTime Vocal PDF] innerHTML length:', staging.innerHTML.length);
-    console.log('[KanTime Vocal PDF] Offset Width/Height:', staging.offsetWidth + 'x' + staging.offsetHeight);
-    console.log('[KanTime Vocal PDF] scrollHeight:', staging.scrollHeight);
+  /*
+   * ---------------------------------------------------------
+   * LOAD LIBRARIES
+   * ---------------------------------------------------------
+   *
+   * Do NOT use html2pdf.js here.
+   *
+   * We use:
+   *
+   *   HTML
+   *      ↓
+   *   html2canvas
+   *      ↓
+   *   JPEG
+   *      ↓
+   *   jsPDF
+   *      ↓
+   *   PDF
+   *
+   * This is the same approach as exportTutorialToPdf().
+   */
 
-    const h = staging.scrollHeight;
+  const loadScript = (src) =>
+    new Promise((resolve, reject) => {
+      const existing = document.querySelector(
+        `script[src="${src}"]`
+      );
 
-    if (staging.offsetWidth === 0 || h === 0) {
-      console.error('[KanTime Vocal PDF] Zero-size container – aborting.');
-      showToast('PDF generation failed: container is zero-sized.');
-      cleanup();
-      return;
-    }
+      if (existing) {
+        if (
+          typeof html2canvas !== "undefined" ||
+          (window.jspdf &&
+            typeof window.jspdf.jsPDF === "function")
+        ) {
+          resolve();
+          return;
+        }
 
-    const opt = {
-      margin: [8, 8, 8, 8],
-      filename: 'KanTime-Vocal-WarmUps-All-Drills.pdf',
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: {
+        existing.addEventListener("load", resolve, {
+          once: true
+        });
+
+        existing.addEventListener("error", reject, {
+          once: true
+        });
+
+        return;
+      }
+
+      const script = document.createElement("script");
+
+      script.src = src;
+
+      script.onload = resolve;
+      script.onerror = reject;
+
+      document.head.appendChild(script);
+    });
+
+  /*
+   * ---------------------------------------------------------
+   * DIRECT CANVAS → PDF EXPORT
+   * ---------------------------------------------------------
+   */
+
+  const exportCanvasToPdf = async () => {
+    try {
+      console.log(
+        "[KanTime Vocal PDF] Target:",
+        staging
+      );
+
+      console.log(
+        "[KanTime Vocal PDF] Dimensions:",
+        staging.offsetWidth,
+        "x",
+        staging.scrollHeight
+      );
+
+      if (
+        staging.offsetWidth === 0 ||
+        staging.scrollHeight === 0
+      ) {
+        throw new Error(
+          "Vocal staging element has zero dimensions."
+        );
+      }
+
+      /*
+       * Wait for the browser to actually paint
+       * the staging element.
+       */
+
+      await new Promise((resolve) =>
+        requestAnimationFrame(() =>
+          requestAnimationFrame(resolve)
+        )
+      );
+
+      /*
+       * Render the visible staging element.
+       */
+
+      const canvas = await html2canvas(staging, {
         scale: 2,
+
+        backgroundColor: "#ffffff",
+
         useCORS: true,
         allowTaint: false,
+
+        logging: true,
+
+        x: 0,
+        y: 0,
+
+        width: staging.offsetWidth,
+        height: staging.scrollHeight,
+
+        windowWidth: A4_PX,
+
+        windowHeight: Math.max(
+          staging.scrollHeight + 100,
+          window.innerHeight
+        ),
+
         scrollX: 0,
         scrollY: 0,
-        windowWidth: A4_PX,
-        windowHeight: h + 50,
-        ignoreElements: (el) => el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.tagName === 'SELECT'
-      },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
 
-    html2pdf().set(opt).from(staging).save().then(() => {
-      showToast('Vocal Warm-Ups PDF downloaded! 📄');
+        ignoreElements: (el) =>
+          el.tagName === "BUTTON" ||
+          el.tagName === "INPUT" ||
+          el.tagName === "SELECT"
+      });
+
+      console.log(
+        "[KanTime Vocal PDF] Canvas:",
+        canvas.width,
+        "x",
+        canvas.height
+      );
+
+      /*
+       * Diagnostic check.
+       */
+
+      if (
+        !canvas ||
+        canvas.width === 0 ||
+        canvas.height === 0
+      ) {
+        throw new Error(
+          "html2canvas returned an empty vocal-drills canvas."
+        );
+      }
+
+      /*
+       * Convert the canvas to JPEG.
+       *
+       * This is important because it confirms that
+       * html2canvas actually produced image pixels.
+       */
+
+      const imgData = canvas.toDataURL(
+        "image/jpeg",
+        0.98
+      );
+
+      if (!imgData || imgData.length < 1000) {
+        throw new Error(
+          "Vocal canvas image data is unexpectedly empty."
+        );
+      }
+
+      console.log(
+        "[KanTime Vocal PDF] Image data length:",
+        imgData.length
+      );
+
+      /*
+       * Make sure jsPDF exists.
+       */
+
+      if (
+        !window.jspdf ||
+        typeof window.jspdf.jsPDF !== "function"
+      ) {
+        throw new Error(
+          "jsPDF library is not available."
+        );
+      }
+
+      const { jsPDF } = window.jspdf;
+
+      /*
+       * -----------------------------------------------------
+       * CREATE A4 PDF
+       * -----------------------------------------------------
+       */
+
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4"
+      });
+
+      const pageWidth = 210;
+      const pageHeight = 297;
+
+      const margin = 8;
+
+      const usableWidth =
+        pageWidth - margin * 2;
+
+      const usableHeight =
+        pageHeight - margin * 2;
+
+      /*
+       * Maintain the canvas aspect ratio.
+       */
+
+      const imgWidth = usableWidth;
+
+      const imgHeight =
+        (canvas.height * imgWidth) /
+        canvas.width;
+
+      /*
+       * -----------------------------------------------------
+       * PAGE 1
+       * -----------------------------------------------------
+       */
+
+      let remainingHeight = imgHeight;
+
+      let position = margin;
+
+      pdf.addImage(
+        imgData,
+        "JPEG",
+        margin,
+        position,
+        imgWidth,
+        imgHeight,
+        undefined,
+        "FAST"
+      );
+
+      remainingHeight -= usableHeight;
+
+      /*
+       * -----------------------------------------------------
+       * ADD ADDITIONAL PAGES
+       * -----------------------------------------------------
+       *
+       * The full rendered canvas is reused with a shifted
+       * Y-position so each PDF page displays the next portion.
+       */
+
+      while (remainingHeight > 0) {
+        pdf.addPage();
+
+        position =
+          margin -
+          (imgHeight - remainingHeight);
+
+        pdf.addImage(
+          imgData,
+          "JPEG",
+          margin,
+          position,
+          imgWidth,
+          imgHeight,
+          undefined,
+          "FAST"
+        );
+
+        remainingHeight -= usableHeight;
+      }
+
+      /*
+       * -----------------------------------------------------
+       * SAVE
+       * -----------------------------------------------------
+       */
+
+      const filename =
+        "KanTime-Vocal-WarmUps-All-Drills.pdf";
+
+      pdf.save(filename);
+
+      console.log(
+        "[KanTime Vocal PDF] PDF generated successfully:",
+        filename
+      );
+
+      showToast(
+        "Vocal Warm-Ups PDF downloaded! 📄"
+      );
+
       cleanup();
-    }).catch(err => {
-      console.error('[KanTime Vocal PDF] Export error:', err);
-      showToast('PDF export failed – opening print fallback.');
-      window.print();
+
+    } catch (err) {
+      console.error(
+        "[KanTime Vocal PDF] DIRECT EXPORT ERROR:",
+        err
+      );
+
+      showToast(
+        "PDF export failed – opening print fallback."
+      );
+
       cleanup();
-    });
+
+      /*
+       * Use the existing print fallback if available.
+       * Otherwise use window.print().
+       */
+
+      if (
+        typeof _printVocalDrillsFallback ===
+        "function"
+      ) {
+        _printVocalDrillsFallback();
+      } else {
+        window.print();
+      }
+    }
   };
 
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        if (typeof html2pdf !== 'undefined') {
-          doExport();
-        } else {
-          const script = document.createElement('script');
-          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-          script.onload = doExport;
-          script.onerror = () => { cleanup(); showToast('PDF library unavailable.'); window.print(); };
-          document.head.appendChild(script);
-        }
-      }, 250);
-    });
-  });
+  /*
+   * ---------------------------------------------------------
+   * ENSURE LIBRARIES
+   * ---------------------------------------------------------
+   */
+
+  const ensureLibraries = async () => {
+    try {
+      /*
+       * html2canvas
+       */
+
+      if (
+        typeof html2canvas ===
+        "undefined"
+      ) {
+        await loadScript(
+          "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
+        );
+      }
+
+      /*
+       * jsPDF UMD build
+       */
+
+      if (
+        !window.jspdf ||
+        typeof window.jspdf.jsPDF !== "function"
+      ) {
+        await loadScript(
+          "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+        );
+      }
+
+      /*
+       * Give the browser time to paint the staging
+       * container before html2canvas captures it.
+       */
+
+      await new Promise((resolve) =>
+        requestAnimationFrame(() =>
+          requestAnimationFrame(resolve)
+        )
+      );
+
+      await exportCanvasToPdf();
+
+    } catch (err) {
+      console.error(
+        "[KanTime Vocal PDF] Library loading error:",
+        err
+      );
+
+      cleanup();
+
+      showToast(
+        "PDF libraries could not be loaded – opening print fallback."
+      );
+
+      if (
+        typeof _printVocalDrillsFallback ===
+        "function"
+      ) {
+        _printVocalDrillsFallback();
+      } else {
+        window.print();
+      }
+    }
+  };
+
+  ensureLibraries();
 }
 
 // Initial load
