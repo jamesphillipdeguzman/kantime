@@ -2287,6 +2287,8 @@ function openSettingsModal(defaultTab = 'profile') {
   const settingBtn = document.getElementById("saveSettingsProfileBtn");
   validateNameInput(settingNameInput, settingMsg, settingBtn);
 
+  updateThemeSegmentedControl(getSavedThemeMode());
+
   modal.classList.add("active");
   document.body.style.overflow = "hidden";
 }
@@ -3071,12 +3073,351 @@ function initNameValidation() {
   }
 }
 
+// ==========================================================================
+// THEME & APPEARANCE SYSTEM (System / Light / Dark)
+// ==========================================================================
+function getSavedThemeMode() {
+  return localStorage.getItem("theme_mode") || "system";
+}
+
+function resolveTheme(mode) {
+  if (mode === "system") {
+    return (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+  }
+  return mode === "dark" ? "dark" : "light";
+}
+
+function applyTheme(mode, persist = true) {
+  if (persist) {
+    localStorage.setItem("theme_mode", mode);
+  }
+  const resolved = resolveTheme(mode);
+  document.documentElement.setAttribute("data-theme", resolved);
+
+  // Update quick toggle button in header
+  const quickBtn = document.getElementById("themeQuickToggleBtn");
+  if (quickBtn) {
+    quickBtn.innerText = resolved === "dark" ? "☀️" : "🌙";
+    quickBtn.title = resolved === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode";
+    quickBtn.setAttribute("aria-label", quickBtn.title);
+  }
+
+  // Update mobile status bar theme color
+  const metaTheme = document.querySelector("meta[name='theme-color']");
+  if (metaTheme) {
+    metaTheme.setAttribute("content", resolved === "dark" ? "#090d16" : "#1e40af");
+  }
+
+  updateThemeSegmentedControl(mode);
+}
+
+function updateThemeSegmentedControl(mode) {
+  const btnSystem = document.getElementById("themeBtnSystem");
+  const btnLight = document.getElementById("themeBtnLight");
+  const btnDark = document.getElementById("themeBtnDark");
+
+  if (btnSystem) btnSystem.classList.toggle("active", mode === "system");
+  if (btnLight) btnLight.classList.toggle("active", mode === "light");
+  if (btnDark) btnDark.classList.toggle("active", mode === "dark");
+}
+
+function setThemePreference(mode) {
+  applyTheme(mode, true);
+  const resolved = resolveTheme(mode);
+  const label = mode === "system" ? `System (${resolved})` : (mode === "dark" ? "Dark" : "Light");
+  showToast(`Appearance set to ${label}! 🎨`);
+}
+
+function toggleQuickTheme() {
+  const currentResolved = document.documentElement.getAttribute("data-theme") || "light";
+  const newMode = currentResolved === "dark" ? "light" : "dark";
+  applyTheme(newMode, true);
+  showToast(`Switched to ${newMode === "dark" ? "Dark mode 🌙" : "Light mode ☀️"}`);
+}
+
+function initThemeSystem() {
+  const savedMode = getSavedThemeMode();
+  applyTheme(savedMode, false);
+
+  if (window.matchMedia) {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    mediaQuery.addEventListener("change", () => {
+      if (getSavedThemeMode() === "system") {
+        applyTheme("system", false);
+      }
+    });
+  }
+}
+
+// ==========================================================================
+// IN-BROWSER METRONOME ENGINE (Web Audio API Lookahead Scheduler)
+// ==========================================================================
+let metronomeAudioCtx = null;
+let isMetronomeRunning = false;
+let metronomeBpm = 100;
+let metronomeBeatsPerBar = 4;
+let currentBeatInBar = 0;
+let nextNoteTime = 0.0;
+const METRONOME_LOOKAHEAD_MS = 25.0;
+const METRONOME_SCHEDULE_AHEAD_SEC = 0.1;
+let metronomeTimerId = null;
+let tapTimestamps = [];
+
+function getTempoMarking(bpm) {
+  const b = Number(bpm) || 100;
+  if (b < 60) return "Largo (Broad & Slow)";
+  if (b < 76) return "Adagio (Slow & Stately)";
+  if (b < 108) return "Andante (Walking Pace)";
+  if (b < 120) return "Moderato (Moderate)";
+  if (b < 156) return "Allegro (Fast & Bright)";
+  if (b < 176) return "Vivace (Lively)";
+  return "Presto (Very Fast)";
+}
+
+function updateMetronomeUI() {
+  const bpmDisplay = document.getElementById("metronomeBpmDisplay");
+  if (bpmDisplay) bpmDisplay.innerText = metronomeBpm;
+
+  const slider = document.getElementById("metronomeSlider");
+  if (slider && Number(slider.value) !== metronomeBpm) {
+    slider.value = metronomeBpm;
+  }
+
+  const tempoMarking = document.getElementById("metronomeTempoMarking");
+  if (tempoMarking) tempoMarking.innerText = getTempoMarking(metronomeBpm);
+
+  const headerBadge = document.getElementById("metronomeHeaderBadge");
+  if (headerBadge) {
+    const timeSigText = metronomeBeatsPerBar === 6 ? "6/8" : `${metronomeBeatsPerBar}/4`;
+    headerBadge.innerText = `${metronomeBpm} BPM • ${timeSigText}`;
+  }
+}
+
+function updateMetronomeBeatDots() {
+  const container = document.getElementById("metronomeBeatDots");
+  if (!container) return;
+
+  let html = "";
+  for (let i = 0; i < metronomeBeatsPerBar; i++) {
+    const isDownbeat = (i === 0);
+    html += `<span class="metronome-beat-dot ${isDownbeat ? 'downbeat' : ''}" id="metroDot-${i}" title="Beat ${i + 1}"></span>`;
+  }
+  container.innerHTML = html;
+}
+
+function highlightBeat(beatNumber) {
+  const container = document.getElementById("metronomeBeatDots");
+  if (!container) return;
+
+  const dots = container.querySelectorAll(".metronome-beat-dot");
+  dots.forEach((dot, idx) => {
+    if (idx === beatNumber) {
+      dot.classList.add("active");
+      setTimeout(() => {
+        dot.classList.remove("active");
+      }, 140);
+    } else {
+      dot.classList.remove("active");
+    }
+  });
+}
+
+function scheduleMetronomeNote(beatNumber, time) {
+  if (!metronomeAudioCtx) return;
+
+  try {
+    const osc = metronomeAudioCtx.createOscillator();
+    const gain = metronomeAudioCtx.createGain();
+    const isDownbeat = (beatNumber === 0);
+
+    // High crisp woodblock ping for beat 1, lower blip for subsequent beats
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(isDownbeat ? 1200 : 800, time);
+
+    gain.gain.setValueAtTime(isDownbeat ? 0.95 : 0.6, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + (isDownbeat ? 0.05 : 0.035));
+
+    osc.connect(gain);
+    gain.connect(metronomeAudioCtx.destination);
+
+    osc.start(time);
+    osc.stop(time + (isDownbeat ? 0.05 : 0.035));
+
+    // Schedule visual beat pulse synced with audio
+    const delayMs = Math.max(0, (time - metronomeAudioCtx.currentTime) * 1000);
+    setTimeout(() => {
+      if (isMetronomeRunning) {
+        highlightBeat(beatNumber);
+      }
+    }, delayMs);
+  } catch (err) {
+    console.warn("Metronome note scheduling error:", err);
+  }
+}
+
+function nextMetronomeNote() {
+  const secondsPerBeat = 60.0 / metronomeBpm;
+  nextNoteTime += secondsPerBeat;
+  currentBeatInBar = (currentBeatInBar + 1) % metronomeBeatsPerBar;
+}
+
+function metronomeScheduler() {
+  if (!isMetronomeRunning || !metronomeAudioCtx) return;
+
+  while (nextNoteTime < metronomeAudioCtx.currentTime + METRONOME_SCHEDULE_AHEAD_SEC) {
+    scheduleMetronomeNote(currentBeatInBar, nextNoteTime);
+    nextMetronomeNote();
+  }
+
+  metronomeTimerId = setTimeout(metronomeScheduler, METRONOME_LOOKAHEAD_MS);
+}
+
+function startMetronome() {
+  if (isMetronomeRunning) return;
+
+  if (!metronomeAudioCtx) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (AudioContextClass) {
+      metronomeAudioCtx = new AudioContextClass();
+    }
+  }
+
+  if (metronomeAudioCtx && metronomeAudioCtx.state === "suspended") {
+    metronomeAudioCtx.resume();
+  }
+
+  isMetronomeRunning = true;
+  currentBeatInBar = 0;
+  if (metronomeAudioCtx) {
+    nextNoteTime = metronomeAudioCtx.currentTime + 0.05;
+  }
+  metronomeScheduler();
+
+  const toggleBtn = document.getElementById("metronomeToggleBtn");
+  if (toggleBtn) {
+    toggleBtn.classList.add("running");
+    toggleBtn.innerText = "⏹ Stop Metronome";
+  }
+}
+
+function stopMetronome() {
+  isMetronomeRunning = false;
+  if (metronomeTimerId) {
+    clearTimeout(metronomeTimerId);
+    metronomeTimerId = null;
+  }
+
+  // Clear any active beat dots
+  const container = document.getElementById("metronomeBeatDots");
+  if (container) {
+    const dots = container.querySelectorAll(".metronome-beat-dot");
+    dots.forEach(d => d.classList.remove("active"));
+  }
+
+  const toggleBtn = document.getElementById("metronomeToggleBtn");
+  if (toggleBtn) {
+    toggleBtn.classList.remove("running");
+    toggleBtn.innerText = "▶ Start Metronome";
+  }
+}
+
+function toggleMetronome() {
+  if (isMetronomeRunning) {
+    stopMetronome();
+  } else {
+    startMetronome();
+  }
+}
+
+function setMetronomeBpm(val) {
+  let num = Number(val) || 100;
+  num = Math.max(40, Math.min(220, num));
+  metronomeBpm = num;
+  updateMetronomeUI();
+}
+
+function adjustMetronomeBpm(delta) {
+  setMetronomeBpm(metronomeBpm + delta);
+}
+
+function handleMetronomeSliderInput(val) {
+  setMetronomeBpm(val);
+}
+
+function handleTapTempo() {
+  const now = performance.now();
+  const tapBtn = document.getElementById("metronomeTapBtn");
+  if (tapBtn) {
+    tapBtn.classList.add("tapped");
+    setTimeout(() => tapBtn.classList.remove("tapped"), 120);
+  }
+
+  if (tapTimestamps.length > 0 && (now - tapTimestamps[tapTimestamps.length - 1]) > 2500) {
+    tapTimestamps = [];
+  }
+
+  tapTimestamps.push(now);
+
+  if (tapTimestamps.length >= 2) {
+    if (tapTimestamps.length > 5) {
+      tapTimestamps.shift();
+    }
+    let intervals = [];
+    for (let i = 1; i < tapTimestamps.length; i++) {
+      intervals.push(tapTimestamps[i] - tapTimestamps[i - 1]);
+    }
+    const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+    if (avgInterval > 0) {
+      const calculatedBpm = Math.round(60000 / avgInterval);
+      setMetronomeBpm(calculatedBpm);
+    }
+  }
+}
+
+function setMetronomeTimeSignature(beats) {
+  metronomeBeatsPerBar = Number(beats) || 4;
+  currentBeatInBar = 0;
+
+  const pills = document.querySelectorAll(".metronome-meter-pill");
+  pills.forEach(pill => {
+    const pBeats = Number(pill.getAttribute("data-beats"));
+    pill.classList.toggle("active", pBeats === metronomeBeatsPerBar);
+  });
+
+  updateMetronomeBeatDots();
+  updateMetronomeUI();
+}
+
+function toggleMetronomeCollapse() {
+  const card = document.getElementById("metronomeWidget");
+  if (!card) return;
+
+  const isCollapsed = card.classList.toggle("collapsed");
+  const header = card.querySelector(".metronome-header");
+  if (header) {
+    header.setAttribute("aria-expanded", !isCollapsed ? "true" : "false");
+  }
+
+  // Auto-pause when collapsing to conserve battery
+  if (isCollapsed && isMetronomeRunning) {
+    stopMetronome();
+  }
+}
+
+// Auto-pause metronome when backgrounding or switching tabs
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && isMetronomeRunning) {
+    stopMetronome();
+  }
+});
+
 // Initial load
 window.addEventListener("DOMContentLoaded", function () {
   const footerYear = document.getElementById("footerYear");
   if (footerYear) {
     footerYear.innerText = new Date().getFullYear();
   }
+  initThemeSystem();
   registerServiceWorker();
   updateOnlineStatus();
   applyHeaderTargetDate();
@@ -3085,6 +3426,8 @@ window.addEventListener("DOMContentLoaded", function () {
   loadProfile();
   initNameValidation();
   restoreTimerState();
+  updateMetronomeBeatDots();
+  updateMetronomeUI();
   initTutorialLang();
   syncOfflinePracticeQueue();
 });

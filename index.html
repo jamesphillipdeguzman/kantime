@@ -46,7 +46,10 @@
           <p id="headerSubtitle">Stake Choir Prep • Oct 24–25</p>
         </div>
       </div>
-      <button class="settings-btn" id="openSettingsBtn" onclick="openSettingsModal()" aria-label="Settings" title="Settings & Practice Preferences">⚙️</button>
+      <div class="header-actions">
+        <button type="button" class="theme-quick-btn" id="themeQuickToggleBtn" onclick="toggleQuickTheme()" aria-label="Toggle Dark / Light Theme" title="Toggle Dark/Light Mode">🌙</button>
+        <button type="button" class="settings-btn" id="openSettingsBtn" onclick="openSettingsModal()" aria-label="Settings" title="Settings & Practice Preferences">⚙️</button>
+      </div>
     </div>
   </header>
 
@@ -146,6 +149,67 @@
         </p>
 
         <button class="btn btn-primary" id="timerBtn" onclick="toggleTimer()">Start 15m Session</button>
+      </div>
+
+      <!-- Built-in In-Browser Metronome Tool -->
+      <div class="card metronome-card" id="metronomeWidget">
+        <div class="metronome-header" onclick="toggleMetronomeCollapse()" role="button" tabindex="0" aria-expanded="true">
+          <div class="metronome-header-left">
+            <span class="metronome-header-icon">⏱️</span>
+            <div>
+              <h3 class="metronome-title">In-Browser Metronome</h3>
+              <p class="metronome-subtitle">Web Audio precision pulse for choral rehearsal</p>
+            </div>
+          </div>
+          <div class="metronome-header-right">
+            <span class="metronome-badge" id="metronomeHeaderBadge">100 BPM • 4/4</span>
+            <button type="button" class="metronome-collapse-btn" id="metronomeCollapseBtn" aria-label="Toggle Metronome Controls">▼</button>
+          </div>
+        </div>
+
+        <div class="metronome-body" id="metronomeBody">
+          <!-- Tempo Display & Dynamic Italian Marking -->
+          <div class="metronome-tempo-display">
+            <div class="metronome-bpm-wrap">
+              <span class="metronome-bpm-number" id="metronomeBpmDisplay">100</span>
+              <span class="metronome-bpm-unit">BPM</span>
+            </div>
+            <div class="metronome-tempo-name" id="metronomeTempoMarking">Moderato (Moderate)</div>
+          </div>
+
+          <!-- Slider & Fine Tuning -->
+          <div class="metronome-controls-row">
+            <button type="button" class="metronome-fine-btn" onclick="adjustMetronomeBpm(-1)" title="Decrease 1 BPM" aria-label="Decrease 1 BPM">&minus;1</button>
+            <input type="range" class="metronome-slider" id="metronomeSlider" min="40" max="220" value="100" oninput="handleMetronomeSliderInput(this.value)" aria-label="Metronome Tempo Slider">
+            <button type="button" class="metronome-fine-btn" onclick="adjustMetronomeBpm(1)" title="Increase 1 BPM" aria-label="Increase 1 BPM">+1</button>
+          </div>
+
+          <!-- Tap Tempo & Time Signatures -->
+          <div class="metronome-options-row">
+            <button type="button" class="metronome-tap-btn" id="metronomeTapBtn" onclick="handleTapTempo()" title="Tap repeatedly at your desired tempo">
+              <span class="tap-icon">👆</span> Tap Tempo
+            </button>
+
+            <div class="metronome-meter-group" role="radiogroup" aria-label="Time Signature">
+              <button type="button" class="metronome-meter-pill" data-beats="2" onclick="setMetronomeTimeSignature(2)">2/4</button>
+              <button type="button" class="metronome-meter-pill" data-beats="3" onclick="setMetronomeTimeSignature(3)">3/4</button>
+              <button type="button" class="metronome-meter-pill active" data-beats="4" onclick="setMetronomeTimeSignature(4)">4/4</button>
+              <button type="button" class="metronome-meter-pill" data-beats="6" onclick="setMetronomeTimeSignature(6)">6/8</button>
+            </div>
+          </div>
+
+          <!-- Visual Beat Indicator LED Dots -->
+          <div class="metronome-beat-container">
+            <div class="metronome-beat-dots" id="metronomeBeatDots">
+              <!-- Rendered dynamically by updateMetronomeBeatDots() -->
+            </div>
+          </div>
+
+          <!-- Start / Stop Button -->
+          <button type="button" class="btn btn-primary metronome-toggle-btn" id="metronomeToggleBtn" onclick="toggleMetronome()">
+            ▶ Start Metronome
+          </button>
+        </div>
       </div>
 
       <!-- Active Song Resources (Dynamically Filtered) -->
@@ -395,6 +459,23 @@
             <label for="settingTargetDate">Stake Conference / Target Event</label>
             <input type="text" id="settingTargetDate" placeholder="e.g. Stake Choir Prep • Oct 24–25" oninput="handleTargetDateInput(this.value)">
             <p class="settings-hint">Updates the top header subtitle in real-time on your device.</p>
+          </div>
+
+          <!-- Theme & Appearance Section -->
+          <div class="settings-section">
+            <label>Theme &amp; Appearance</label>
+            <div class="theme-segmented-control" role="group" aria-label="Theme selection">
+              <button type="button" class="theme-option-btn" id="themeBtnSystem" onclick="setThemePreference('system')">
+                <span class="theme-icon">💻</span> System
+              </button>
+              <button type="button" class="theme-option-btn" id="themeBtnLight" onclick="setThemePreference('light')">
+                <span class="theme-icon">☀️</span> Light
+              </button>
+              <button type="button" class="theme-option-btn" id="themeBtnDark" onclick="setThemePreference('dark')">
+                <span class="theme-icon">🌙</span> Dark
+              </button>
+            </div>
+            <p class="settings-hint">Choose your preferred appearance or automatically follow your device's system dark mode.</p>
           </div>
 
           <div class="settings-section-divider"></div>

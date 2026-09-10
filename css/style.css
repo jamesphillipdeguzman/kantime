@@ -17,15 +17,26 @@
   --success: #10b981;
   --success-light: #ecfdf5;
 
-  /* Neutrals & Surfaces */
+  /* Neutrals & Surfaces (Semantic Tokens) */
   --bg: #f8fafc;
+  --bg-page: #f8fafc;
   --card-bg: #ffffff;
   --card-bg-subtle: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-modal: #ffffff;
+  --bg-input: #ffffff;
+  --bg-elevated: #ffffff;
+
   --text: #0f172a;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
   --text-muted: #64748b;
   --text-subtle: #94a3b8;
+
   --border: #e2e8f0;
   --border-light: #f1f5f9;
+  --border-subtle: #e2e8f0;
+  --border-highlight: #bfdbfe;
 
   /* Shadows & Radius */
   --radius-sm: 8px;
@@ -37,6 +48,245 @@
   --shadow-card: 0 2px 6px -1px rgba(15, 23, 42, 0.06), 0 1px 3px -1px rgba(15, 23, 42, 0.04);
   --shadow-elevated: 0 8px 20px -3px rgba(15, 23, 42, 0.08), 0 4px 8px -2px rgba(15, 23, 42, 0.04);
   --shadow-btn: 0 4px 12px rgba(29, 78, 216, 0.22);
+}
+
+/* ==========================================================================
+   Dark Theme System Tokens & Overrides ([data-theme="dark"])
+   ========================================================================== */
+[data-theme="dark"] {
+  --primary: #3b82f6;
+  --primary-hover: #60a5fa;
+  --primary-light: rgba(59, 130, 246, 0.16);
+  --primary-border: #1e3a8a;
+
+  --accent: #f59e0b;
+  --accent-hover: #fbbf24;
+  --accent-light: rgba(245, 158, 11, 0.16);
+  --accent-border: #78350f;
+
+  --success: #10b981;
+  --success-light: rgba(16, 185, 129, 0.16);
+
+  --bg: #090d16;
+  --bg-page: #090d16;
+  --card-bg: #131b2e;
+  --card-bg-subtle: #182238;
+  --bg-card: #131b2e;
+  --bg-modal: #131b2e;
+  --bg-input: #1a243c;
+  --bg-elevated: #1e293b;
+
+  --text: #f1f5f9;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-subtle: #64748b;
+
+  --border: #23314e;
+  --border-light: #1c273e;
+  --border-subtle: #23314e;
+  --border-highlight: #3b82f6;
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 4px 14px rgba(0, 0, 0, 0.4);
+  --shadow-elevated: 0 12px 30px rgba(0, 0, 0, 0.6);
+  --shadow-btn: 0 4px 14px rgba(59, 130, 246, 0.35);
+}
+
+[data-theme="dark"] body {
+  background-color: var(--bg);
+  background-image: radial-gradient(at 100% 0%, rgba(30, 58, 138, 0.24) 0px, transparent 55%),
+                    radial-gradient(at 0% 100%, rgba(120, 53, 15, 0.18) 0px, transparent 55%);
+}
+
+[data-theme="dark"] body::before {
+  opacity: 0.04;
+  filter: invert(1) brightness(0.8);
+}
+
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
+}
+
+[data-theme="dark"] select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] input[type="text"]:focus,
+[data-theme="dark"] select:focus {
+  background-color: var(--bg-input);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3.5px rgba(59, 130, 246, 0.22);
+}
+
+[data-theme="dark"] input[type="text"].input-invalid {
+  background-color: rgba(239, 68, 68, 0.15) !important;
+  border-color: #ef4444 !important;
+  color: #fca5a5 !important;
+}
+
+[data-theme="dark"] .input-validation-msg {
+  color: #f87171;
+}
+
+[data-theme="dark"] .quick-duration-pill {
+  background: var(--card-bg-subtle);
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .quick-duration-pill:hover:not(:disabled) {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+[data-theme="dark"] .quick-duration-pill.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .board-row {
+  border-bottom-color: var(--border-light);
+}
+
+[data-theme="dark"] .board-row:hover {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+[data-theme="dark"] .section-row {
+  border-bottom-color: var(--border-light);
+}
+
+[data-theme="dark"] .section-bar-track {
+  background: #182238;
+}
+
+[data-theme="dark"] .modal-backdrop {
+  background: rgba(4, 7, 14, 0.75);
+}
+
+[data-theme="dark"] .modal-box,
+[data-theme="dark"] .inactivity-modal-box,
+[data-theme="dark"] .completion-modal-box {
+  background: var(--bg-modal);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .modal-header {
+  background: var(--card-bg-subtle);
+  border-bottom-color: var(--border);
+}
+
+[data-theme="dark"] .modal-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .settings-tabs-nav {
+  background: var(--card-bg-subtle);
+  border-bottom-color: var(--border);
+}
+
+[data-theme="dark"] .settings-tab-btn {
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .settings-tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  background: transparent;
+}
+
+[data-theme="dark"] .tutorial-step-card {
+  background: var(--card-bg-subtle);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .tutorial-step-card:hover {
+  background: #1c2742;
+  border-color: var(--primary-border);
+}
+
+[data-theme="dark"] .song-editor-card {
+  background: var(--card-bg-subtle);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .repertoire-item-row {
+  background: var(--card-bg-subtle);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .repertoire-item-row:hover {
+  background: #1c2742;
+}
+
+[data-theme="dark"] .lang-switcher {
+  background: #182238;
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .lang-pill {
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .lang-pill.active {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .resource-gated-box {
+  background: var(--card-bg-subtle);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .resource-gated-icon {
+  background: var(--card-bg);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .avatar-circle-default {
+  background: var(--card-bg-subtle);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .pitch-widget-card {
+  background: var(--card-bg);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .pitch-display-area {
+  background: var(--card-bg-subtle);
+}
+
+[data-theme="dark"] .pitch-widget-minimized {
+  background: var(--card-bg);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .pitch-ref-btn {
+  background: var(--card-bg);
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .pitch-ref-btn:hover {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 /* Reset & Base Setup */
@@ -112,14 +362,21 @@ header {
   max-width: 520px;
   margin: 0 auto;
   position: relative;
-  padding: 0 44px 0 0; /* allowance for gear button */
+  padding: 0 88px 0 0; /* allowance for theme toggle and gear buttons */
 }
 
-.settings-btn {
+.header-actions {
   position: absolute;
   right: 0;
   top: 50%;
   transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-quick-btn,
+.settings-btn {
   background: rgba(255, 255, 255, 0.16);
   border: 1px solid rgba(255, 255, 255, 0.28);
   color: #ffffff;
@@ -137,13 +394,22 @@ header {
   touch-action: manipulation;
 }
 
+.theme-quick-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+  transform: scale(1.08);
+}
+
+.theme-quick-btn:active {
+  transform: scale(0.94);
+}
+
 .settings-btn:hover {
   background: rgba(255, 255, 255, 0.28);
-  transform: translateY(-50%) scale(1.08) rotate(30deg);
+  transform: scale(1.08) rotate(30deg);
 }
 
 .settings-btn:active {
-  transform: translateY(-50%) scale(0.94);
+  transform: scale(0.94);
 }
 
 .header-brand {
@@ -242,7 +508,7 @@ input[type="text"], select {
   color: var(--text);
   margin-bottom: 14px;
   outline: none;
-  background-color: #ffffff;
+  background-color: var(--bg-input);
   transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
   font-family: inherit;
   appearance: none;
@@ -261,7 +527,7 @@ select {
 
 input[type="text"]:focus, select:focus {
   border-color: var(--primary);
-  background-color: #ffffff;
+  background-color: var(--bg-input);
   box-shadow: 0 0 0 3.5px rgba(29, 78, 216, 0.14);
 }
 
@@ -2636,4 +2902,405 @@ input[type="text"].input-invalid {
 
 .pdf-footer-right {
   color: #94a3b8 !important;
+}
+
+/* ==========================================================================
+   Theme Segmented Control (Settings Modal)
+   ========================================================================== */
+.theme-segmented-control {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: var(--card-bg-subtle);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  gap: 4px;
+  margin-top: 6px;
+  margin-bottom: 12px;
+}
+
+.theme-option-btn {
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.theme-option-btn:hover {
+  color: var(--text);
+  background: rgba(29, 78, 216, 0.06);
+}
+
+.theme-option-btn.active {
+  background: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(29, 78, 216, 0.3);
+}
+
+.theme-option-btn.active:hover {
+  background: var(--primary-hover);
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   Built-in Metronome Widget Styles
+   ========================================================================== */
+.metronome-card {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+.metronome-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.metronome-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.metronome-header-icon {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.metronome-title {
+  font-size: 1.05rem;
+  font-weight: 750;
+  color: var(--text);
+  margin: 0;
+}
+
+.metronome-subtitle {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin: 2px 0 0;
+}
+
+.metronome-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.metronome-badge {
+  font-size: 0.75rem;
+  font-weight: 750;
+  background: var(--primary-light);
+  color: var(--primary);
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-full);
+  padding: 3px 9px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.metronome-collapse-btn {
+  background: var(--card-bg-subtle);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.15s ease;
+}
+
+.metronome-card.collapsed .metronome-collapse-btn {
+  transform: rotate(-90deg);
+}
+
+.metronome-body {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: fadeIn 0.25s ease;
+}
+
+.metronome-card.collapsed .metronome-body {
+  display: none;
+}
+
+/* Tempo Readout */
+.metronome-tempo-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--card-bg-subtle);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 16px 10px;
+}
+
+.metronome-bpm-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.metronome-bpm-number {
+  font-size: 2.5rem;
+  font-weight: 850;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+  color: var(--primary);
+}
+
+.metronome-bpm-unit {
+  font-size: 0.85rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.metronome-tempo-name {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-top: 3px;
+  letter-spacing: 0.02em;
+}
+
+/* Slider & Fine-Tuning Controls */
+.metronome-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.metronome-fine-btn {
+  background: var(--card-bg-subtle);
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 800;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.metronome-fine-btn:hover {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: scale(1.05);
+}
+
+.metronome-fine-btn:active {
+  transform: scale(0.92);
+}
+
+.metronome-slider {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--border);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  margin: 0;
+  transition: background 0.15s ease;
+}
+
+.metronome-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(29, 78, 216, 0.4);
+  border: 2px solid #ffffff;
+  transition: transform 0.12s ease;
+}
+
+.metronome-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.metronome-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(29, 78, 216, 0.4);
+  border: 2px solid #ffffff;
+  transition: transform 0.12s ease;
+}
+
+/* Options Row: Tap Tempo + Time Signatures */
+.metronome-options-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.metronome-tap-btn {
+  background: var(--card-bg-subtle);
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 750;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.metronome-tap-btn:hover {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.metronome-tap-btn:active,
+.metronome-tap-btn.tapped {
+  transform: scale(0.94);
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
+.metronome-meter-group {
+  display: inline-flex;
+  background: var(--card-bg-subtle);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  gap: 2px;
+}
+
+.metronome-meter-pill {
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 5px 11px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.metronome-meter-pill:hover {
+  color: var(--primary);
+  background: rgba(29, 78, 216, 0.08);
+}
+
+.metronome-meter-pill.active {
+  background: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 1px 4px rgba(29, 78, 216, 0.3);
+}
+
+/* Beat LED Indicator Dots */
+.metronome-beat-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0 6px;
+}
+
+.metronome-beat-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.metronome-beat-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--border);
+  border: 2px solid transparent;
+  transition: transform 0.1s ease, background 0.12s ease, box-shadow 0.12s ease;
+}
+
+.metronome-beat-dot.downbeat {
+  width: 20px;
+  height: 20px;
+  border-color: var(--accent-border);
+}
+
+.metronome-beat-dot.active {
+  background: var(--primary);
+  transform: scale(1.3);
+  box-shadow: 0 0 12px var(--primary);
+}
+
+.metronome-beat-dot.downbeat.active {
+  background: var(--accent);
+  border-color: #ffffff;
+  transform: scale(1.4);
+  box-shadow: 0 0 16px var(--accent);
+}
+
+/* Start/Stop Button */
+.metronome-toggle-btn {
+  width: 100%;
+  min-height: 46px;
+  font-size: 0.95rem;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.metronome-toggle-btn.running {
+  background: #dc2626 !important;
+  border-color: #b91c1c !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35) !important;
+}
+
+.metronome-toggle-btn.running:hover {
+  background: #b91c1c !important;
 }
