@@ -47,34 +47,34 @@ function renderAvatarPicker(currentAvatar) {
   selectedAvatarFile = currentAvatar !== undefined ? currentAvatar : (localStorage.getItem("choir_avatar") || "");
 
   let html = `
-    <div class="avatar-option ${!selectedAvatarFile ? 'selected' : ''}" 
-         id="avatar-opt-default" 
-         onclick="selectAvatar('')" 
-         onkeydown="handleAvatarKeyDown(event, '')"
-         role="button" 
-         tabindex="0"
-         aria-label="Default avatar (Music Note)"
-         title="No Avatar (Default 🎵)">
-      <div class="avatar-circle avatar-circle-default">🎵</div>
-      <span class="avatar-option-name">Default</span>
-    </div>
-  `;
+      <div class="avatar-option ${!selectedAvatarFile ? 'selected' : ''}" 
+          id="avatar-opt-default" 
+          onclick="selectAvatar('')" 
+          onkeydown="handleAvatarKeyDown(event, '')"
+          role="button" 
+          tabindex="0"
+          aria-label="Default avatar (Music Note)"
+          title="No Avatar (Default 🎵)">
+        <div class="avatar-circle avatar-circle-default">🎵</div>
+        <span class="avatar-option-name">Default</span>
+      </div>
+    `;
 
   CHOIR_AVATARS.forEach(av => {
     const isSelected = selectedAvatarFile === av.file;
     html += `
-      <div class="avatar-option ${isSelected ? 'selected' : ''}" 
-           id="avatar-opt-${av.file.replace(/[^a-zA-Z0-9_-]/g, '')}" 
-           onclick="selectAvatar('${av.file}')" 
-           onkeydown="handleAvatarKeyDown(event, '${av.file}')"
-           role="button" 
-           tabindex="0"
-           aria-label="${av.label} (${av.category})"
-           title="${av.label} (${av.category})">
-        <img class="avatar-circle" src="${getAvatarImgSrc(av.file)}" alt="${av.label}" loading="lazy">
-        <span class="avatar-option-name">${av.label}</span>
-      </div>
-    `;
+        <div class="avatar-option ${isSelected ? 'selected' : ''}" 
+            id="avatar-opt-${av.file.replace(/[^a-zA-Z0-9_-]/g, '')}" 
+            onclick="selectAvatar('${av.file}')" 
+            onkeydown="handleAvatarKeyDown(event, '${av.file}')"
+            role="button" 
+            tabindex="0"
+            aria-label="${av.label} (${av.category})"
+            title="${av.label} (${av.category})">
+          <img class="avatar-circle" src="${getAvatarImgSrc(av.file)}" alt="${av.label}" loading="lazy">
+          <span class="avatar-option-name">${av.label}</span>
+        </div>
+      `;
   });
 
   container.innerHTML = html;
@@ -117,34 +117,34 @@ function renderSettingAvatarPicker(currentAvatar) {
   selectedSettingAvatarFile = currentAvatar !== undefined ? currentAvatar : (localStorage.getItem("choir_avatar") || "");
 
   let html = `
-    <div class="avatar-option ${!selectedSettingAvatarFile ? 'selected' : ''}" 
-         id="setting-avatar-opt-default" 
-         onclick="selectSettingAvatar('')" 
-         onkeydown="handleSettingAvatarKeyDown(event, '')"
-         role="button" 
-         tabindex="0"
-         aria-label="Default avatar (Music Note)"
-         title="No Avatar (Default 🎵)">
-      <div class="avatar-circle avatar-circle-default">🎵</div>
-      <span class="avatar-option-name">Default</span>
-    </div>
-  `;
+      <div class="avatar-option ${!selectedSettingAvatarFile ? 'selected' : ''}" 
+          id="setting-avatar-opt-default" 
+          onclick="selectSettingAvatar('')" 
+          onkeydown="handleSettingAvatarKeyDown(event, '')"
+          role="button" 
+          tabindex="0"
+          aria-label="Default avatar (Music Note)"
+          title="No Avatar (Default 🎵)">
+        <div class="avatar-circle avatar-circle-default">🎵</div>
+        <span class="avatar-option-name">Default</span>
+      </div>
+    `;
 
   CHOIR_AVATARS.forEach(av => {
     const isSelected = selectedSettingAvatarFile === av.file;
     html += `
-      <div class="avatar-option ${isSelected ? 'selected' : ''}" 
-           id="setting-avatar-opt-${av.file.replace(/[^a-zA-Z0-9_-]/g, '')}" 
-           onclick="selectSettingAvatar('${av.file}')" 
-           onkeydown="handleSettingAvatarKeyDown(event, '${av.file}')"
-           role="button" 
-           tabindex="0"
-           aria-label="${av.label} (${av.category})"
-           title="${av.label} (${av.category})">
-        <img class="avatar-circle" src="${getAvatarImgSrc(av.file)}" alt="${av.label}" loading="lazy">
-        <span class="avatar-option-name">${av.label}</span>
-      </div>
-    `;
+        <div class="avatar-option ${isSelected ? 'selected' : ''}" 
+            id="setting-avatar-opt-${av.file.replace(/[^a-zA-Z0-9_-]/g, '')}" 
+            onclick="selectSettingAvatar('${av.file}')" 
+            onkeydown="handleSettingAvatarKeyDown(event, '${av.file}')"
+            role="button" 
+            tabindex="0"
+            aria-label="${av.label} (${av.category})"
+            title="${av.label} (${av.category})">
+          <img class="avatar-circle" src="${getAvatarImgSrc(av.file)}" alt="${av.label}" loading="lazy">
+          <span class="avatar-option-name">${av.label}</span>
+        </div>
+      `;
   });
 
   container.innerHTML = html;
@@ -174,21 +174,21 @@ function getLeaderboardAvatarHtml(avatarFile, singerName) {
   if (avatarFile && avatarFile.trim()) {
     const src = getAvatarImgSrc(avatarFile);
     return `
-      <div class="leaderboard-avatar-wrap">
-        <img src="${src}" 
-             alt="${singerName || 'Singer'}" 
-             class="leaderboard-avatar" 
-             loading="lazy"
-             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-        <div class="leaderboard-avatar avatar-fallback" style="display:none;" title="Choir Singer">🎵</div>
-      </div>
-    `;
+        <div class="leaderboard-avatar-wrap">
+          <img src="${src}" 
+              alt="${singerName || 'Singer'}" 
+              class="leaderboard-avatar" 
+              loading="lazy"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="leaderboard-avatar avatar-fallback" style="display:none;" title="Choir Singer">🎵</div>
+        </div>
+      `;
   }
   return `
-    <div class="leaderboard-avatar-wrap">
-      <div class="leaderboard-avatar avatar-fallback" title="Choir Singer">🎵</div>
-    </div>
-  `;
+      <div class="leaderboard-avatar-wrap">
+        <div class="leaderboard-avatar avatar-fallback" title="Choir Singer">🎵</div>
+      </div>
+    `;
 }
 
 // --- USER SETTINGS & DEFAULT CHOIR REPERTOIRE ---
@@ -449,21 +449,21 @@ function renderSelectedSongResource(songKey) {
 
   if (!sessionActive) {
     container.innerHTML = `
-      <div class="song-item ${isPrimary} fade-in">
-        <span class="song-tag" ${tagStyle}>${escapeHtml(song.part || 'Repertoire')}</span>
-        <div class="song-title">${escapeHtml(song.title)}</div>
-        
-        <div class="resource-gated-box">
-          <div class="resource-gated-icon" aria-hidden="true">🔒</div>
-          <div class="resource-gated-content">
-            <h4 class="resource-gated-title">Rehearsal Material Locked</h4>
-            <p class="resource-gated-prompt">
-              Select your hymn, then press <strong>&ldquo;Start Practice&rdquo;</strong> to unlock sheet music and rehearsal audio.
-            </p>
+        <div class="song-item ${isPrimary} fade-in">
+          <span class="song-tag" ${tagStyle}>${escapeHtml(song.part || 'Repertoire')}</span>
+          <div class="song-title">${escapeHtml(song.title)}</div>
+          
+          <div class="resource-gated-box">
+            <div class="resource-gated-icon" aria-hidden="true">🔒</div>
+            <div class="resource-gated-content">
+              <h4 class="resource-gated-title">Rehearsal Material Locked</h4>
+              <p class="resource-gated-prompt">
+                Select your hymn, then press <strong>&ldquo;Start Practice&rdquo;</strong> to unlock sheet music and rehearsal audio.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
-    `;
+      `;
     return;
   }
 
@@ -500,39 +500,39 @@ function renderSelectedSongResource(songKey) {
     });
 
     localAudioHtml = `
-      <div class="local-audio-card">
-        <div class="local-audio-header">
-          <div class="local-audio-title">
-            <span>🎧 Rehearsal Audio Tracks</span>
-            <span class="badge-cached-offline">⚡ Offline Ready</span>
+        <div class="local-audio-card">
+          <div class="local-audio-header">
+            <div class="local-audio-title">
+              <span>🎧 Rehearsal Audio Tracks</span>
+              <span class="badge-cached-offline">⚡ Offline Ready</span>
+            </div>
           </div>
+          <div class="local-audio-part-selector" role="group" aria-label="Select Voice Part Track">
+            ${pillsHtml}
+          </div>
+          <audio id="activeLocalAudio" class="local-audio-element" controls preload="metadata" src="${escapeHtml(song.audioTracks[0].src)}">
+            Your browser does not support local audio playback.
+          </audio>
         </div>
-        <div class="local-audio-part-selector" role="group" aria-label="Select Voice Part Track">
-          ${pillsHtml}
-        </div>
-        <audio id="activeLocalAudio" class="local-audio-element" controls preload="metadata" src="${escapeHtml(song.audioTracks[0].src)}">
-          Your browser does not support local audio playback.
-        </audio>
-      </div>
-    `;
+      `;
   }
 
   let embedHtml = "";
   if (song.videoUrl) {
     if (isOffline) {
       embedHtml = `
-        <div style="margin-top: 12px; padding: 14px; background: #fffbeb; border: 1px dashed #fde68a; border-radius: 8px; text-align: center; color: #92400e; font-size: 0.82rem;">
-          ▶️ <strong>YouTube Video:</strong> <span class="badge-offline-req">Requires Internet</span>
-          <p style="margin: 4px 0 0; font-size: 0.76rem; color: #b45309;">Streaming video is disabled in Offline Mode. Use the cached rehearsal audio player above to practice.</p>
-        </div>
-      `;
+          <div style="margin-top: 12px; padding: 14px; background: #fffbeb; border: 1px dashed #fde68a; border-radius: 8px; text-align: center; color: #92400e; font-size: 0.82rem;">
+            ▶️ <strong>YouTube Video:</strong> <span class="badge-offline-req">Requires Internet</span>
+            <p style="margin: 4px 0 0; font-size: 0.76rem; color: #b45309;">Streaming video is disabled in Offline Mode. Use the cached rehearsal audio player above to practice.</p>
+          </div>
+        `;
     } else {
       const embedUrl = formatYouTubeEmbedUrl(song.videoUrl);
       embedHtml = `
-        <div style="margin-top: 12px; border-radius: 8px; overflow: hidden; background: #000; position: relative; padding-bottom: 56.25%; height: 0;">
-          <iframe src="${escapeHtml(embedUrl)}" style="position: absolute; top:0; left:0; width:100%; height:100%; border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-        </div>
-      `;
+          <div style="margin-top: 12px; border-radius: 8px; overflow: hidden; background: #000; position: relative; padding-bottom: 56.25%; height: 0;">
+            <iframe src="${escapeHtml(embedUrl)}" style="position: absolute; top:0; left:0; width:100%; height:100%; border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+        `;
     }
   }
 
@@ -542,21 +542,21 @@ function renderSelectedSongResource(songKey) {
   const noteHtml = noteText ? `<div class="external-note">${escapeHtml(noteText)}</div>` : "";
 
   container.innerHTML = `
-    <div class="song-item ${isPrimary} fade-in">
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
-        <span class="song-tag" ${tagStyle}>${escapeHtml(song.part || 'Repertoire')}</span>
-        <span class="resource-status-badge">🔓 Session Active &bull; Unlocked</span>
+      <div class="song-item ${isPrimary} fade-in">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+          <span class="song-tag" ${tagStyle}>${escapeHtml(song.part || 'Repertoire')}</span>
+          <span class="resource-status-badge">🔓 Session Active &bull; Unlocked</span>
+        </div>
+        <div class="song-title">${escapeHtml(song.title)}</div>
+        
+        <div class="resource-unlocked-container">
+          ${localAudioHtml}
+          <div class="song-actions">${actionsHtml}</div>
+          ${noteHtml}
+          ${embedHtml}
+        </div>
       </div>
-      <div class="song-title">${escapeHtml(song.title)}</div>
-      
-      <div class="resource-unlocked-container">
-        ${localAudioHtml}
-        <div class="song-actions">${actionsHtml}</div>
-        ${noteHtml}
-        ${embedHtml}
-      </div>
-    </div>
-  `;
+    `;
 }
 
 function handleSongSelectionChange() {
@@ -581,16 +581,16 @@ function updateActiveProfileDisplay(name, section, avatar) {
     if (avatar && avatar.trim()) {
       const src = getAvatarImgSrc(avatar);
       avatarWrap.innerHTML = `
-        <img src="${src}" 
-             alt="${name}" 
-             class="banner-avatar-badge" 
-             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-        <div class="banner-avatar-badge avatar-fallback" style="display:none;" title="${name}">🎵</div>
-      `;
+          <img src="${src}" 
+              alt="${name}" 
+              class="banner-avatar-badge" 
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="banner-avatar-badge avatar-fallback" style="display:none;" title="${name}">🎵</div>
+        `;
     } else {
       avatarWrap.innerHTML = `
-        <div class="banner-avatar-badge avatar-fallback" title="${name}">🎵</div>
-      `;
+          <div class="banner-avatar-badge avatar-fallback" title="${name}">🎵</div>
+        `;
     }
   }
 }
@@ -911,13 +911,13 @@ function openInactivityModal() {
     if (avatar && avatar.trim()) {
       const src = getAvatarImgSrc(avatar);
       avatarWrap.innerHTML = `
-        <img src="${src}" alt="${firstName}" class="inactivity-avatar-circle" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-        <div class="inactivity-avatar-circle avatar-fallback" style="display:none;" title="${firstName}">🎵</div>
-      `;
+          <img src="${src}" alt="${firstName}" class="inactivity-avatar-circle" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="inactivity-avatar-circle avatar-fallback" style="display:none;" title="${firstName}">🎵</div>
+        `;
     } else {
       avatarWrap.innerHTML = `
-        <div class="inactivity-avatar-circle avatar-fallback" title="${firstName}">🎵</div>
-      `;
+          <div class="inactivity-avatar-circle avatar-fallback" title="${firstName}">🎵</div>
+        `;
     }
   }
 
@@ -1473,16 +1473,16 @@ function loadLeaderboard() {
         const avatarBadgeHtml = getLeaderboardAvatarHtml(avatarToShow, s.name);
 
         singersHtml += `
-          <div class="board-row">
-            <span class="rank ${isTop3}">${medal}#${idx + 1}</span>
-            ${avatarBadgeHtml}
-            <div style="flex:1; min-width:0; padding-right:6px;">
-              <strong style="font-size:0.92rem;">${s.name}</strong>
-              <span class="part-badge" data-voice="${s.section}">${s.section}</span>
+            <div class="board-row">
+              <span class="rank ${isTop3}">${medal}#${idx + 1}</span>
+              ${avatarBadgeHtml}
+              <div style="flex:1; min-width:0; padding-right:6px;">
+                <strong style="font-size:0.92rem;">${s.name}</strong>
+                <span class="part-badge" data-voice="${s.section}">${s.section}</span>
+              </div>
+              <span class="mins-badge">${s.totalMins}m <span style="font-weight:400; font-size:0.75rem; color:var(--text-muted);">(${hours}h)</span></span>
             </div>
-            <span class="mins-badge">${s.totalMins}m <span style="font-weight:400; font-size:0.75rem; color:var(--text-muted);">(${hours}h)</span></span>
-          </div>
-        `;
+          `;
       });
       if (topSingersEl) topSingersEl.innerHTML = singersHtml;
 
@@ -1493,15 +1493,15 @@ function loadLeaderboard() {
         const medal = idx === 0 ? "🥇 " : idx === 1 ? "🥈 " : idx === 2 ? "🥉 " : "";
         const hours = (mins / 60).toFixed(1);
         sectionHtml += `
-          <div class="board-row">
-            <span class="rank ${isTop3}">${medal}#${idx + 1}</span>
-            <div style="flex:1; display:flex; align-items:center; min-width:0;">
-              <span style="font-weight:700;">${sec}</span>
-              <span class="part-badge" data-voice="${sec}">Section</span>
+            <div class="board-row">
+              <span class="rank ${isTop3}">${medal}#${idx + 1}</span>
+              <div style="flex:1; display:flex; align-items:center; min-width:0;">
+                <span style="font-weight:700;">${sec}</span>
+                <span class="part-badge" data-voice="${sec}">Section</span>
+              </div>
+              <span class="mins-badge">${mins}m <span style="font-weight:400; font-size:0.75rem; color:var(--text-muted);">(${hours}h)</span></span>
             </div>
-            <span class="mins-badge">${mins}m <span style="font-weight:400; font-size:0.75rem; color:var(--text-muted);">(${hours}h)</span></span>
-          </div>
-        `;
+          `;
       });
       if (sectionEl) sectionEl.innerHTML = sectionHtml;
 
@@ -2378,23 +2378,23 @@ function renderRepertoireList() {
     const sheetTag = song.sheetUrl ? `<span class="link-tag">🎼 Sheet</span>` : "";
 
     html += `
-      <div class="repertoire-list-item">
-        <div class="repertoire-item-info">
-          <div class="repertoire-item-title-row">
-            <strong>${escapeHtml(song.title)}</strong>
-            ${partBadge}
+        <div class="repertoire-list-item">
+          <div class="repertoire-item-info">
+            <div class="repertoire-item-title-row">
+              <strong>${escapeHtml(song.title)}</strong>
+              ${partBadge}
+            </div>
+            <div class="repertoire-item-links">
+              ${videoTag}
+              ${sheetTag}
+            </div>
           </div>
-          <div class="repertoire-item-links">
-            ${videoTag}
-            ${sheetTag}
+          <div class="repertoire-item-actions">
+            <button type="button" class="btn-icon" onclick="openSongForm('${song.id}')" title="Edit piece" aria-label="Edit ${escapeHtml(song.title)}">✏️</button>
+            <button type="button" class="btn-icon btn-icon-danger" onclick="deleteSong('${song.id}')" title="Delete piece" aria-label="Delete ${escapeHtml(song.title)}">🗑️</button>
           </div>
         </div>
-        <div class="repertoire-item-actions">
-          <button type="button" class="btn-icon" onclick="openSongForm('${song.id}')" title="Edit piece" aria-label="Edit ${escapeHtml(song.title)}">✏️</button>
-          <button type="button" class="btn-icon btn-icon-danger" onclick="deleteSong('${song.id}')" title="Delete piece" aria-label="Delete ${escapeHtml(song.title)}">🗑️</button>
-        </div>
-      </div>
-    `;
+      `;
   });
 
   container.innerHTML = html;
@@ -2670,6 +2670,7 @@ function applyTutorialLang(lang) {
 function exportTutorialToPdf() {
   const exportBtn = document.querySelector(".btn-export-pdf");
   const origBtnContent = exportBtn ? exportBtn.innerHTML : "";
+
   if (exportBtn) {
     exportBtn.disabled = true;
     exportBtn.innerHTML = "⏳ Exporting PDF...";
@@ -2680,165 +2681,536 @@ function exportTutorialToPdf() {
   const settings = getUserSettings();
   const targetDate = settings.targetDate || "Stake Choir Prep • Oct 24–25";
   const year = new Date().getFullYear();
+
   const dateStr = new Date().toLocaleDateString(undefined, {
-    year: 'numeric', month: 'short', day: 'numeric'
+    year: "numeric",
+    month: "short",
+    day: "numeric"
   });
 
   const memberName = localStorage.getItem("choir_name") || "";
-  const memberVoice = localStorage.getItem("choir_voice") || localStorage.getItem("choir_section") || "";
-  const singerInfo = memberName ? `${memberName} (${memberVoice || 'Choir Singer'})` : "";
+  const memberVoice =
+    localStorage.getItem("choir_voice") ||
+    localStorage.getItem("choir_section") ||
+    "";
+
+  const singerInfo = memberName
+    ? `${memberName} (${memberVoice || "Choir Singer"})`
+    : "";
+
   const lang = currentTutorialLang || "en";
   const s = TUTORIAL_I18N[lang] || TUTORIAL_I18N.en;
 
-  const A4_PX = 794; // A4 at 96 DPI
+  const A4_PX = 794;
+
   const staging = document.createElement("div");
   staging.id = "pdfIsolatedExportContainer";
 
-  // FIXED POSITIONING: Placed at (0,0) with negative z-index so html2canvas renders
-  // directly inside the viewport coordinate frame without clipping.
   Object.assign(staging.style, {
-    position: 'fixed',
-    top: '0',
-    left: '0',
-    width: A4_PX + 'px',
-    maxWidth: A4_PX + 'px',
-    zIndex: '2147483647',
-    background: '#ffffff',
-    backgroundColor: '#ffffff',
-    color: '#0f172a',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
-    fontSize: '14px',
-    lineHeight: '1.5',
-    padding: '32px 36px',
-    boxSizing: 'border-box',
-    display: 'block',
-    visibility: 'visible',
-    opacity: '1',
-    pointerEvents: 'none'
+    position: "fixed",
+    top: "0",
+    left: "0",
+    width: A4_PX + "px",
+    maxWidth: A4_PX + "px",
+
+    /* IMPORTANT: keep it in the visible rendering tree */
+    zIndex: "2147483647",
+
+    background: "#ffffff",
+    backgroundColor: "#ffffff",
+    color: "#0f172a",
+
+    fontFamily:
+      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+
+    fontSize: "14px",
+    lineHeight: "1.5",
+
+    padding: "32px 36px",
+    boxSizing: "border-box",
+
+    display: "block",
+    visibility: "visible",
+    opacity: "1",
+
+    pointerEvents: "none"
   });
 
   const BADGE_COLORS = [
-    { bg: '#eff6ff', fg: '#1d4ed8', border: '#bfdbfe', left: '#3b82f6' },
-    { bg: '#f0fdfa', fg: '#0f766e', border: '#99f6e4', left: '#14b8a6' },
-    { bg: '#ecfdf5', fg: '#059669', border: '#a7f3d0', left: '#10b981' },
-    { bg: '#fffbeb', fg: '#b45309', border: '#fde68a', left: '#f59e0b' },
-    { bg: '#f5f3ff', fg: '#6d28d9', border: '#ddd6fe', left: '#8b5cf6' }
+    { bg: "#eff6ff", fg: "#1d4ed8", border: "#bfdbfe", left: "#3b82f6" },
+    { bg: "#f0fdfa", fg: "#0f766e", border: "#99f6e4", left: "#14b8a6" },
+    { bg: "#ecfdf5", fg: "#059669", border: "#a7f3d0", left: "#10b981" },
+    { bg: "#fffbeb", fg: "#b45309", border: "#fde68a", left: "#f59e0b" },
+    { bg: "#f5f3ff", fg: "#6d28d9", border: "#ddd6fe", left: "#8b5cf6" }
   ];
 
   const stepsList = [
-    { label: s.step_label_1, title: s.step1_title, desc: s.step1_desc },
-    { label: s.step_label_2, title: s.step2_title, desc: s.step2_desc },
-    { label: s.step_label_3, title: s.step3_title, desc: s.step3_desc },
-    { label: s.step_label_4, title: s.step4_title, desc: s.step4_desc },
-    { label: s.step_label_5, title: s.step5_title, desc: s.step5_desc }
+    {
+      label: s.step_label_1,
+      title: s.step1_title,
+      desc: s.step1_desc
+    },
+    {
+      label: s.step_label_2,
+      title: s.step2_title,
+      desc: s.step2_desc
+    },
+    {
+      label: s.step_label_3,
+      title: s.step3_title,
+      desc: s.step3_desc
+    },
+    {
+      label: s.step_label_4,
+      title: s.step4_title,
+      desc: s.step4_desc
+    },
+    {
+      label: s.step_label_5,
+      title: s.step5_title,
+      desc: s.step5_desc
+    }
   ];
 
-  let stepsHtml = '';
+  let stepsHtml = "";
+
   stepsList.forEach((step, i) => {
     const c = BADGE_COLORS[i];
+
     stepsHtml += `
-      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid ${c.left};border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:8px;page-break-inside:avoid;break-inside:avoid;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-          <span style="background:${c.bg};color:${c.fg};border:1px solid ${c.border};font-size:6.5pt;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;padding:2px 8px;border-radius:999px;white-space:nowrap;">${escapeHtml(step.label || 'Step ' + (i + 1))}</span>
-          <span style="font-size:10pt;font-weight:800;color:#0f172a;margin:0;">${escapeHtml(step.title || '')}</span>
+      <div style="
+        background:#f8fafc;
+        border:1px solid #e2e8f0;
+        border-left:4px solid ${c.left};
+        border-radius:0 8px 8px 0;
+        padding:10px 14px;
+        margin-bottom:8px;
+        page-break-inside:avoid;
+        break-inside:avoid;
+      ">
+        <div style="
+          display:flex;
+          align-items:center;
+          gap:8px;
+          margin-bottom:4px;
+        ">
+          <span style="
+            background:${c.bg};
+            color:${c.fg};
+            border:1px solid ${c.border};
+            font-size:6.5pt;
+            font-weight:800;
+            text-transform:uppercase;
+            letter-spacing:0.5px;
+            padding:2px 8px;
+            border-radius:999px;
+            white-space:nowrap;
+          ">
+            ${escapeHtml(step.label || "Step " + (i + 1))}
+          </span>
+
+          <span style="
+            font-size:10pt;
+            font-weight:800;
+            color:#0f172a;
+            margin:0;
+          ">
+            ${escapeHtml(step.title || "")}
+          </span>
         </div>
-        <p style="font-size:8.5pt;color:#475569;line-height:1.45;margin:0;">${escapeHtml(step.desc || '')}</p>
-      </div>`;
+
+        <p style="
+          font-size:8.5pt;
+          color:#475569;
+          line-height:1.45;
+          margin:0;
+        ">
+          ${escapeHtml(step.desc || "")}
+        </p>
+      </div>
+    `;
   });
 
   staging.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #1d4ed8;padding-bottom:12px;margin-bottom:14px;">
-      <div style="display:flex;align-items:center;gap:12px;">
+    <div style="
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom:3px solid #1d4ed8;
+      padding-bottom:12px;
+      margin-bottom:14px;
+    ">
+      <div style="
+        display:flex;
+        align-items:center;
+        gap:12px;
+      ">
         <span style="font-size:26pt;line-height:1;">🎵</span>
+
         <div>
-          <div style="font-size:14pt;font-weight:900;color:#1e3a8a;line-height:1.2;margin:0 0 3px;">KanTime: Choir Member Quick Guide &bull; Stake Choir Prep</div>
-          <div style="font-size:8.5pt;color:#475569;font-weight:600;margin:0;">5 Simple Steps &bull; ${escapeHtml(targetDate)} &bull; Language: ${lang.toUpperCase()}</div>
+          <div style="
+            font-size:14pt;
+            font-weight:900;
+            color:#1e3a8a;
+            line-height:1.2;
+            margin:0 0 3px;
+          ">
+            KanTime: Choir Member Quick Guide &bull; Stake Choir Prep
+          </div>
+
+          <div style="
+            font-size:8.5pt;
+            color:#475569;
+            font-weight:600;
+            margin:0;
+          ">
+            5 Simple Steps &bull;
+            ${escapeHtml(targetDate)}
+            &bull;
+            Language: ${lang.toUpperCase()}
+          </div>
         </div>
       </div>
-      <div style="text-align:right;font-size:7.5pt;color:#64748b;line-height:1.4;">
-        ${singerInfo ? `<div>Member: <strong style="color:#1e293b;">${escapeHtml(singerInfo)}</strong></div>` : ''}
+
+      <div style="
+        text-align:right;
+        font-size:7.5pt;
+        color:#64748b;
+        line-height:1.4;
+      ">
+        ${singerInfo
+      ? `<div>Member:
+                <strong style="color:#1e293b;">
+                  ${escapeHtml(singerInfo)}
+                </strong>
+              </div>`
+      : ""
+    }
+
         <div>Stake Choir Practice Hub</div>
         <div>${dateStr}</div>
       </div>
     </div>
-    <div style="background:#eff6ff;border-left:4px solid #1d4ed8;padding:8px 14px;border-radius:0 6px 6px 0;font-size:8.5pt;color:#1e40af;margin-bottom:14px;line-height:1.45;">
-      ${escapeHtml(s.guide_subtitle || 'Master your rehearsal routine, background tracking, and choir standings in 5 simple steps.')}
+
+    <div style="
+      background:#eff6ff;
+      border-left:4px solid #1d4ed8;
+      padding:8px 14px;
+      border-radius:0 6px 6px 0;
+      font-size:8.5pt;
+      color:#1e40af;
+      margin-bottom:14px;
+      line-height:1.45;
+    ">
+      ${escapeHtml(
+      s.guide_subtitle ||
+      "Master your rehearsal routine, background tracking, and choir standings in 5 simple steps."
+    )}
     </div>
+
     ${stepsHtml}
-    <div style="margin-top:18px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;font-size:7.5pt;color:#64748b;">
-      <span style="font-weight:600;">Developed for Iloilo Stake Choir | Built by James Phillip De Guzman</span>
-      <span style="color:#94a3b8;">&copy; ${year} KanTime Practice Hub</span>
-    </div>`;
+
+    <div style="
+      margin-top:18px;
+      padding-top:10px;
+      border-top:1px solid #e2e8f0;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      font-size:7.5pt;
+      color:#64748b;
+    ">
+      <span style="font-weight:600;">
+        Developed for Iloilo Stake Choir | Built by James Phillip De Guzman
+      </span>
+
+      <span style="color:#94a3b8;">
+        &copy; ${year} KanTime Practice Hub
+      </span>
+    </div>
+  `;
 
   document.body.appendChild(staging);
 
   let cleaned = false;
+
   const cleanup = () => {
-    if (!cleaned) {
-      cleaned = true;
-      if (staging.parentNode) staging.parentNode.removeChild(staging);
-      if (exportBtn) { exportBtn.disabled = false; exportBtn.innerHTML = origBtnContent; }
+    if (cleaned) return;
+
+    cleaned = true;
+
+    if (staging.parentNode) {
+      staging.parentNode.removeChild(staging);
+    }
+
+    if (exportBtn) {
+      exportBtn.disabled = false;
+      exportBtn.innerHTML = origBtnContent;
     }
   };
 
-  const doExport = () => {
-    console.log('[KanTime PDF] Target element:', staging);
-    console.log('[KanTime PDF] innerHTML length:', staging.innerHTML.length);
-    console.log('[KanTime PDF] Offset Width/Height:', staging.offsetWidth + 'x' + staging.offsetHeight);
-    console.log('[KanTime PDF] scrollHeight:', staging.scrollHeight);
+  /*
+   * Load html2canvas + jsPDF directly.
+   * We intentionally do NOT use html2pdf.js for the actual export.
+   */
+  const loadScript = (src) =>
+    new Promise((resolve, reject) => {
+      const existing = document.querySelector(`script[src="${src}"]`);
 
-    const h = staging.scrollHeight;
+      if (existing) {
+        if (typeof html2canvas !== "undefined" || typeof window.jspdf !== "undefined") {
+          resolve();
+          return;
+        }
 
-    if (staging.offsetWidth === 0 || h === 0) {
-      console.error('[KanTime PDF] Staging container has zero dimensions – aborting.');
-      showToast('PDF generation failed: container is zero-sized.');
-      cleanup();
-      return;
-    }
+        existing.addEventListener("load", resolve, { once: true });
+        existing.addEventListener("error", reject, { once: true });
+        return;
+      }
 
-    const opt = {
-      margin: [8, 8, 8, 8],
-      filename: `KanTime-Choir-Guide-${lang.toUpperCase()}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: {
+      const script = document.createElement("script");
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = reject;
+
+      document.head.appendChild(script);
+    });
+
+  const exportCanvasToPdf = async () => {
+    try {
+      console.log("[KanTime PDF] Target:", staging);
+      console.log(
+        "[KanTime PDF] Dimensions:",
+        staging.offsetWidth,
+        "x",
+        staging.scrollHeight
+      );
+
+      if (staging.offsetWidth === 0 || staging.scrollHeight === 0) {
+        throw new Error("Staging element has zero dimensions.");
+      }
+
+      /*
+       * Wait until the browser has actually painted the staging element.
+       */
+      await new Promise((resolve) =>
+        requestAnimationFrame(() =>
+          requestAnimationFrame(resolve)
+        )
+      );
+
+      const canvas = await html2canvas(staging, {
         scale: 2,
+
+        backgroundColor: "#ffffff",
+
         useCORS: true,
         allowTaint: false,
+
+        logging: true,
+
+        x: 0,
+        y: 0,
+
+        width: staging.offsetWidth,
+        height: staging.scrollHeight,
+
+        windowWidth: A4_PX,
+        windowHeight: Math.max(
+          staging.scrollHeight + 100,
+          window.innerHeight
+        ),
+
         scrollX: 0,
         scrollY: 0,
-        windowWidth: A4_PX,
-        windowHeight: h + 50,
-        ignoreElements: (el) => el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.tagName === 'SELECT'
-      },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
 
-    html2pdf().set(opt).from(staging).save().then(() => {
-      showToast('PDF guide downloaded! 📄');
+        ignoreElements: (el) =>
+          el.tagName === "BUTTON" ||
+          el.tagName === "INPUT" ||
+          el.tagName === "SELECT"
+      });
+
+      console.log(
+        "[KanTime PDF] Canvas:",
+        canvas.width,
+        "x",
+        canvas.height
+      );
+
+      /*
+       * IMPORTANT diagnostic check.
+       */
+      if (!canvas || canvas.width === 0 || canvas.height === 0) {
+        throw new Error("html2canvas returned an empty canvas.");
+      }
+
+      /*
+       * Convert canvas directly into a JPEG.
+       * This proves that html2canvas produced actual pixels.
+       */
+      const imgData = canvas.toDataURL("image/jpeg", 0.98);
+
+      if (!imgData || imgData.length < 1000) {
+        throw new Error(
+          "Canvas image data is unexpectedly empty."
+        );
+      }
+
+      console.log(
+        "[KanTime PDF] Image data length:",
+        imgData.length
+      );
+
+      /*
+       * jsPDF is exposed as window.jspdf.jsPDF by the CDN build.
+       */
+      if (
+        !window.jspdf ||
+        typeof window.jspdf.jsPDF !== "function"
+      ) {
+        throw new Error("jsPDF library is not available.");
+      }
+
+      const { jsPDF } = window.jspdf;
+
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4"
+      });
+
+      const pageWidth = 210;
+      const pageHeight = 297;
+
+      const margin = 8;
+
+      const usableWidth = pageWidth - margin * 2;
+      const usableHeight = pageHeight - margin * 2;
+
+      /*
+       * Canvas aspect ratio.
+       */
+      const imgWidth = usableWidth;
+      const imgHeight =
+        (canvas.height * imgWidth) / canvas.width;
+
+      /*
+       * If the guide is taller than one A4 page,
+       * split the canvas across multiple PDF pages.
+       */
+      let remainingHeight = imgHeight;
+      let position = margin;
+
+      pdf.addImage(
+        imgData,
+        "JPEG",
+        margin,
+        position,
+        imgWidth,
+        imgHeight,
+        undefined,
+        "FAST"
+      );
+
+      remainingHeight -= usableHeight;
+
+      while (remainingHeight > 0) {
+        pdf.addPage();
+
+        position = margin - (imgHeight - remainingHeight);
+
+        pdf.addImage(
+          imgData,
+          "JPEG",
+          margin,
+          position,
+          imgWidth,
+          imgHeight,
+          undefined,
+          "FAST"
+        );
+
+        remainingHeight -= usableHeight;
+      }
+
+      const filename =
+        `KanTime-Choir-Guide-${lang.toUpperCase()}.pdf`;
+
+      pdf.save(filename);
+
+      console.log(
+        "[KanTime PDF] PDF generated successfully:",
+        filename
+      );
+
+      showToast("PDF guide downloaded! 📄");
+
       cleanup();
-    }).catch(err => {
-      console.error('[KanTime PDF] Export error:', err);
-      showToast('PDF export failed – opening print fallback.');
+
+    } catch (err) {
+      console.error(
+        "[KanTime PDF] DIRECT EXPORT ERROR:",
+        err
+      );
+
+      showToast(
+        "PDF export failed – opening print fallback."
+      );
+
+      cleanup();
+
       _printTutorialFallback();
-      cleanup();
-    });
+    }
   };
 
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        if (typeof html2pdf !== 'undefined') {
-          doExport();
-        } else {
-          const script = document.createElement('script');
-          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-          script.onload = doExport;
-          script.onerror = () => { cleanup(); showToast('PDF library unavailable.'); _printTutorialFallback(); };
-          document.head.appendChild(script);
-        }
-      }, 250);
-    });
-  });
+  /*
+   * Load html2canvas first.
+   */
+  const ensureLibraries = async () => {
+    try {
+      if (typeof html2canvas === "undefined") {
+        await loadScript(
+          "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
+        );
+      }
+
+      /*
+       * jsPDF standalone build.
+       */
+      if (
+        !window.jspdf ||
+        typeof window.jspdf.jsPDF !== "function"
+      ) {
+        await loadScript(
+          "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+        );
+      }
+
+      await new Promise((resolve) =>
+        requestAnimationFrame(() =>
+          requestAnimationFrame(resolve)
+        )
+      );
+
+      await exportCanvasToPdf();
+
+    } catch (err) {
+      console.error(
+        "[KanTime PDF] Library loading error:",
+        err
+      );
+
+      cleanup();
+
+      showToast(
+        "PDF libraries could not be loaded – opening print fallback."
+      );
+
+      _printTutorialFallback();
+    }
+  };
+
+  ensureLibraries();
 }
 
 function _printTutorialFallback() {
@@ -3629,61 +4001,61 @@ function exportVocalDrillsToPdf() {
     sec.drills.forEach((d, di) => {
       const isLast = di === sec.drills.length - 1 && !sec.goldenRules;
       drillsHtml += `
-        <div style="margin-bottom:${isLast ? '0' : '6px'};padding-bottom:${isLast ? '0' : '6px'};border-bottom:${isLast ? 'none' : '1px dashed #f1f5f9'};">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
-            <span style="font-size:8.5pt;font-weight:700;color:#1e293b;">${escapeHtml(d.name)}</span>
-            ${d.pitch ? `<span style="font-size:6.5pt;font-weight:700;color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe;padding:1px 6px;border-radius:4px;">${escapeHtml(d.pitch)}</span>` : ''}
-          </div>
-          <p style="font-size:7.8pt;color:#475569;line-height:1.4;margin:0;">${escapeHtml(d.cues)}</p>
-        </div>`;
+          <div style="margin-bottom:${isLast ? '0' : '6px'};padding-bottom:${isLast ? '0' : '6px'};border-bottom:${isLast ? 'none' : '1px dashed #f1f5f9'};">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+              <span style="font-size:8.5pt;font-weight:700;color:#1e293b;">${escapeHtml(d.name)}</span>
+              ${d.pitch ? `<span style="font-size:6.5pt;font-weight:700;color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe;padding:1px 6px;border-radius:4px;">${escapeHtml(d.pitch)}</span>` : ''}
+            </div>
+            <p style="font-size:7.8pt;color:#475569;line-height:1.4;margin:0;">${escapeHtml(d.cues)}</p>
+          </div>`;
     });
 
     let goldenHtml = '';
     if (sec.goldenRules) {
       goldenHtml = `<div style="margin-top:8px;">
-        <div style="font-size:8pt;font-weight:700;color:#1e293b;margin-bottom:4px;">Choir Golden Rules for Section Unity:</div>`;
+          <div style="font-size:8pt;font-weight:700;color:#1e293b;margin-bottom:4px;">Choir Golden Rules for Section Unity:</div>`;
       sec.goldenRules.forEach(r => {
         goldenHtml += `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #f59e0b;border-radius:4px;padding:4px 8px;font-size:7.5pt;color:#334155;line-height:1.35;margin-bottom:4px;">
-          <strong style="color:#0f172a;">${r.icon} ${escapeHtml(r.title)}:</strong> ${escapeHtml(r.desc)}
-        </div>`;
+            <strong style="color:#0f172a;">${r.icon} ${escapeHtml(r.title)}:</strong> ${escapeHtml(r.desc)}
+          </div>`;
       });
       goldenHtml += '</div>';
     }
 
     bodyHtml += `
-      <div style="background:#ffffff;border:1px solid #e2e8f0;border-left:4px solid ${c.left};border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:10px;page-break-inside:avoid;break-inside:avoid;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;border-bottom:1px solid #f1f5f9;padding-bottom:4px;">
-          <span style="background:${c.badgeBg};color:${c.badgeFg};border:1px solid ${c.badgeBorder};font-size:6.5pt;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;padding:2px 7px;border-radius:999px;">${escapeHtml(sec.badge)}</span>
-          <span style="font-size:10pt;font-weight:800;color:#0f172a;">${escapeHtml(sec.title)}</span>
-        </div>
-        <div>${drillsHtml}</div>
-        ${goldenHtml}
-      </div>`;
+        <div style="background:#ffffff;border:1px solid #e2e8f0;border-left:4px solid ${c.left};border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:10px;page-break-inside:avoid;break-inside:avoid;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;border-bottom:1px solid #f1f5f9;padding-bottom:4px;">
+            <span style="background:${c.badgeBg};color:${c.badgeFg};border:1px solid ${c.badgeBorder};font-size:6.5pt;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;padding:2px 7px;border-radius:999px;">${escapeHtml(sec.badge)}</span>
+            <span style="font-size:10pt;font-weight:800;color:#0f172a;">${escapeHtml(sec.title)}</span>
+          </div>
+          <div>${drillsHtml}</div>
+          ${goldenHtml}
+        </div>`;
   });
 
   staging.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #1d4ed8;padding-bottom:12px;margin-bottom:14px;">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <span style="font-size:26pt;line-height:1;">🎤</span>
-        <div>
-          <div style="font-size:14pt;font-weight:900;color:#1e3a8a;line-height:1.2;margin:0 0 3px;">KanTime: Vocal Warm-Ups &amp; Singing Tips</div>
-          <div style="font-size:8.5pt;color:#475569;font-weight:600;margin:0;">All 6 Core Choir Drill Categories &bull; ${escapeHtml(targetDate)}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #1d4ed8;padding-bottom:12px;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="font-size:26pt;line-height:1;">🎤</span>
+          <div>
+            <div style="font-size:14pt;font-weight:900;color:#1e3a8a;line-height:1.2;margin:0 0 3px;">KanTime: Vocal Warm-Ups &amp; Singing Tips</div>
+            <div style="font-size:8.5pt;color:#475569;font-weight:600;margin:0;">All 6 Core Choir Drill Categories &bull; ${escapeHtml(targetDate)}</div>
+          </div>
+        </div>
+        <div style="text-align:right;font-size:7.5pt;color:#64748b;line-height:1.4;">
+          ${singerInfo ? `<div>Member: <strong style="color:#1e293b;">${escapeHtml(singerInfo)}</strong></div>` : ''}
+          <div>Stake Choir Practice Hub</div>
+          <div>${dateStr}</div>
         </div>
       </div>
-      <div style="text-align:right;font-size:7.5pt;color:#64748b;line-height:1.4;">
-        ${singerInfo ? `<div>Member: <strong style="color:#1e293b;">${escapeHtml(singerInfo)}</strong></div>` : ''}
-        <div>Stake Choir Practice Hub</div>
-        <div>${dateStr}</div>
+      <div style="background:#eff6ff;border-left:4px solid #1d4ed8;padding:8px 14px;border-radius:0 6px 6px 0;font-size:8.5pt;color:#1e40af;margin-bottom:14px;line-height:1.45;">
+        Essential drills for tension release, breath support, SOVT registration, resonance, articulation, and choir section blending. Practice these daily before repertoire rehearsals.
       </div>
-    </div>
-    <div style="background:#eff6ff;border-left:4px solid #1d4ed8;padding:8px 14px;border-radius:0 6px 6px 0;font-size:8.5pt;color:#1e40af;margin-bottom:14px;line-height:1.45;">
-      Essential drills for tension release, breath support, SOVT registration, resonance, articulation, and choir section blending. Practice these daily before repertoire rehearsals.
-    </div>
-    ${bodyHtml}
-    <div style="margin-top:18px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;font-size:7.5pt;color:#64748b;">
-      <span style="font-weight:600;">Developed for Iloilo Stake Choir | Built by James Phillip De Guzman</span>
-      <span style="color:#94a3b8;">&copy; ${year} KanTime Practice Hub &bull; All Vocal Drills</span>
-    </div>`;
+      ${bodyHtml}
+      <div style="margin-top:18px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;font-size:7.5pt;color:#64748b;">
+        <span style="font-weight:600;">Developed for Iloilo Stake Choir | Built by James Phillip De Guzman</span>
+        <span style="color:#94a3b8;">&copy; ${year} KanTime Practice Hub &bull; All Vocal Drills</span>
+      </div>`;
 
   document.body.appendChild(staging);
 
