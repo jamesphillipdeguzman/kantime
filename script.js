@@ -363,6 +363,14 @@ function getSongResource(songKeyOrTitle) {
   return found;
 }
 
+// Helper to check if rehearsal session is active (countdown running or paused with progress)
+function isPracticeSessionActive() {
+  const isRunning = Boolean(timerInterval || targetEndTime);
+  const pausedVal = localStorage.getItem("kantime_paused_remaining");
+  const hasPausedProgress = Boolean(pausedVal && Number(pausedVal) > 0 && Number(pausedVal) < timerDuration);
+  return isRunning || hasPausedProgress;
+}
+
 function renderSelectedSongResource(songKey) {
   const container = document.getElementById("dynamicResourceContainer");
   if (!container) return;
@@ -373,6 +381,32 @@ function renderSelectedSongResource(songKey) {
     return;
   }
 
+  const isPrimary = (song.part || "").toLowerCase() === "primary" ? "primary-piece" : "";
+  const tagStyle = isPrimary ? "style='color:var(--accent);'" : "";
+  const sessionActive = isPracticeSessionActive();
+
+  // 🔒 GATED STATE: Prior to timer start or upon reset/completion, hide interactive materials & show prompt
+  if (!sessionActive) {
+    container.innerHTML = `
+      <div class="song-item ${isPrimary} fade-in">
+        <span class="song-tag" ${tagStyle}>${escapeHtml(song.part || 'Repertoire')}</span>
+        <div class="song-title">${escapeHtml(song.title)}</div>
+        
+        <div class="resource-gated-box">
+          <div class="resource-gated-icon" aria-hidden="true">🔒</div>
+          <div class="resource-gated-content">
+            <h4 class="resource-gated-title">Rehearsal Material Locked</h4>
+            <p class="resource-gated-prompt">
+              Select your hymn, then press <strong>&ldquo;Start Practice&rdquo;</strong> to unlock sheet music and rehearsal audio.
+            </p>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // 🔓 UNLOCKED STATE: Session is active (running or paused) — reveal interactive sheet music, player, and part rehearsal links
   let actionsHtml = "";
 
   if (song.sheetUrl) {
@@ -401,19 +435,23 @@ function renderSelectedSongResource(songKey) {
     `;
   }
 
-  const isPrimary = (song.part || "").toLowerCase() === "primary" ? "primary-piece" : "";
-  const tagStyle = isPrimary ? "style='color:var(--accent);'" : "";
   const mins = getUserSettings().timerMinutes || 15;
   const noteText = song.note !== undefined ? song.note : (song.sheetUrl ? `ℹ️ Opens in external tab. Your ${mins}-minute timer will keep running while you practice!` : "");
   const noteHtml = noteText ? `<div class="external-note">${escapeHtml(noteText)}</div>` : "";
 
   container.innerHTML = `
     <div class="song-item ${isPrimary} fade-in">
-      <span class="song-tag" ${tagStyle}>${escapeHtml(song.part || 'Repertoire')}</span>
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+        <span class="song-tag" ${tagStyle}>${escapeHtml(song.part || 'Repertoire')}</span>
+        <span class="resource-status-badge">🔓 Session Active &bull; Unlocked</span>
+      </div>
       <div class="song-title">${escapeHtml(song.title)}</div>
-      <div class="song-actions">${actionsHtml}</div>
-      ${noteHtml}
-      ${embedHtml}
+      
+      <div class="resource-unlocked-container">
+        <div class="song-actions">${actionsHtml}</div>
+        ${noteHtml}
+        ${embedHtml}
+      </div>
     </div>
   `;
 }
@@ -1081,6 +1119,10 @@ function completeTimerSession() {
   openCompletionModal(currentDurationMins, stats);
 
   submitPracticeSession(currentDurationMins);
+
+  // Return song resource section to hidden/prompt state
+  const currentSong = document.getElementById("targetSong") ? document.getElementById("targetSong").value : "";
+  renderSelectedSongResource(currentSong);
 }
 
 function restoreTimerState() {
@@ -1141,6 +1183,10 @@ function restoreTimerState() {
     }
   }
 
+  // Restore resource state (unlocked if running/paused, gated if session not started)
+  const currentSong = document.getElementById("targetSong") ? document.getElementById("targetSong").value : "";
+  renderSelectedSongResource(currentSong);
+
   initEncouragementBanner();
 }
 
@@ -1176,6 +1222,9 @@ function toggleTimer() {
     btn.innerText = "Pause Session";
     btn.classList.remove("btn-primary");
     btn.classList.add("btn-outline");
+
+    // Reveal interactive sheet music, player, and part rehearsal links smoothly upon timer start
+    renderSelectedSongResource(document.getElementById("targetSong").value);
 
     // Dynamic Encouragement Trigger: Session Start
     const totalSecs = currentDurationMins * 60;
@@ -2541,9 +2590,19 @@ function applyTutorialLang(lang) {
   });
 }
 
-// --- EXPORT TUTORIAL GUIDE TO PDF ---
+// --- EXPORT TUTORIAL GUIDE TO PDF (MOBILE-OPTIMIZED VIA HTML2PDF) ---
 function exportTutorialToPdf() {
-  showToast("Opening printable PDF guide... 📄");
+  const exportBtn = document.querySelector(".btn-export-pdf");
+  const origBtnContent = exportBtn ? exportBtn.innerHTML : "";
+  if (exportBtn) {
+    exportBtn.disabled = true;
+    exportBtn.innerHTML = "⏳ Exporting PDF...";
+  }
+
+  showToast("Generating mobile-optimized PDF guide... 📄");
+
+  // Call window.scrollTo(0, 0) before capture as required
+  window.scrollTo(0, 0);
 
   const settings = getUserSettings();
   const targetDate = settings.targetDate || "Stake Choir Prep • Oct 24–25";
@@ -2556,278 +2615,123 @@ function exportTutorialToPdf() {
 
   const memberName = localStorage.getItem("choir_name") || "";
   const memberVoice = localStorage.getItem("choir_voice") || localStorage.getItem("choir_section") || "";
-  const singerInfo = memberName ? `${escapeHtml(memberName)} (${escapeHtml(memberVoice || 'Choir Singer')})` : "";
+  const singerInfo = memberName ? `${memberName} (${memberVoice || 'Choir Singer'})` : "";
 
   // Use the currently selected tutorial language for PDF content
   const lang = currentTutorialLang || "en";
   const s = TUTORIAL_I18N[lang] || TUTORIAL_I18N.en;
 
-  const printHtml = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>KanTime \u2014 Choir Member Practice Guide</title>
-  <style>
-    @page {
-      size: A4 portrait;
-      margin: 14mm 16mm 14mm 16mm;
-    }
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      color: #0f172a;
-      background: #ffffff;
-      line-height: 1.5;
-      font-size: 10pt;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
-    /* ---- Document wrapper (fixed width for consistent rendering) ---- */
-    .guide-doc {
-      width: 680px;
-      max-width: 100%;
-      margin: 0 auto;
-    }
-    /* ---- Header ---- */
-    .guide-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      padding-bottom: 10px;
-      margin-bottom: 12px;
-      border-bottom: 3px solid #1d4ed8;
-    }
-    .guide-header-logo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .guide-header-logo .logo-icon {
-      font-size: 22pt;
-      line-height: 1;
-    }
-    .guide-header-title h1 {
-      font-size: 16pt;
-      font-weight: 900;
-      color: #1e3a8a;
-      letter-spacing: -0.4px;
-      line-height: 1.15;
-      margin-bottom: 2px;
-    }
-    .guide-header-title .subtitle {
-      font-size: 9pt;
-      color: #475569;
-      font-weight: 600;
-    }
-    .guide-header-meta {
-      text-align: right;
-      font-size: 7.5pt;
-      color: #64748b;
-      line-height: 1.5;
-    }
-    .guide-header-meta strong { color: #1e293b; }
-    /* ---- Intro banner ---- */
-    .guide-intro {
-      background: #eff6ff;
-      border-left: 4px solid #1d4ed8;
-      padding: 8px 12px;
-      border-radius: 0 5px 5px 0;
-      font-size: 8.5pt;
-      color: #1e40af;
-      margin-bottom: 14px;
-      line-height: 1.45;
-      font-weight: 500;
-    }
-    /* ---- Steps ---- */
-    .steps-container {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .step-item {
-      border: 1px solid #e2e8f0;
-      border-left: 4px solid #cbd5e1;
-      border-radius: 0 6px 6px 0;
-      padding: 9px 12px;
-      background: #f8fafc;
-      page-break-inside: avoid;
-      break-inside: avoid;
-    }
-    .step-item.s1 { border-left-color: #3b82f6; }
-    .step-item.s2 { border-left-color: #14b8a6; }
-    .step-item.s3 { border-left-color: #10b981; }
-    .step-item.s4 { border-left-color: #f59e0b; }
-    .step-item.s5 { border-left-color: #8b5cf6; }
-    .step-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 4px;
-    }
-    .step-badge {
-      font-size: 6.5pt;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding: 2px 8px;
-      border-radius: 999px;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    .badge-1 { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
-    .badge-2 { background: #f0fdfa; color: #0f766e; border: 1px solid #99f6e4; }
-    .badge-3 { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-    .badge-4 { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
-    .badge-5 { background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe; }
-    .step-title {
-      font-size: 10pt;
-      font-weight: 800;
-      color: #0f172a;
-    }
-    .step-desc {
-      font-size: 8.5pt;
-      color: #475569;
-      line-height: 1.45;
-      padding-left: 1px;
-    }
-    /* ---- Footer ---- */
-    .guide-footer {
-      margin-top: 20px;
-      padding-top: 8px;
-      border-top: 1px solid #e2e8f0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 7pt;
-      color: #94a3b8;
-      gap: 8px;
-    }
-    .guide-footer-left { text-align: left; line-height: 1.5; }
-    .guide-footer-right { text-align: right; white-space: nowrap; }
-    @media print {
-      body { font-size: 10pt; }
-      .guide-doc { width: 100%; }
-    }
-  </style>
-</head>
-<body>
-  <div class="guide-doc">
+  // Isolate the Export Target:
+  // Clone only tutorial steps content into a temporary, off-screen container with fixed width (700px).
+  // Excludes modal headers, close buttons (✕), tab navigation bars, language toggles, and the export button itself.
+  const exportContainer = document.createElement("div");
+  exportContainer.id = "pdfIsolatedExportContainer";
+  exportContainer.className = "pdf-isolated-container";
 
-    <!-- Document Header -->
-    <div class="guide-header">
-      <div class="guide-header-logo">
-        <div class="logo-icon">🎵</div>
-        <div class="guide-header-title">
-          <h1>KanTime: Choir Member Quick Guide</h1>
-          <div class="subtitle">Stake Choir Prep &nbsp;&bull;&nbsp; 5 Simple Steps &nbsp;&bull;&nbsp; ${escapeHtml(targetDate)}</div>
+  // Prepend clean header: "KanTime: Choir Member Quick Guide • Stake Choir Prep"
+  const headerHtml = `
+    <div class="pdf-header">
+      <div class="pdf-header-main">
+        <div class="pdf-header-logo">🎵</div>
+        <div>
+          <h1 class="pdf-header-title">KanTime: Choir Member Quick Guide &bull; Stake Choir Prep</h1>
+          <p class="pdf-header-subtitle">5 Simple Steps &bull; ${escapeHtml(targetDate)} &bull; Language: ${lang.toUpperCase()}</p>
         </div>
       </div>
-      <div class="guide-header-meta">
+      <div class="pdf-header-meta">
+        ${singerInfo ? `<div>Member: <strong>${escapeHtml(singerInfo)}</strong></div>` : ''}
         <div>Stake Choir Practice Hub</div>
-        ${singerInfo ? `<div>Member: <strong>${singerInfo}</strong></div>` : ''}
-        <div>Printed: ${dateStr}</div>
+        <div>${dateStr}</div>
       </div>
     </div>
-
-    <!-- Intro -->
-    <div class="guide-intro">
-      Welcome to KanTime! Follow these 5 steps to set up your profile, configure your practice timer, sing along with interactive sheets, check your pitch, and track your minutes on the Choir Standings.
+    <div class="pdf-intro-banner">
+      ${escapeHtml(s.guide_subtitle || "Master your rehearsal routine, background tracking, and choir standings in 5 simple steps.")}
     </div>
+  `;
 
-    <!-- Steps (no extra wrappers — clean sequential list) -->
-    <div class="steps-container">
+  // Tutorial Steps Content (Cloned from i18n data, completely isolated from modal elements)
+  const stepsList = [
+    { label: s.step_label_1, title: s.step1_title, desc: s.step1_desc, cls: "s1", badgeCls: "step-badge-1" },
+    { label: s.step_label_2, title: s.step2_title, desc: s.step2_desc, cls: "s2", badgeCls: "step-badge-2" },
+    { label: s.step_label_3, title: s.step3_title, desc: s.step3_desc, cls: "s3", badgeCls: "step-badge-3" },
+    { label: s.step_label_4, title: s.step4_title, desc: s.step4_desc, cls: "s4", badgeCls: "step-badge-4" },
+    { label: s.step_label_5, title: s.step5_title, desc: s.step5_desc, cls: "s5", badgeCls: "step-badge-5" }
+  ];
 
-      <div class="step-item s1">
-        <div class="step-header">
-          <span class="step-badge badge-1">${escapeHtml(s.step_label_1)}</span>
-          <span class="step-title">${escapeHtml(s.step1_title)}</span>
+  let stepsHtml = '<div class="pdf-steps-container">';
+  stepsList.forEach(step => {
+    stepsHtml += `
+      <div class="pdf-step-item ${step.cls}">
+        <div class="pdf-step-header">
+          <span class="step-badge ${step.badgeCls}">${escapeHtml(step.label)}</span>
+          <h5 class="pdf-step-title">${escapeHtml(step.title)}</h5>
         </div>
-        <div class="step-desc">${escapeHtml(s.step1_desc)}</div>
+        <p class="pdf-step-desc">${escapeHtml(step.desc)}</p>
       </div>
+    `;
+  });
+  stepsHtml += '</div>';
 
-      <div class="step-item s2">
-        <div class="step-header">
-          <span class="step-badge badge-2">${escapeHtml(s.step_label_2)}</span>
-          <span class="step-title">${escapeHtml(s.step2_title)}</span>
-        </div>
-        <div class="step-desc">${escapeHtml(s.step2_desc)}</div>
-      </div>
-
-      <div class="step-item s3">
-        <div class="step-header">
-          <span class="step-badge badge-3">${escapeHtml(s.step_label_3)}</span>
-          <span class="step-title">${escapeHtml(s.step3_title)}</span>
-        </div>
-        <div class="step-desc">${escapeHtml(s.step3_desc)}</div>
-      </div>
-
-      <div class="step-item s4">
-        <div class="step-header">
-          <span class="step-badge badge-4">${escapeHtml(s.step_label_4)}</span>
-          <span class="step-title">${escapeHtml(s.step4_title)}</span>
-        </div>
-        <div class="step-desc">${escapeHtml(s.step4_desc)}</div>
-      </div>
-
-      <div class="step-item s5">
-        <div class="step-header">
-          <span class="step-badge badge-5">${escapeHtml(s.step_label_5)}</span>
-          <span class="step-title">${escapeHtml(s.step5_title)}</span>
-        </div>
-        <div class="step-desc">${escapeHtml(s.step5_desc)}</div>
-      </div>
-
+  // Append clean footer: "Developed for Iloilo Stake Choir | Built by James Phillip De Guzman"
+  const footerHtml = `
+    <div class="pdf-footer">
+      <div class="pdf-footer-left">Developed for Iloilo Stake Choir | Built by James Phillip De Guzman</div>
+      <div class="pdf-footer-right">&copy; ${year} KanTime Practice Hub</div>
     </div>
+  `;
 
-    <!-- Footer Branding -->
-    <div class="guide-footer">
-      <div class="guide-footer-left">
-        Developed for Iloilo Stake Choir &nbsp;&bull;&nbsp; Built by James Phillip De Guzman &nbsp;&bull;&nbsp; v2.0 KanTime
-      </div>
-      <div class="guide-footer-right">&copy; ${year} &nbsp;|&nbsp; Official KanTime Member Handout</div>
-    </div>
+  exportContainer.innerHTML = headerHtml + stepsHtml + footerHtml;
+  document.body.appendChild(exportContainer);
 
-  </div>
-</body>
-</html>`;
-
-  // --- Primary: open a popup window for a clean, isolated print dialog ---
-  // A real popup is far more reliable than a hidden 0×0 iframe across all browsers.
-  const printWin = window.open("", "_blank", "width=820,height=700,menubar=no,toolbar=no,scrollbars=yes,resizable=yes");
-
-  if (!printWin) {
-    // Popup blocked by the browser — fall through to the @media print isolation fallback
-    showToast("Popup blocked \u2014 using print fallback. \ud83d\udcc4");
-    _printTutorialFallback();
-    return;
-  }
-
-  printWin.document.open();
-  printWin.document.write(printHtml);
-  printWin.document.close();
-
-  // Trigger print once content is fully loaded in the popup
-  printWin.onload = function () {
-    printWin.focus();
-    printWin.print();
-    setTimeout(function () {
-      if (!printWin.closed) printWin.close();
-    }, 900);
+  const cleanup = () => {
+    if (exportContainer && exportContainer.parentNode) {
+      exportContainer.parentNode.removeChild(exportContainer);
+    }
+    if (exportBtn) {
+      exportBtn.disabled = false;
+      exportBtn.innerHTML = origBtnContent;
+    }
   };
 
-  // Belt-and-suspenders: fire print after a short delay if onload is unreliable
-  setTimeout(function () {
-    if (printWin && !printWin.closed) {
-      try {
-        printWin.focus();
-        printWin.print();
-      } catch (e) { /* no-op if already printed via onload */ }
-    }
-  }, 700);
+  const executeExport = () => {
+    const opt = {
+      margin: [10, 12, 10, 12],
+      filename: `KanTime-Choir-Guide-${lang.toUpperCase()}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
+
+    html2pdf().set(opt).from(exportContainer).save()
+      .then(() => {
+        showToast("PDF guide downloaded successfully! 📄");
+      })
+      .catch((err) => {
+        console.error("html2pdf error:", err);
+        showToast("PDF export failed. Opening print fallback... 📄");
+        _printTutorialFallback();
+      })
+      .finally(() => {
+        // Remove temporary clone immediately after the PDF promise resolves
+        cleanup();
+      });
+  };
+
+  if (typeof html2pdf !== "undefined") {
+    executeExport();
+  } else {
+    // Dynamic loader fallback
+    const script = document.createElement("script");
+    script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+    script.onload = () => executeExport();
+    script.onerror = () => {
+      cleanup();
+      showToast("PDF library unavailable. Opening print dialog... 📄");
+      _printTutorialFallback();
+    };
+    document.head.appendChild(script);
+  }
 }
 
 // --- @media print fallback: isolate only the tutorial panel on the main window ---
