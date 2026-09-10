@@ -8,7 +8,7 @@
   --primary-hover: #1e40af;
   --primary-light: #eff6ff;
   --primary-border: #bfdbfe;
-  
+
   --accent: #d97706;
   --accent-hover: #b45309;
   --accent-light: #fffbeb;
@@ -96,7 +96,7 @@
 [data-theme="dark"] body {
   background-color: var(--bg);
   background-image: radial-gradient(at 100% 0%, rgba(30, 58, 138, 0.24) 0px, transparent 55%),
-                    radial-gradient(at 0% 100%, rgba(120, 53, 15, 0.18) 0px, transparent 55%);
+    radial-gradient(at 0% 100%, rgba(120, 53, 15, 0.18) 0px, transparent 55%);
 }
 
 [data-theme="dark"] body::before {
@@ -434,9 +434,100 @@
   color: #ffffff !important;
 }
 
+/* ── Dark Mode: Settings Modal & Repertoire Editor Fixes ── */
+[data-theme="dark"] .settings-modal-box,
+[data-theme="dark"] .settings-modal-body {
+  background-color: var(--bg-modal, #131b2e) !important;
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .settings-nav-tabs {
+  background-color: var(--card-bg-subtle, #182238);
+  border-bottom-color: var(--border);
+}
+
+[data-theme="dark"] .settings-modal-footer {
+  background-color: var(--card-bg-subtle, #182238);
+  border-top-color: var(--border);
+}
+
+/* Fix Repertoire List Items & Headings */
+[data-theme="dark"] .repertoire-header-row h4 {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .repertoire-list-item {
+  background-color: var(--card-bg-subtle, #182238);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .repertoire-list-item:hover {
+  background-color: #1c2742;
+}
+
+[data-theme="dark"] .repertoire-item-title-row strong {
+  color: var(--text-primary, #f1f5f9);
+}
+
+/* Fix Action Buttons & Link Tags (Pencil, Trash, Sheet, Video) */
+[data-theme="dark"] .repertoire-item-actions .btn-icon {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .repertoire-item-actions .btn-icon:hover {
+  background-color: rgba(255, 255, 255, 0.16);
+  border-color: var(--primary);
+}
+
+[data-theme="dark"] .repertoire-item-actions .btn-icon-danger:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+}
+
+[data-theme="dark"] .link-tag {
+  background-color: rgba(255, 255, 255, 0.07);
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+/* ── Dark Mode: Tutorial & Guide Header Fixes ── */
+[data-theme="dark"] .settings-modal-body,
+[data-theme="dark"] .modal-body.settings-modal-body {
+  background-color: var(--bg-modal, #131b2e) !important;
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .tutorial-guide-intro {
+  border-bottom-color: var(--border);
+}
+
+[data-theme="dark"] .tutorial-guide-intro h4 {
+  color: var(--text-primary, #f1f5f9) !important;
+}
+
+[data-theme="dark"] .tutorial-guide-intro p {
+  color: var(--text-secondary, #cbd5e1) !important;
+}
+
+/* Fix "Export to PDF" Button in Dark Mode */
+[data-theme="dark"] .btn-export-pdf {
+  background-color: rgba(59, 130, 246, 0.12) !important;
+  border: 1px solid rgba(59, 130, 246, 0.35) !important;
+  color: #93c5fd !important;
+}
+
+[data-theme="dark"] .btn-export-pdf:hover {
+  background-color: rgba(59, 130, 246, 0.22) !important;
+  border-color: #60a5fa !important;
+  color: #ffffff !important;
+}
 
 /* Reset & Base Setup */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -453,7 +544,7 @@ body {
   position: relative;
   background-color: var(--bg);
   background-image: radial-gradient(at 100% 0%, rgba(219, 234, 254, 0.4) 0px, transparent 50%),
-                    radial-gradient(at 0% 100%, rgba(254, 243, 199, 0.3) 0px, transparent 50%);
+    radial-gradient(at 0% 100%, rgba(254, 243, 199, 0.3) 0px, transparent 50%);
   background-attachment: fixed;
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -487,7 +578,7 @@ body::before {
 header {
   position: relative;
   background-color: #1e3a8a;
-  background-image: 
+  background-image:
     linear-gradient(135deg, rgba(15, 23, 42, 0.76) 0%, rgba(30, 58, 138, 0.80) 50%, rgba(29, 78, 216, 0.74) 100%),
     url("../images/kantime-bg.jpg");
   background-position: center 22%;
@@ -508,7 +599,8 @@ header {
   max-width: 520px;
   margin: 0 auto;
   position: relative;
-  padding: 0 88px 0 0; /* allowance for theme toggle and gear buttons */
+  padding: 0 88px 0 0;
+  /* allowance for theme toggle and gear buttons */
 }
 
 .header-actions {
@@ -667,13 +759,15 @@ label {
   letter-spacing: 0.03em;
 }
 
-input[type="text"], select {
+input[type="text"],
+select {
   width: 100%;
   min-height: 48px;
   padding: 12px 14px;
   border-radius: var(--radius-md);
   border: 1.5px solid var(--border);
-  font-size: 16px; /* 16px minimum stops iOS WebKit from auto-zooming */
+  font-size: 16px;
+  /* 16px minimum stops iOS WebKit from auto-zooming */
   color: var(--text);
   margin-bottom: 14px;
   outline: none;
@@ -694,7 +788,8 @@ select {
   padding-right: 38px;
 }
 
-input[type="text"]:focus, select:focus {
+input[type="text"]:focus,
+select:focus {
   border-color: var(--primary);
   background-color: var(--bg-input);
   box-shadow: 0 0 0 3.5px rgba(29, 78, 216, 0.14);
@@ -992,6 +1087,7 @@ input[type="text"].input-invalid {
     opacity: 0;
     transform: translateY(4px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1184,6 +1280,7 @@ input[type="text"].input-invalid {
     opacity: 0;
     transform: translateY(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1480,6 +1577,7 @@ input[type="text"].input-invalid {
     opacity: 0;
     transform: translate(-50%, 10px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translate(-50%, 0) scale(1);
@@ -1599,6 +1697,7 @@ input[type="text"].input-invalid {
     opacity: 0;
     transform: translateY(6px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1696,7 +1795,8 @@ input[type="text"].input-invalid {
 .modal-iframe-wrapper {
   position: relative;
   width: 100%;
-  padding-bottom: 56.25%; /* 16:9 */
+  padding-bottom: 56.25%;
+  /* 16:9 */
   height: 0;
   border-radius: var(--radius-sm);
   overflow: hidden;
@@ -1833,9 +1933,19 @@ input[type="text"].input-invalid {
 }
 
 @keyframes bounceCelebration {
-  0% { transform: scale(0.3) rotate(-15deg); opacity: 0; }
-  60% { transform: scale(1.15) rotate(8deg); }
-  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  0% {
+    transform: scale(0.3) rotate(-15deg);
+    opacity: 0;
+  }
+
+  60% {
+    transform: scale(1.15) rotate(8deg);
+  }
+
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
 }
 
 .completion-content h3 {
@@ -2141,11 +2251,35 @@ input[type="text"].input-invalid {
   justify-content: center;
 }
 
-.step-badge-1 { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
-.step-badge-2 { background: #f0fdfa; color: #0f766e; border: 1px solid #99f6e4; }
-.step-badge-3 { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-.step-badge-4 { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
-.step-badge-5 { background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe; }
+.step-badge-1 {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.step-badge-2 {
+  background: #f0fdfa;
+  color: #0f766e;
+  border: 1px solid #99f6e4;
+}
+
+.step-badge-3 {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.step-badge-4 {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.step-badge-5 {
+  background: #f5f3ff;
+  color: #6d28d9;
+  border: 1px solid #ddd6fe;
+}
 
 .tutorial-step-card p {
   font-size: 0.8rem;
@@ -2507,9 +2641,20 @@ input[type="text"].input-invalid {
 }
 
 @keyframes pulseDot {
-  0% { transform: scale(0.9); opacity: 0.8; }
-  50% { transform: scale(1.25); opacity: 1; }
-  100% { transform: scale(0.9); opacity: 0.8; }
+  0% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: scale(1.25);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
 }
 
 /* Expanded Card */
@@ -2695,8 +2840,13 @@ input[type="text"].input-invalid {
 }
 
 @keyframes pulseTone {
-  from { transform: scale(1); }
-  to { transform: scale(1.06); }
+  from {
+    transform: scale(1);
+  }
+
+  to {
+    transform: scale(1.06);
+  }
 }
 
 /* Pitch Display Area */
@@ -2899,6 +3049,7 @@ input[type="text"].input-invalid {
     transform: scale(1);
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3), 0 0 10px rgba(16, 185, 129, 0.25);
   }
+
   100% {
     transform: scale(1.05);
     box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.5), 0 0 20px rgba(16, 185, 129, 0.5);
@@ -2910,26 +3061,26 @@ input[type="text"].input-invalid {
   .container {
     padding: 12px 10px;
   }
-  
+
   .card {
     padding: 16px 14px;
     border-radius: 14px;
   }
-  
+
   .timer-display {
     font-size: 2.75rem;
     padding: 10px 20px;
   }
-  
+
   .header-brand {
     gap: 10px;
   }
-  
+
   .header-logo {
     width: 38px;
     height: 38px;
   }
-  
+
   header h1 {
     font-size: 1.3rem;
   }
@@ -3083,11 +3234,25 @@ input[type="text"].input-invalid {
   break-inside: avoid !important;
 }
 
-.pdf-step-item.s1 { border-left-color: #3b82f6 !important; }
-.pdf-step-item.s2 { border-left-color: #14b8a6 !important; }
-.pdf-step-item.s3 { border-left-color: #10b981 !important; }
-.pdf-step-item.s4 { border-left-color: #f59e0b !important; }
-.pdf-step-item.s5 { border-left-color: #8b5cf6 !important; }
+.pdf-step-item.s1 {
+  border-left-color: #3b82f6 !important;
+}
+
+.pdf-step-item.s2 {
+  border-left-color: #14b8a6 !important;
+}
+
+.pdf-step-item.s3 {
+  border-left-color: #10b981 !important;
+}
+
+.pdf-step-item.s4 {
+  border-left-color: #f59e0b !important;
+}
+
+.pdf-step-item.s5 {
+  border-left-color: #8b5cf6 !important;
+}
 
 .pdf-step-header {
   display: flex !important;
@@ -3158,12 +3323,29 @@ input[type="text"].input-invalid {
   margin-bottom: 8px !important;
 }
 
-.pdf-vocal-card.cat-tension { border-left-color: #2563eb !important; }
-.pdf-vocal-card.cat-breath { border-left-color: #0891b2 !important; }
-.pdf-vocal-card.cat-sovt { border-left-color: #d97706 !important; }
-.pdf-vocal-card.cat-resonance { border-left-color: #7c3aed !important; }
-.pdf-vocal-card.cat-diction { border-left-color: #059669 !important; }
-.pdf-vocal-card.cat-blend { border-left-color: #e11d48 !important; }
+.pdf-vocal-card.cat-tension {
+  border-left-color: #2563eb !important;
+}
+
+.pdf-vocal-card.cat-breath {
+  border-left-color: #0891b2 !important;
+}
+
+.pdf-vocal-card.cat-sovt {
+  border-left-color: #d97706 !important;
+}
+
+.pdf-vocal-card.cat-resonance {
+  border-left-color: #7c3aed !important;
+}
+
+.pdf-vocal-card.cat-diction {
+  border-left-color: #059669 !important;
+}
+
+.pdf-vocal-card.cat-blend {
+  border-left-color: #e11d48 !important;
+}
 
 .pdf-vocal-card-header {
   display: flex !important;
@@ -3183,12 +3365,41 @@ input[type="text"].input-invalid {
   border-radius: 999px !important;
 }
 
-.pdf-badge-tension { background: #eff6ff !important; color: #1d4ed8 !important; border: 1px solid #bfdbfe !important; }
-.pdf-badge-breath { background: #ecfeff !important; color: #0891b2 !important; border: 1px solid #a5f3fc !important; }
-.pdf-badge-sovt { background: #fffbeb !important; color: #d97706 !important; border: 1px solid #fde68a !important; }
-.pdf-badge-resonance { background: #f5f3ff !important; color: #7c3aed !important; border: 1px solid #ddd6fe !important; }
-.pdf-badge-diction { background: #ecfdf5 !important; color: #059669 !important; border: 1px solid #a7f3d0 !important; }
-.pdf-badge-blend { background: #fff1f2 !important; color: #e11d48 !important; border: 1px solid #fecdd3 !important; }
+.pdf-badge-tension {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #bfdbfe !important;
+}
+
+.pdf-badge-breath {
+  background: #ecfeff !important;
+  color: #0891b2 !important;
+  border: 1px solid #a5f3fc !important;
+}
+
+.pdf-badge-sovt {
+  background: #fffbeb !important;
+  color: #d97706 !important;
+  border: 1px solid #fde68a !important;
+}
+
+.pdf-badge-resonance {
+  background: #f5f3ff !important;
+  color: #7c3aed !important;
+  border: 1px solid #ddd6fe !important;
+}
+
+.pdf-badge-diction {
+  background: #ecfdf5 !important;
+  color: #059669 !important;
+  border: 1px solid #a7f3d0 !important;
+}
+
+.pdf-badge-blend {
+  background: #fff1f2 !important;
+  color: #e11d48 !important;
+  border: 1px solid #fecdd3 !important;
+}
 
 .pdf-vocal-section-title {
   font-size: 10pt !important;
@@ -3908,12 +4119,41 @@ input[type="text"].input-invalid {
   border-radius: var(--radius-full);
 }
 
-.badge-tension { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
-.badge-breath { background: #ecfeff; color: #0891b2; border: 1px solid #a5f3fc; }
-.badge-sovt { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
-.badge-resonance { background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe; }
-.badge-diction { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-.badge-blend { background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
+.badge-tension {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.badge-breath {
+  background: #ecfeff;
+  color: #0891b2;
+  border: 1px solid #a5f3fc;
+}
+
+.badge-sovt {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.badge-resonance {
+  background: #f5f3ff;
+  color: #7c3aed;
+  border: 1px solid #ddd6fe;
+}
+
+.badge-diction {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.badge-blend {
+  background: #fff1f2;
+  color: #e11d48;
+  border: 1px solid #fecdd3;
+}
 
 /* Drill Items */
 .vocal-drill-item {
@@ -3975,8 +4215,13 @@ input[type="text"].input-invalid {
 }
 
 @keyframes pulsePitch {
-  from { box-shadow: 0 0 2px var(--primary); }
-  to { box-shadow: 0 0 8px var(--primary); }
+  from {
+    box-shadow: 0 0 2px var(--primary);
+  }
+
+  to {
+    box-shadow: 0 0 8px var(--primary);
+  }
 }
 
 /* Golden Rules Box */
@@ -4084,6 +4329,7 @@ input[type="text"].input-invalid {
     flex-direction: column-reverse;
     align-items: stretch;
   }
+
   .vocal-tips-modal-footer button {
     width: 100% !important;
     justify-content: center;
