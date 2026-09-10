@@ -80,6 +80,7 @@
       <h2 id="profileCardTitle">👤 Choir Member Setup</h2>
       <label for="memberName">Full Name (Required)</label>
       <input type="text" id="memberName" placeholder="e.g. Juan dela Cruz">
+      <div class="input-validation-msg" id="memberNameValidationMsg" style="display: none;">⚠️ Please enter a valid full name (at least 5 characters).</div>
 
       <label for="memberSection">Voice Part / Choir</label>
       <select id="memberSection">
@@ -117,6 +118,20 @@
         <select id="targetSong" onchange="handleSongSelectionChange()">
           <!-- Populated dynamically from userSettings.songs -->
         </select>
+
+        <!-- Quick Timer Duration Adjuster -->
+        <div class="quick-duration-wrapper" id="quickDurationWrapper">
+          <span class="quick-duration-label">⏱️ Duration:</span>
+          <div class="quick-duration-pills" id="quickDurationPills" role="radiogroup" aria-label="Practice duration">
+            <button type="button" class="quick-duration-pill" data-mins="5" onclick="selectQuickDuration(5)">5m</button>
+            <button type="button" class="quick-duration-pill" data-mins="10" onclick="selectQuickDuration(10)">10m</button>
+            <button type="button" class="quick-duration-pill active" data-mins="15" onclick="selectQuickDuration(15)">15m</button>
+            <button type="button" class="quick-duration-pill" data-mins="20" onclick="selectQuickDuration(20)">20m</button>
+            <button type="button" class="quick-duration-pill" data-mins="30" onclick="selectQuickDuration(30)">30m</button>
+            <button type="button" class="quick-duration-pill" data-mins="45" onclick="selectQuickDuration(45)">45m</button>
+            <button type="button" class="quick-duration-pill" data-mins="60" onclick="selectQuickDuration(60)">60m</button>
+          </div>
+        </div>
 
         <div class="timer-display" id="timerDisplay">15:00</div>
 
@@ -328,6 +343,7 @@
           <div class="settings-section">
             <label for="settingMemberName">Full Name</label>
             <input type="text" id="settingMemberName" placeholder="e.g. Juan dela Cruz">
+            <div class="input-validation-msg" id="settingMemberNameValidationMsg" style="display: none;">⚠️ Please enter a valid full name (at least 5 characters).</div>
           </div>
 
           <div class="settings-section">

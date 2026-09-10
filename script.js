@@ -347,6 +347,51 @@ function applyTimerDuration(minutes, resetReadyClock = true) {
       if (btn) btn.innerText = `Resume ${mins}m Session`;
     }
   }
+
+  updateDurationSelectorUI(mins, Boolean(timerInterval));
+}
+
+function updateDurationSelectorUI(mins, isLocked) {
+  const currentMins = Number(mins) || getUserSettings().timerMinutes || 15;
+  const locked = Boolean(isLocked);
+
+  // Synchronize Settings modal dropdown if present
+  const settingsSelect = document.getElementById("settingTimerDuration");
+  if (settingsSelect && Number(settingsSelect.value) !== currentMins) {
+    settingsSelect.value = currentMins;
+  }
+
+  // Synchronize quick-duration pills
+  const pills = document.querySelectorAll(".quick-duration-pill");
+  pills.forEach(pill => {
+    const pillMins = Number(pill.getAttribute("data-mins"));
+    const isSelected = pillMins === currentMins;
+
+    pill.classList.toggle("active", isSelected);
+    pill.setAttribute("aria-pressed", isSelected ? "true" : "false");
+
+    pill.disabled = locked;
+    pill.classList.toggle("locked", locked);
+    if (locked) {
+      pill.setAttribute("title", "Timer is running. Pause or reset to change duration.");
+    } else {
+      pill.setAttribute("title", `Set rehearsal timer to ${pillMins} minutes`);
+    }
+  });
+
+  const wrapper = document.getElementById("quickDurationWrapper");
+  if (wrapper) {
+    wrapper.classList.toggle("running-locked", locked);
+  }
+}
+
+function selectQuickDuration(mins) {
+  const isRunning = Boolean(timerInterval || targetEndTime);
+  if (isRunning) {
+    showToast("Rehearsal timer is running! Pause or reset to change duration.");
+    return;
+  }
+  handleTimerDurationChange(mins);
 }
 
 function populateSongSelectDropdown() {
@@ -576,7 +621,7 @@ function loadProfile() {
 
   renderAvatarPicker(savedAvatar);
 
-  if (savedName && savedSection) {
+  if (savedName && savedName.trim().length >= 5 && savedSection) {
     document.getElementById("memberName").value = savedName;
     document.getElementById("memberSection").value = savedSection;
     updateActiveProfileDisplay(savedName, savedSection, savedAvatar);
@@ -608,13 +653,19 @@ function loadProfile() {
 }
 
 function handleProfileSubmit() {
-  const name = document.getElementById("memberName").value.trim();
+  const nameInput = document.getElementById("memberName");
+  const msgEl = document.getElementById("memberNameValidationMsg");
+  const submitBtn = document.getElementById("saveProfileBtn");
+  const name = nameInput ? nameInput.value.trim() : "";
   const section = document.getElementById("memberSection").value;
   const avatar = selectedAvatarFile;
 
-  if (!name) {
-    alert("Please enter your full name first!");
-    document.getElementById("memberName").focus();
+  if (!name || name.length <= 4) {
+    if (nameInput) nameInput.classList.add("input-invalid");
+    if (msgEl) msgEl.style.display = "block";
+    if (submitBtn) submitBtn.disabled = true;
+    showToast("⚠️ Please enter a valid full name (at least 5 characters).");
+    if (nameInput) nameInput.focus();
     return;
   }
   if (!section) {
@@ -663,13 +714,18 @@ function handleProfileSubmit() {
 
 function saveProfileFromSettings() {
   const nameInput = document.getElementById("settingMemberName");
+  const msgEl = document.getElementById("settingMemberNameValidationMsg");
+  const saveBtn = document.getElementById("saveSettingsProfileBtn");
   const sectionSelect = document.getElementById("settingMemberSection");
   const name = nameInput ? nameInput.value.trim() : "";
   const section = sectionSelect ? sectionSelect.value : "";
   const avatar = selectedSettingAvatarFile;
 
-  if (!name) {
-    alert("Please enter your full name!");
+  if (!name || name.length <= 4) {
+    if (nameInput) nameInput.classList.add("input-invalid");
+    if (msgEl) msgEl.style.display = "block";
+    if (saveBtn) saveBtn.disabled = true;
+    showToast("⚠️ Please enter a valid full name (at least 5 characters).");
     if (nameInput) nameInput.focus();
     return false;
   }
@@ -742,8 +798,12 @@ function cancelProfileEdit() {
 function validateUser() {
   const name = document.getElementById("memberName").value.trim();
   const section = document.getElementById("memberSection").value;
-  if (!name || !section) {
-    alert("Please confirm your name and voice part before starting!");
+  if (!name || name.length <= 4 || !section) {
+    if (name && name.length <= 4) {
+      showToast("⚠️ Please enter a valid full name (at least 5 characters).");
+    } else {
+      alert("Please confirm your name and voice part before starting!");
+    }
     switchProfile();
     return false;
   }
@@ -1174,6 +1234,8 @@ function completeTimerSession() {
     btn.classList.add("btn-primary");
   }
 
+  updateDurationSelectorUI(currentDurationMins, false);
+
   // Record completed session in history for consistency tracking
   recordCompletedSession(currentDurationMins);
   const stats = getWeekSessionStats();
@@ -1227,6 +1289,7 @@ function restoreTimerState() {
       }
 
       startIdleTracking();
+      updateDurationSelectorUI(currentDurationMins, true);
     } else {
       completeTimerSession();
     }
@@ -1248,6 +1311,7 @@ function restoreTimerState() {
       btn.classList.remove("btn-outline");
       btn.classList.add("btn-primary");
     }
+    updateDurationSelectorUI(currentDurationMins, false);
   }
 
   // Restore resource state (unlocked if running/paused, gated if session not started)
@@ -1279,6 +1343,7 @@ function toggleTimer() {
     btn.classList.add("btn-primary");
 
     stopIdleTracking();
+    updateDurationSelectorUI(currentDurationMins, false);
   } else {
     // Start or Resume timer
     targetEndTime = Date.now() + (timeRemaining * 1000);
@@ -1312,6 +1377,7 @@ function toggleTimer() {
     timerInterval = setInterval(updateTimerTick, 500);
 
     startIdleTracking();
+    updateDurationSelectorUI(currentDurationMins, true);
   }
 }
 
@@ -2216,6 +2282,11 @@ function openSettingsModal(defaultTab = 'profile') {
   // 3. Switch to target tab (defaults to 'profile' or 'preferences')
   switchSettingsTab(defaultTab || 'profile');
 
+  const settingNameInput = document.getElementById("settingMemberName");
+  const settingMsg = document.getElementById("settingMemberNameValidationMsg");
+  const settingBtn = document.getElementById("saveSettingsProfileBtn");
+  validateNameInput(settingNameInput, settingMsg, settingBtn);
+
   modal.classList.add("active");
   document.body.style.overflow = "hidden";
 }
@@ -2231,7 +2302,7 @@ function closeSettingsModal() {
     const savedSec = localStorage.getItem("choir_voice") || localStorage.getItem("choir_section") || "";
     const savedAv = localStorage.getItem("choir_avatar") || "";
 
-    if (curName && curSec && (curName !== savedName || curSec !== savedSec || selectedSettingAvatarFile !== savedAv)) {
+    if (curName && curName.length >= 5 && curSec && (curName !== savedName || curSec !== savedSec || selectedSettingAvatarFile !== savedAv)) {
       saveProfileFromSettings();
     }
   }
@@ -2935,6 +3006,71 @@ function registerServiceWorker() {
   }
 }
 
+// --- USER NAME REAL-TIME VALIDATION HELPERS ---
+function validateNameInput(inputEl, msgEl, btnEl) {
+  if (!inputEl) return false;
+  const val = inputEl.value.trim();
+  const isValid = val.length >= 5;
+
+  if (val.length === 0) {
+    inputEl.classList.remove("input-invalid");
+    if (msgEl) msgEl.style.display = "none";
+    if (btnEl) btnEl.disabled = true;
+    return false;
+  }
+
+  if (!isValid) {
+    inputEl.classList.add("input-invalid");
+    if (msgEl) msgEl.style.display = "block";
+    if (btnEl) btnEl.disabled = true;
+    return false;
+  } else {
+    inputEl.classList.remove("input-invalid");
+    if (msgEl) msgEl.style.display = "none";
+    if (btnEl) btnEl.disabled = false;
+    return true;
+  }
+}
+
+function initNameValidation() {
+  const setupInput = document.getElementById("memberName");
+  const setupMsg = document.getElementById("memberNameValidationMsg");
+  const setupBtn = document.getElementById("saveProfileBtn");
+
+  if (setupInput) {
+    setupInput.addEventListener("input", () => {
+      validateNameInput(setupInput, setupMsg, setupBtn);
+    });
+    setupInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        if (!validateNameInput(setupInput, setupMsg, setupBtn)) {
+          e.preventDefault();
+          showToast("⚠️ Name must be at least 5 characters.");
+        }
+      }
+    });
+    validateNameInput(setupInput, setupMsg, setupBtn);
+  }
+
+  const settingInput = document.getElementById("settingMemberName");
+  const settingMsg = document.getElementById("settingMemberNameValidationMsg");
+  const settingBtn = document.getElementById("saveSettingsProfileBtn");
+
+  if (settingInput) {
+    settingInput.addEventListener("input", () => {
+      validateNameInput(settingInput, settingMsg, settingBtn);
+    });
+    settingInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        if (!validateNameInput(settingInput, settingMsg, settingBtn)) {
+          e.preventDefault();
+          showToast("⚠️ Name must be at least 5 characters.");
+        }
+      }
+    });
+  }
+}
+
 // Initial load
 window.addEventListener("DOMContentLoaded", function () {
   const footerYear = document.getElementById("footerYear");
@@ -2947,6 +3083,7 @@ window.addEventListener("DOMContentLoaded", function () {
   applyTimerDuration(getUserSettings().timerMinutes, false);
   populateSongSelectDropdown();
   loadProfile();
+  initNameValidation();
   restoreTimerState();
   initTutorialLang();
   syncOfflinePracticeQueue();
