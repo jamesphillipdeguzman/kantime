@@ -217,7 +217,16 @@ const DEFAULT_USER_SETTINGS = {
       title: "Choose You This Day",
       part: "Adult Choir #3",
       sheetUrl: "https://drive.google.com/embeddedfolderview?id=1bBnCakJGBj-zfka8wVbz42_ykvipMnwU#grid",
+      localSheetUrl: "kantime-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day.pdf",
       videoUrl: "https://www.youtube.com/embed/q54H2OqWBcY?enablejsapi=1",
+      audioTracks: [
+        { name: "Full Choir", src: "kantime-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day.mp3" },
+        { name: "Soprano", src: "kantime-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20-%20SOPRANO.mp3" },
+        { name: "Alto", src: "kantime-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20-%20ALTO.mp3" },
+        { name: "Tenor", src: "kantime-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20-%20TENOR.mp3" },
+        { name: "Bass", src: "kantime-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20-%20BASS.mp3" },
+        { name: "Piano", src: "kantime-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20(piano).mp3" }
+      ],
       note: ""
     },
     {
@@ -260,10 +269,22 @@ function getUserSettings() {
   }
   try {
     const parsed = JSON.parse(stored);
+    let songs = Array.isArray(parsed.songs) && parsed.songs.length > 0 ? parsed.songs : DEFAULT_USER_SETTINGS.songs;
+
+    // Merge default audioTracks and localSheetUrl for bundled songs if missing
+    songs = songs.map(s => {
+      const def = DEFAULT_USER_SETTINGS.songs.find(d => d.id === s.id || d.title === s.title);
+      if (def) {
+        if (!s.audioTracks && def.audioTracks) s.audioTracks = def.audioTracks;
+        if (!s.localSheetUrl && def.localSheetUrl) s.localSheetUrl = def.localSheetUrl;
+      }
+      return s;
+    });
+
     return {
       targetDate: parsed.targetDate !== undefined ? parsed.targetDate : DEFAULT_USER_SETTINGS.targetDate,
       timerMinutes: Number(parsed.timerMinutes) || DEFAULT_USER_SETTINGS.timerMinutes,
-      songs: Array.isArray(parsed.songs) && parsed.songs.length > 0 ? parsed.songs : DEFAULT_USER_SETTINGS.songs
+      songs: songs
     };
   } catch (e) {
     console.error("Failed to parse kantime_user_settings:", e);
@@ -384,6 +405,7 @@ function renderSelectedSongResource(songKey) {
   const isPrimary = (song.part || "").toLowerCase() === "primary" ? "primary-piece" : "";
   const tagStyle = isPrimary ? "style='color:var(--accent);'" : "";
   const sessionActive = isPracticeSessionActive();
+  const isOffline = !navigator.onLine;
 
   // 🔒 GATED STATE: Prior to timer start or upon reset/completion, hide interactive materials & show prompt
   if (!sessionActive) {
@@ -409,34 +431,78 @@ function renderSelectedSongResource(songKey) {
   // 🔓 UNLOCKED STATE: Session is active (running or paused) — reveal interactive sheet music, player, and part rehearsal links
   let actionsHtml = "";
 
+  // Local Sheet Music PDF (cached offline in kantime-resources/)
+  if (song.localSheetUrl) {
+    actionsHtml += `<button class="btn-link" type="button" onclick="openResourceModal('${escapeHtml(song.title)} (Local Sheet)', '${escapeHtml(song.localSheetUrl)}', 'doc')">🎼 Preview Sheet (Offline PDF) <span class="badge-cached-offline">Offline Ready</span></button> `;
+  }
+
   if (song.sheetUrl) {
     const isGoogleDrive = song.sheetUrl.includes("drive.google.com");
+    const offlineBadge = isOffline ? ` <span class="badge-offline-req">⚠️ Requires Internet</span>` : "";
     if (isGoogleDrive) {
-      actionsHtml += `<button class="btn-link" type="button" onclick="openResourceModal('${escapeHtml(song.title)} (Sheet)', '${escapeHtml(song.sheetUrl)}', 'doc')">🎼 Preview Sheet (In-App)</button> `;
+      actionsHtml += `<button class="btn-link ${isOffline ? 'link-disabled-offline' : ''}" type="button" onclick="${isOffline ? "showToast('Google Drive requires an active internet connection.')" : `openResourceModal('${escapeHtml(song.title)} (Sheet)', '${escapeHtml(song.sheetUrl)}', 'doc')`}">🎼 Preview Drive Sheet${offlineBadge}</button> `;
       const directFolderUrl = song.sheetUrl.replace('/embeddedfolderview', '/drive/folders').split('#')[0];
-      actionsHtml += `<a class="btn-link" href="${escapeHtml(directFolderUrl)}" target="_blank" rel="noopener noreferrer">📁 Open Drive Folder ↗</a> `;
+      actionsHtml += `<a class="btn-link ${isOffline ? 'link-disabled-offline' : ''}" href="${isOffline ? 'javascript:void(0);' : escapeHtml(directFolderUrl)}" ${isOffline ? `onclick="showToast('Google Drive requires an active internet connection.')"` : 'target="_blank" rel="noopener noreferrer"'}>📁 Open Drive Folder ↗${offlineBadge}</a> `;
     } else {
-      actionsHtml += `<a class="btn-link" href="${escapeHtml(song.sheetUrl)}" target="_blank" rel="noopener noreferrer">🎼 Interactive Sheet & Audio ↗</a> `;
+      actionsHtml += `<a class="btn-link ${isOffline ? 'link-disabled-offline' : ''}" href="${isOffline ? 'javascript:void(0);' : escapeHtml(song.sheetUrl)}" ${isOffline ? `onclick="showToast('Online sheet requires an active internet connection.')"` : 'target="_blank" rel="noopener noreferrer"'}>🎼 Interactive Sheet & Audio ↗${offlineBadge}</a> `;
     }
   }
 
   if (song.videoUrl) {
+    const offlineBadge = isOffline ? ` <span class="badge-offline-req">⚠️ Requires Internet</span>` : "";
     const embedUrl = formatYouTubeEmbedUrl(song.videoUrl);
-    actionsHtml += `<button class="btn-link" type="button" onclick="openResourceModal('${escapeHtml(song.title)} (Video)', '${escapeHtml(embedUrl)}', 'video')">▶️ Watch Video (In-App)</button> `;
+    actionsHtml += `<button class="btn-link ${isOffline ? 'link-disabled-offline' : ''}" type="button" onclick="${isOffline ? "showToast('YouTube streaming requires an active internet connection.')" : `openResourceModal('${escapeHtml(song.title)} (Video)', '${escapeHtml(embedUrl)}', 'video')`}">▶️ Watch Video${offlineBadge}</button> `;
   }
 
-  let embedHtml = "";
-  if (song.videoUrl) {
-    const embedUrl = formatYouTubeEmbedUrl(song.videoUrl);
-    embedHtml = `
-      <div style="margin-top: 12px; border-radius: 8px; overflow: hidden; background: #000; position: relative; padding-bottom: 56.25%; height: 0;">
-        <iframe src="${escapeHtml(embedUrl)}" style="position: absolute; top:0; left:0; width:100%; height:100%; border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  // Bundled Local Audio Tracks Player (<audio> tags referencing bundled mp3s)
+  let localAudioHtml = "";
+  if (song.audioTracks && song.audioTracks.length > 0) {
+    let pillsHtml = "";
+    song.audioTracks.forEach((track, idx) => {
+      const isActive = idx === 0 ? "active" : "";
+      pillsHtml += `<button type="button" class="audio-part-pill ${isActive}" onclick="selectAudioTrack('${escapeHtml(track.src)}', this)">${escapeHtml(track.name)}</button>`;
+    });
+
+    localAudioHtml = `
+      <div class="local-audio-card">
+        <div class="local-audio-header">
+          <div class="local-audio-title">
+            <span>🎧 Rehearsal Audio Tracks</span>
+            <span class="badge-cached-offline">⚡ Offline Ready</span>
+          </div>
+        </div>
+        <div class="local-audio-part-selector" role="group" aria-label="Select Voice Part Track">
+          ${pillsHtml}
+        </div>
+        <audio id="activeLocalAudio" class="local-audio-element" controls preload="metadata" src="${escapeHtml(song.audioTracks[0].src)}">
+          Your browser does not support local audio playback.
+        </audio>
       </div>
     `;
   }
 
+  let embedHtml = "";
+  if (song.videoUrl) {
+    if (isOffline) {
+      embedHtml = `
+        <div style="margin-top: 12px; padding: 14px; background: #fffbeb; border: 1px dashed #fde68a; border-radius: 8px; text-align: center; color: #92400e; font-size: 0.82rem;">
+          ▶️ <strong>YouTube Video:</strong> <span class="badge-offline-req">Requires Internet</span>
+          <p style="margin: 4px 0 0; font-size: 0.76rem; color: #b45309;">Streaming video is disabled in Offline Mode. Use the cached rehearsal audio player above to practice.</p>
+        </div>
+      `;
+    } else {
+      const embedUrl = formatYouTubeEmbedUrl(song.videoUrl);
+      embedHtml = `
+        <div style="margin-top: 12px; border-radius: 8px; overflow: hidden; background: #000; position: relative; padding-bottom: 56.25%; height: 0;">
+          <iframe src="${escapeHtml(embedUrl)}" style="position: absolute; top:0; left:0; width:100%; height:100%; border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+      `;
+    }
+  }
+
   const mins = getUserSettings().timerMinutes || 15;
-  const noteText = song.note !== undefined ? song.note : (song.sheetUrl ? `ℹ️ Opens in external tab. Your ${mins}-minute timer will keep running while you practice!` : "");
+  const defaultNote = song.sheetUrl ? `ℹ️ Opens in external tab. Your ${mins}-minute timer will keep running while you practice!` : "";
+  const noteText = song.note !== undefined && song.note !== "" ? song.note : defaultNote;
   const noteHtml = noteText ? `<div class="external-note">${escapeHtml(noteText)}</div>` : "";
 
   container.innerHTML = `
@@ -448,6 +514,7 @@ function renderSelectedSongResource(songKey) {
       <div class="song-title">${escapeHtml(song.title)}</div>
       
       <div class="resource-unlocked-container">
+        ${localAudioHtml}
         <div class="song-actions">${actionsHtml}</div>
         ${noteHtml}
         ${embedHtml}
@@ -1267,22 +1334,30 @@ function showToast(msg) {
   setTimeout(() => { t.style.display = "none"; }, 3000);
 }
 
-// --- SUBMIT PRACTICE LOG TO GOOGLE SHEETS ---
+// --- SUBMIT PRACTICE LOG TO GOOGLE SHEETS (WITH OFFLINE QUEUE) ---
 function submitPracticeSession(minutes) {
   const name = document.getElementById("memberName").value.trim();
   const section = document.getElementById("memberSection").value;
   const song = document.getElementById("targetSong").value;
   const avatar = localStorage.getItem("choir_avatar") || "";
-
-  showToast("Logging session...");
+  const timestamp = new Date().toISOString();
 
   const payload = {
     name: name,
     section: section,
     song: song,
     minutes: minutes,
-    avatar: avatar
+    avatar: avatar,
+    timestamp: timestamp
   };
+
+  if (!navigator.onLine) {
+    saveOfflinePracticeSession(payload);
+    showToast("Session saved offline! It will sync to the leaderboard when you reconnect. 📡");
+    return;
+  }
+
+  showToast("Logging session...");
 
   fetch(APPS_SCRIPT_URL, {
     method: "POST",
@@ -1295,13 +1370,26 @@ function submitPracticeSession(minutes) {
       setTimeout(loadLeaderboard, 1500);
     })
     .catch(err => {
-      showToast("Error logging. Please check connection.");
-      console.error(err);
+      saveOfflinePracticeSession(payload);
+      showToast("Session saved offline! It will sync to the leaderboard when you reconnect. 📡");
+      console.warn("Network request failed, queued offline:", err);
     });
 }
 
 // --- LOAD LEADERBOARDS (TOP 10 & SECTIONS) ---
 function loadLeaderboard() {
+  if (!navigator.onLine) {
+    const topSingersEl = document.getElementById("topSingersList");
+    const sectionEl = document.getElementById("sectionList");
+    if (topSingersEl) {
+      topSingersEl.innerHTML = `<div style="text-align:center; padding:12px; font-size:0.85rem; color:var(--text-muted);">📡 Offline: Leaderboard syncs when reconnected.</div>`;
+    }
+    if (sectionEl) {
+      sectionEl.innerHTML = `<div style="text-align:center; padding:12px; font-size:0.85rem; color:var(--text-muted);">📡 Offline: Standings sync when reconnected.</div>`;
+    }
+    return;
+  }
+
   fetch(APPS_SCRIPT_URL)
     .then(res => res.json())
     .then(data => {
@@ -2751,16 +2839,115 @@ function _printTutorialFallback() {
   }, 1500);
 }
 
+// --- PWA, OFFLINE QUEUE & AUDIO HELPERS ---
+function selectAudioTrack(trackSrc, pillEl) {
+  const audioEl = document.getElementById("activeLocalAudio");
+  if (audioEl) {
+    const wasPlaying = !audioEl.paused;
+    audioEl.src = trackSrc;
+    if (wasPlaying) {
+      audioEl.play().catch(() => {});
+    }
+  }
+  const pills = document.querySelectorAll(".audio-part-pill");
+  pills.forEach(p => p.classList.remove("active"));
+  if (pillEl) {
+    pillEl.classList.add("active");
+  }
+}
+
+function saveOfflinePracticeSession(sessionObj) {
+  try {
+    const queue = JSON.parse(localStorage.getItem("offline_practice_queue") || "[]");
+    queue.push(sessionObj);
+    localStorage.setItem("offline_practice_queue", JSON.stringify(queue));
+  } catch (e) {
+    console.error("Failed to queue offline session:", e);
+  }
+}
+
+function syncOfflinePracticeQueue() {
+  if (!navigator.onLine) return;
+  let queue = [];
+  try {
+    queue = JSON.parse(localStorage.getItem("offline_practice_queue") || "[]");
+  } catch (e) {
+    queue = [];
+  }
+
+  if (!queue || queue.length === 0) return;
+
+  const count = queue.length;
+  showToast(`Syncing ${count} offline session${count > 1 ? 's' : ''} to leaderboard... 📡`);
+
+  const syncPromises = queue.map(session => {
+    return fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(session)
+    });
+  });
+
+  Promise.all(syncPromises)
+    .then(() => {
+      localStorage.removeItem("offline_practice_queue");
+      showToast(`Synced ${count} offline session${count > 1 ? 's' : ''} successfully! 🔥`);
+      setTimeout(loadLeaderboard, 1200);
+    })
+    .catch(err => {
+      console.warn("Failed to sync offline practice queue:", err);
+    });
+}
+
+function updateOnlineStatus() {
+  const banner = document.getElementById("offlineStatusBanner");
+  const isOffline = !navigator.onLine;
+
+  if (banner) {
+    banner.style.display = isOffline ? "flex" : "none";
+  }
+
+  // Refresh active repertoire view to show/hide "Requires Internet" badges
+  const targetSongEl = document.getElementById("targetSong");
+  if (targetSongEl && targetSongEl.value) {
+    renderSelectedSongResource(targetSongEl.value);
+  }
+
+  if (!isOffline) {
+    syncOfflinePracticeQueue();
+    loadLeaderboard();
+  }
+}
+
+window.addEventListener("online", updateOnlineStatus);
+window.addEventListener("offline", updateOnlineStatus);
+
+function registerServiceWorker() {
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js")
+      .then(reg => {
+        console.log("KanTime ServiceWorker registered with scope:", reg.scope);
+      })
+      .catch(err => {
+        console.warn("KanTime ServiceWorker registration failed:", err);
+      });
+  }
+}
+
 // Initial load
 window.addEventListener("DOMContentLoaded", function () {
   const footerYear = document.getElementById("footerYear");
   if (footerYear) {
     footerYear.innerText = new Date().getFullYear();
   }
+  registerServiceWorker();
+  updateOnlineStatus();
   applyHeaderTargetDate();
   applyTimerDuration(getUserSettings().timerMinutes, false);
   populateSongSelectDropdown();
   loadProfile();
   restoreTimerState();
   initTutorialLang();
+  syncOfflinePracticeQueue();
 });

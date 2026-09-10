@@ -25,7 +25,12 @@
     content="Access hymn repertoire, practice tracks, and track your daily 15-minute practice sessions for Oct 24–25!">
   <meta name="twitter:image" content="https://kantimes.netlify.app/images/kantime-bg.jpg">
 
-  <meta name="theme-color" content="#1d4ed8">
+  <meta name="theme-color" content="#1e40af">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="images/kantime-logo.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="KanTime">
   <link rel="icon" type="image/x-icon" href="images/favicon.ico">
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -44,6 +49,12 @@
       <button class="settings-btn" id="openSettingsBtn" onclick="openSettingsModal()" aria-label="Settings" title="Settings & Practice Preferences">⚙️</button>
     </div>
   </header>
+
+  <!-- Offline Status Banner (Visible when offline) -->
+  <div id="offlineStatusBanner" class="offline-banner" style="display: none;" role="status" aria-live="polite">
+    <span class="offline-banner-icon">📡</span>
+    <span class="offline-banner-text"><strong>Offline Mode:</strong> Practicing with cached repertoire. Practice logs will sync automatically when you reconnect.</span>
+  </div>
 
   <div class="container">
 
