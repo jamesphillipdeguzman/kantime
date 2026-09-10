@@ -634,7 +634,12 @@
           <h3 id="vocalTipsModalTitle">🎤 Vocal Warm-Ups &amp; Singing Tips</h3>
           <p class="vocal-tips-subtitle">Core drills for healthy tension release, breath support, and choir resonance</p>
         </div>
-        <button class="modal-close-btn" type="button" onclick="closeVocalTipsModal()" aria-label="Close modal">&times;</button>
+        <div class="vocal-tips-header-actions">
+          <button type="button" class="btn btn-outline btn-export-vocal-pdf-header" id="btnExportVocalPdfHeader" onclick="exportVocalDrillsToPdf()" title="Export All Vocal Drills to printable PDF">
+            📄 Export PDF
+          </button>
+          <button class="modal-close-btn" type="button" onclick="closeVocalTipsModal()" aria-label="Close modal">&times;</button>
+        </div>
       </div>
 
       <!-- Category Filter Pills -->
@@ -869,6 +874,9 @@
       </div>
 
       <div class="modal-footer vocal-tips-modal-footer">
+        <button type="button" class="btn btn-outline btn-export-vocal-pdf" id="btnExportVocalPdf" onclick="exportVocalDrillsToPdf()" title="Export All Vocal Drills to a printable PDF sheet">
+          📄 Export All Drills to PDF
+        </button>
         <button type="button" class="btn btn-primary" onclick="closeVocalTipsModal()">Done / Return to Practice</button>
       </div>
     </div>
