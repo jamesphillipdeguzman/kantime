@@ -337,6 +337,68 @@
   color: var(--primary);
 }
 
+/* ==========================================================================
+   Dark Theme: User Profile Card & Action Contrast Fix
+   ========================================================================== */
+[data-theme="dark"] .active-profile-card,
+[data-theme="dark"] #activeProfileBanner,
+[data-theme="dark"] .user-profile-card,
+[data-theme="dark"] .user-card,
+[data-theme="dark"] #user-profile-card,
+[data-theme="dark"] .profile-header {
+  background: var(--bg-card, #1e293b);
+  background-image: none;
+  background-color: var(--bg-card, #1e293b);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .active-profile-card h3,
+[data-theme="dark"] .active-profile-card #activeProfileName,
+[data-theme="dark"] #activeProfileBanner h3,
+[data-theme="dark"] #activeProfileName,
+[data-theme="dark"] .user-profile-card h3,
+[data-theme="dark"] .user-profile-card #activeProfileName,
+[data-theme="dark"] .user-card h3,
+[data-theme="dark"] .profile-header h3 {
+  color: var(--text-primary, #f8fafc);
+}
+
+[data-theme="dark"] .active-profile-label {
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .banner-avatar-badge {
+  border-color: var(--border-subtle, rgba(255, 255, 255, 0.15));
+  background: var(--bg-card, #1e293b);
+}
+
+[data-theme="dark"] .active-profile-card .btn-link,
+[data-theme="dark"] #activeProfileBanner .btn-link,
+[data-theme="dark"] .user-profile-card .btn-link,
+[data-theme="dark"] .user-card .btn-link,
+[data-theme="dark"] #btnSwitchVoice,
+[data-theme="dark"] #btn-switch-voice,
+[data-theme="dark"] .btn-switch-voice,
+[data-theme="dark"] .btn-edit-profile {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .active-profile-card .btn-link:hover,
+[data-theme="dark"] #activeProfileBanner .btn-link:hover,
+[data-theme="dark"] .user-profile-card .btn-link:hover,
+[data-theme="dark"] .user-card .btn-link:hover,
+[data-theme="dark"] #btnSwitchVoice:hover,
+[data-theme="dark"] #btn-switch-voice:hover,
+[data-theme="dark"] .btn-switch-voice:hover,
+[data-theme="dark"] .btn-edit-profile:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+}
+
 /* Reset & Base Setup */
 *, *::before, *::after {
   box-sizing: border-box;
