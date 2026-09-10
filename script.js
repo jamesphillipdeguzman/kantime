@@ -4890,6 +4890,120 @@ function exportVocalDrillsToPdf() {
   ensureLibraries();
 }
 
+// ==========================================================================
+// PWA Install Banner & iOS Fallback
+// ==========================================================================
+
+let deferredPrompt = null;
+
+/**
+ * Checks if the app is already running in standalone (installed) mode.
+ */
+function isRunningStandalone() {
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    navigator.standalone === true
+  );
+}
+
+/**
+ * Initializes the PWA install banner logic.
+ * - Listens for `beforeinstallprompt` (Android/Chrome).
+ * - Detects iOS Safari and shows a delayed fallback toast.
+ */
+function initPWAInstallBanner() {
+  // If already installed, do nothing
+  if (isRunningStandalone()) return;
+
+  // ── Android / Chrome: capture the deferred install prompt ──────────────
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    // Only show if user hasn\'t dismissed this session
+    if (!sessionStorage.getItem("pwa_banner_dismissed")) {
+      const banner = document.getElementById("pwaInstallBanner");
+      if (banner) {
+        banner.style.display = "block";
+        // Animate in after a short tick so CSS transition fires
+        requestAnimationFrame(() => banner.classList.add("pwa-banner-visible"));
+      }
+    }
+  });
+
+  // Hide the banner if the app is installed via the browser\'s own UI
+  window.addEventListener("appinstalled", function () {
+    hidePWAInstallBanner();
+    deferredPrompt = null;
+  });
+
+  // ── iOS Safari fallback ─────────────────────────────────────────────────
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  if (isIOS && !sessionStorage.getItem("ios_toast_dismissed")) {
+    // Show after a 2-second delay so the page has settled
+    setTimeout(function () {
+      const toast = document.getElementById("iosInstallToast");
+      if (toast) {
+        toast.style.display = "block";
+        requestAnimationFrame(() => toast.classList.add("ios-toast-visible"));
+        // Auto-dismiss after 10 seconds
+        setTimeout(dismissIosToast, 10000);
+      }
+    }, 2000);
+  }
+}
+
+/**
+ * Triggers the native install prompt (Android/Chrome).
+ */
+async function installPWA() {
+  if (!deferredPrompt) return;
+
+  // Show the native install prompt
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+
+  if (outcome === "accepted") {
+    hidePWAInstallBanner();
+  }
+
+  // The prompt can only be used once; clear it either way
+  deferredPrompt = null;
+}
+
+/**
+ * Hides the PWA install pill banner.
+ */
+function hidePWAInstallBanner() {
+  const banner = document.getElementById("pwaInstallBanner");
+  if (!banner) return;
+  banner.classList.remove("pwa-banner-visible");
+  setTimeout(() => {
+    banner.style.display = "none";
+  }, 350);
+}
+
+/**
+ * Permanently dismisses the install banner for this browser session.
+ */
+function dismissInstallBanner() {
+  sessionStorage.setItem("pwa_banner_dismissed", "1");
+  hidePWAInstallBanner();
+}
+
+/**
+ * Hides and dismisses the iOS install toast.
+ */
+function dismissIosToast() {
+  const toast = document.getElementById("iosInstallToast");
+  if (!toast) return;
+  toast.classList.remove("ios-toast-visible");
+  sessionStorage.setItem("ios_toast_dismissed", "1");
+  setTimeout(() => {
+    toast.style.display = "none";
+  }, 400);
+}
+
 // Initial load
 window.addEventListener("DOMContentLoaded", function () {
   const footerYear = document.getElementById("footerYear");
@@ -4910,4 +5024,5 @@ window.addEventListener("DOMContentLoaded", function () {
   initMetronomeVisibility();
   initTutorialLang();
   syncOfflinePracticeQueue();
+  initPWAInstallBanner();
 });

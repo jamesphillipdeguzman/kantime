@@ -33,7 +33,7 @@
     content="Access hymn repertoire, practice tracks, and track your daily 15-minute practice sessions for Oct 24–25!">
   <meta name="twitter:image" content="https://kantimes.netlify.app/images/kantime-bg.png">
 
-  <meta name="theme-color" content="#1e40af">
+  <meta name="theme-color" content="#1e3a8a">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="images/kantime-logo.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -68,6 +68,32 @@
     <span class="offline-banner-icon">📡</span>
     <span class="offline-banner-text"><strong>Offline Mode:</strong> Practicing with cached repertoire. Practice logs
       will sync automatically when you reconnect.</span>
+  </div>
+
+  <!-- PWA Install Pill Banner (Android / Chrome – shown when beforeinstallprompt fires) -->
+  <div id="pwaInstallBanner" class="pwa-install-banner" style="display: none;" role="complementary"
+    aria-label="Add KanTime to Home Screen">
+    <div class="pwa-install-inner">
+      <span class="pwa-install-icon">📲</span>
+      <span class="pwa-install-text">Add <strong>KanTime</strong> to Home Screen</span>
+      <button type="button" class="pwa-install-btn" id="pwaInstallBtn" onclick="installPWA()"
+        aria-label="Install KanTime app">Install</button>
+      <button type="button" class="pwa-install-dismiss" id="pwaInstallDismiss" onclick="dismissInstallBanner()"
+        aria-label="Dismiss install prompt">✕</button>
+    </div>
+  </div>
+
+  <!-- iOS Safari Install Toast (shown when device is iOS & not in standalone mode) -->
+  <div id="iosInstallToast" class="ios-install-toast" style="display: none;" role="status" aria-live="polite">
+    <div class="ios-toast-inner">
+      <span class="ios-toast-icon">📲</span>
+      <div class="ios-toast-text">
+        <strong>Add to Home Screen</strong>
+        <span>Tap the Share button <span class="ios-share-icon">⎋</span> then select
+          <em>"Add to Home Screen"</em> ➕</span>
+      </div>
+      <button type="button" class="ios-toast-close" onclick="dismissIosToast()" aria-label="Close">✕</button>
+    </div>
   </div>
 
   <div class="container">
