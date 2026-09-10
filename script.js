@@ -2768,156 +2768,176 @@ function exportTutorialToPdf() {
     exportBtn.innerHTML = "⏳ Exporting PDF...";
   }
 
-  showToast("Generating mobile-optimized PDF guide... 📄");
-
-  // Call window.scrollTo(0, 0) before capture as required
-  window.scrollTo(0, 0);
+  showToast("Generating PDF guide... 📄");
 
   const settings = getUserSettings();
   const targetDate = settings.targetDate || "Stake Choir Prep • Oct 24–25";
   const year = new Date().getFullYear();
   const dateStr = new Date().toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
+    year: 'numeric', month: 'short', day: 'numeric'
   });
 
   const memberName = localStorage.getItem("choir_name") || "";
   const memberVoice = localStorage.getItem("choir_voice") || localStorage.getItem("choir_section") || "";
   const singerInfo = memberName ? `${memberName} (${memberVoice || 'Choir Singer'})` : "";
-
-  // Use the currently selected tutorial language for PDF content
   const lang = currentTutorialLang || "en";
   const s = TUTORIAL_I18N[lang] || TUTORIAL_I18N.en;
 
-  // DOM Attachment & Visible Off-Screen Staging:
-  // Create clone container and append directly to document.body safely behind viewport
-  const clone = document.createElement("div");
-  clone.id = "pdfIsolatedExportContainer";
-  clone.className = "pdf-isolated-container";
-  clone.style.position = 'fixed';
-  clone.style.top = '0';
-  clone.style.left = '0';
-  clone.style.width = '700px';
-  clone.style.maxWidth = '700px';
-  clone.style.zIndex = '-9999';
-  clone.style.backgroundColor = '#ffffff';
-  clone.style.color = '#0f172a';
-  clone.style.opacity = '1';
-  clone.style.visibility = 'visible';
-  clone.style.display = 'block';
-  clone.style.pointerEvents = 'none';
+  // ─── Phase 1: Build the staging container ─────────────────────────────────
+  // CRITICAL: Use position:absolute placed far below the page (NOT position:fixed
+  // with z-index:-9999). Fixed + negative z-index causes html2canvas to capture
+  // the element behind the page background layer → blank 0×0 canvas → 3 KB PDF.
+  // Absolute placement with a large top offset keeps the element out of the
+  // visible viewport while remaining fully renderable by the browser engine.
+  const A4_PX = 794; // A4 at 96 DPI
+  const staging = document.createElement("div");
+  staging.id = "pdfIsolatedExportContainer";
 
-  // Prepend clean header: "KanTime: Choir Member Quick Guide • Stake Choir Prep"
-  const headerHtml = `
-    <div class="pdf-header">
-      <div class="pdf-header-main">
-        <div class="pdf-header-logo">🎵</div>
+  // ALL layout via inline styles – no CSS class dependencies that could be
+  // overridden by dark-mode rules or theme variables.
+  Object.assign(staging.style, {
+    position: 'absolute',
+    top: (document.documentElement.scrollHeight + 5000) + 'px',
+    left: '0',
+    width: A4_PX + 'px',
+    maxWidth: A4_PX + 'px',
+    zIndex: '0',
+    background: '#ffffff',
+    backgroundColor: '#ffffff',
+    color: '#0f172a',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+    fontSize: '14px',
+    lineHeight: '1.5',
+    padding: '32px 36px',
+    boxSizing: 'border-box',
+    display: 'block',
+    visibility: 'visible',
+    opacity: '1',
+    pointerEvents: 'none'
+  });
+
+  // ─── Phase 2: Build PDF HTML using only inline styles ────────────────────
+  const BADGE_COLORS = [
+    { bg:'#eff6ff', fg:'#1d4ed8', border:'#bfdbfe', left:'#3b82f6' },
+    { bg:'#f0fdfa', fg:'#0f766e', border:'#99f6e4', left:'#14b8a6' },
+    { bg:'#ecfdf5', fg:'#059669', border:'#a7f3d0', left:'#10b981' },
+    { bg:'#fffbeb', fg:'#b45309', border:'#fde68a', left:'#f59e0b' },
+    { bg:'#f5f3ff', fg:'#6d28d9', border:'#ddd6fe', left:'#8b5cf6' }
+  ];
+
+  const stepsList = [
+    { label: s.step_label_1, title: s.step1_title, desc: s.step1_desc },
+    { label: s.step_label_2, title: s.step2_title, desc: s.step2_desc },
+    { label: s.step_label_3, title: s.step3_title, desc: s.step3_desc },
+    { label: s.step_label_4, title: s.step4_title, desc: s.step4_desc },
+    { label: s.step_label_5, title: s.step5_title, desc: s.step5_desc }
+  ];
+
+  let stepsHtml = '';
+  stepsList.forEach((step, i) => {
+    const c = BADGE_COLORS[i];
+    stepsHtml += `
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid ${c.left};border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:8px;page-break-inside:avoid;break-inside:avoid;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <span style="background:${c.bg};color:${c.fg};border:1px solid ${c.border};font-size:6.5pt;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;padding:2px 8px;border-radius:999px;white-space:nowrap;">${escapeHtml(step.label || 'Step ' + (i+1))}</span>
+          <span style="font-size:10pt;font-weight:800;color:#0f172a;margin:0;">${escapeHtml(step.title || '')}</span>
+        </div>
+        <p style="font-size:8.5pt;color:#475569;line-height:1.45;margin:0;">${escapeHtml(step.desc || '')}</p>
+      </div>`;
+  });
+
+  staging.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #1d4ed8;padding-bottom:12px;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-size:26pt;line-height:1;">🎵</span>
         <div>
-          <h1 class="pdf-header-title">KanTime: Choir Member Quick Guide &bull; Stake Choir Prep</h1>
-          <p class="pdf-header-subtitle">5 Simple Steps &bull; ${escapeHtml(targetDate)} &bull; Language: ${lang.toUpperCase()}</p>
+          <div style="font-size:14pt;font-weight:900;color:#1e3a8a;line-height:1.2;margin:0 0 3px;">KanTime: Choir Member Quick Guide &bull; Stake Choir Prep</div>
+          <div style="font-size:8.5pt;color:#475569;font-weight:600;margin:0;">5 Simple Steps &bull; ${escapeHtml(targetDate)} &bull; Language: ${lang.toUpperCase()}</div>
         </div>
       </div>
-      <div class="pdf-header-meta">
-        ${singerInfo ? `<div>Member: <strong>${escapeHtml(singerInfo)}</strong></div>` : ''}
+      <div style="text-align:right;font-size:7.5pt;color:#64748b;line-height:1.4;">
+        ${singerInfo ? `<div>Member: <strong style="color:#1e293b;">${escapeHtml(singerInfo)}</strong></div>` : ''}
         <div>Stake Choir Practice Hub</div>
         <div>${dateStr}</div>
       </div>
     </div>
-    <div class="pdf-intro-banner">
-      ${escapeHtml(s.guide_subtitle || "Master your rehearsal routine, background tracking, and choir standings in 5 simple steps.")}
+    <div style="background:#eff6ff;border-left:4px solid #1d4ed8;padding:8px 14px;border-radius:0 6px 6px 0;font-size:8.5pt;color:#1e40af;margin-bottom:14px;line-height:1.45;">
+      ${escapeHtml(s.guide_subtitle || 'Master your rehearsal routine, background tracking, and choir standings in 5 simple steps.')}
     </div>
-  `;
+    ${stepsHtml}
+    <div style="margin-top:18px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;font-size:7.5pt;color:#64748b;">
+      <span style="font-weight:600;">Developed for Iloilo Stake Choir | Built by James Phillip De Guzman</span>
+      <span style="color:#94a3b8;">&copy; ${year} KanTime Practice Hub</span>
+    </div>`;
 
-  // Tutorial Steps Content (Cloned from i18n data, completely isolated from modal elements)
-  const stepsList = [
-    { label: s.step_label_1, title: s.step1_title, desc: s.step1_desc, cls: "s1", badgeCls: "step-badge-1" },
-    { label: s.step_label_2, title: s.step2_title, desc: s.step2_desc, cls: "s2", badgeCls: "step-badge-2" },
-    { label: s.step_label_3, title: s.step3_title, desc: s.step3_desc, cls: "s3", badgeCls: "step-badge-3" },
-    { label: s.step_label_4, title: s.step4_title, desc: s.step4_desc, cls: "s4", badgeCls: "step-badge-4" },
-    { label: s.step_label_5, title: s.step5_title, desc: s.step5_desc, cls: "s5", badgeCls: "step-badge-5" }
-  ];
+  document.body.appendChild(staging);
 
-  let stepsHtml = '<div class="pdf-steps-container">';
-  stepsList.forEach(step => {
-    stepsHtml += `
-      <div class="pdf-step-item ${step.cls}">
-        <div class="pdf-step-header">
-          <span class="step-badge pdf-step-badge ${step.badgeCls}">${escapeHtml(step.label)}</span>
-          <h5 class="pdf-step-title">${escapeHtml(step.title)}</h5>
-        </div>
-        <p class="pdf-step-desc">${escapeHtml(step.desc)}</p>
-      </div>
-    `;
-  });
-  stepsHtml += '</div>';
-
-  // Append clean footer: "Developed for Iloilo Stake Choir | Built by James Phillip De Guzman"
-  const footerHtml = `
-    <div class="pdf-footer">
-      <div class="pdf-footer-left">Developed for Iloilo Stake Choir | Built by James Phillip De Guzman</div>
-      <div class="pdf-footer-right">&copy; ${year} KanTime Practice Hub</div>
-    </div>
-  `;
-
-  clone.innerHTML = headerHtml + stepsHtml + footerHtml;
-  document.body.appendChild(clone);
-
+  // ─── Phase 3: Restore function ───────────────────────────────────────────
+  let cleaned = false;
   const cleanup = () => {
-    if (clone) {
-      clone.remove();
-    }
-    if (exportBtn) {
-      exportBtn.disabled = false;
-      exportBtn.innerHTML = origBtnContent;
+    if (!cleaned) {
+      cleaned = true;
+      if (staging.parentNode) staging.parentNode.removeChild(staging);
+      if (exportBtn) { exportBtn.disabled = false; exportBtn.innerHTML = origBtnContent; }
     }
   };
 
-  const executeExport = () => {
-    window.scrollTo(0, 0);
+  // ─── Phase 4: Export with validation ─────────────────────────────────────
+  const doExport = () => {
+    // Force browser reflow before measuring
+    const h = staging.scrollHeight;
+    console.log('[KanTime PDF] staging dimensions:', staging.offsetWidth, '×', h);
+
+    if (staging.offsetWidth === 0 || h === 0) {
+      console.error('[KanTime PDF] Staging container has zero dimensions – aborting.');
+      showToast('PDF generation failed: container is zero-sized.');
+      cleanup();
+      return;
+    }
+
     const opt = {
-      margin: [10, 10, 10, 10],
-      filename: 'KanTime-Choir-Guide.pdf',
+      margin: [8, 8, 8, 8],
+      filename: `KanTime-Choir-Guide-${lang.toUpperCase()}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: {
         scale: 2,
         useCORS: true,
-        scrollY: 0,
+        allowTaint: false,
         scrollX: 0,
-        windowWidth: 750
+        scrollY: -window.scrollY,
+        windowWidth: A4_PX,
+        windowHeight: h + 100
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    setTimeout(() => {
-      html2pdf().set(opt).from(clone).save().then(() => {
-        showToast("PDF guide downloaded successfully! 📄");
-        clone.remove();
-        cleanup();
-      }).catch((err) => {
-        console.error('PDF export error:', err);
-        showToast("PDF export failed. Opening print fallback... 📄");
-        _printTutorialFallback();
-        clone.remove();
-        cleanup();
-      });
-    }, 100);
+    html2pdf().set(opt).from(staging).save().then(() => {
+      showToast('PDF guide downloaded! 📄');
+      cleanup();
+    }).catch(err => {
+      console.error('[KanTime PDF] Export error:', err);
+      showToast('PDF export failed – opening print fallback.');
+      _printTutorialFallback();
+      cleanup();
+    });
   };
 
-  if (typeof html2pdf !== "undefined") {
-    executeExport();
-  } else {
-    // Dynamic loader fallback
-    const script = document.createElement("script");
-    script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
-    script.onload = () => executeExport();
-    script.onerror = () => {
-      cleanup();
-      showToast("PDF library unavailable. Opening print dialog... 📄");
-      _printTutorialFallback();
-    };
-    document.head.appendChild(script);
-  }
+  // Two rAF + 200 ms settle: ensures fonts, layout & emojis are fully painted
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        if (typeof html2pdf !== 'undefined') {
+          doExport();
+        } else {
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+          script.onload = doExport;
+          script.onerror = () => { cleanup(); showToast('PDF library unavailable.'); _printTutorialFallback(); };
+          document.head.appendChild(script);
+        }
+      }, 200);
+    });
+  });
 }
 
 // --- @media print fallback: isolate only the tutorial panel on the main window ---
@@ -3608,177 +3628,104 @@ function exportVocalDrillsToPdf() {
   const origFooterText = btnFooter ? btnFooter.innerHTML : "";
   const origHeaderText = btnHeader ? btnHeader.innerHTML : "";
 
-  if (btnFooter) {
-    btnFooter.disabled = true;
-    btnFooter.innerHTML = "⏳ Exporting PDF...";
-  }
-  if (btnHeader) {
-    btnHeader.disabled = true;
-    btnHeader.innerHTML = "⏳...";
-  }
+  if (btnFooter) { btnFooter.disabled = true; btnFooter.innerHTML = "⏳ Exporting PDF..."; }
+  if (btnHeader) { btnHeader.disabled = true; btnHeader.innerHTML = "⏳..."; }
 
-  showToast("Generating printable Vocal Warm-Ups PDF... 📄");
-  window.scrollTo(0, 0);
+  showToast("Generating Vocal Warm-Ups PDF... 📄");
 
   const settings = getUserSettings();
   const targetDate = settings.targetDate || "Stake Choir Prep • Oct 24–25";
   const year = new Date().getFullYear();
-  const dateStr = new Date().toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
-
+  const dateStr = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
   const memberName = localStorage.getItem("choir_name") || "";
   const memberVoice = localStorage.getItem("choir_voice") || localStorage.getItem("choir_section") || "";
   const singerInfo = memberName ? `${memberName} (${memberVoice || 'Choir Singer'})` : "";
 
-  // DOM Attachment & Visible Off-Screen Staging:
-  const clone = document.createElement("div");
-  clone.id = "pdfIsolatedVocalExportContainer";
-  clone.className = "pdf-isolated-container";
-  clone.style.position = 'fixed';
-  clone.style.top = '0';
-  clone.style.left = '0';
-  clone.style.width = '700px';
-  clone.style.maxWidth = '700px';
-  clone.style.zIndex = '-9999';
-  clone.style.backgroundColor = '#ffffff';
-  clone.style.color = '#0f172a';
-  clone.style.opacity = '1';
-  clone.style.visibility = 'visible';
-  clone.style.display = 'block';
-  clone.style.pointerEvents = 'none';
+  // ─── Phase 1: Build staging container ────────────────────────────────────
+  // Use position:absolute far below page (NOT position:fixed + z-index:-9999).
+  // Fixed + negative z-index → html2canvas captures element behind page background → blank canvas → 3 KB PDF.
+  const A4_PX = 794;
+  const staging = document.createElement("div");
+  staging.id = "pdfIsolatedVocalExportContainer";
 
-  // Prepend clean, elegant choral header
-  const headerHtml = `
-    <div class="pdf-header">
-      <div class="pdf-header-main">
-        <div class="pdf-header-logo">🎤</div>
-        <div>
-          <h1 class="pdf-header-title">KanTime: Vocal Warm-Ups &amp; Singing Tips</h1>
-          <p class="pdf-header-subtitle">All 6 Core Choir Drill Categories &bull; ${escapeHtml(targetDate)}</p>
-        </div>
-      </div>
-      <div class="pdf-header-meta">
-        ${singerInfo ? `<div>Member: <strong>${escapeHtml(singerInfo)}</strong></div>` : ''}
-        <div>Stake Choir Practice Hub</div>
-        <div>${dateStr}</div>
-      </div>
-    </div>
-    <div class="pdf-intro-banner">
-      Essential drills for tension release, breath support, SOVT registration, resonance, articulation, and choir section blending. Practice these daily before repertoire rehearsals.
-    </div>
-  `;
+  Object.assign(staging.style, {
+    position: 'absolute',
+    top: (document.documentElement.scrollHeight + 5000) + 'px',
+    left: '0',
+    width: A4_PX + 'px',
+    maxWidth: A4_PX + 'px',
+    zIndex: '0',
+    background: '#ffffff',
+    backgroundColor: '#ffffff',
+    color: '#0f172a',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+    fontSize: '13px',
+    lineHeight: '1.5',
+    padding: '28px 32px',
+    boxSizing: 'border-box',
+    display: 'block',
+    visibility: 'visible',
+    opacity: '1',
+    pointerEvents: 'none'
+  });
 
-  // All 6 Drill Categories with complete cues
+  // ─── Phase 2: Build drill HTML with only inline styles ───────────────────
+  const CAT_COLORS = {
+    tension:   { left:'#2563eb', badgeBg:'#eff6ff', badgeFg:'#1d4ed8', badgeBorder:'#bfdbfe' },
+    breath:    { left:'#0891b2', badgeBg:'#ecfeff', badgeFg:'#0891b2', badgeBorder:'#a5f3fc' },
+    sovt:      { left:'#d97706', badgeBg:'#fffbeb', badgeFg:'#d97706', badgeBorder:'#fde68a' },
+    resonance: { left:'#7c3aed', badgeBg:'#f5f3ff', badgeFg:'#7c3aed', badgeBorder:'#ddd6fe' },
+    diction:   { left:'#059669', badgeBg:'#ecfdf5', badgeFg:'#059669', badgeBorder:'#a7f3d0' },
+    blend:     { left:'#e11d48', badgeBg:'#fff1f2', badgeFg:'#e11d48', badgeBorder:'#fecdd3' }
+  };
+
   const sectionsData = [
     {
-      badge: "⏱️ 1 Min • Physical Prep",
-      badgeCls: "pdf-badge-tension",
-      catCls: "cat-tension",
+      key: 'tension', badge: "⏱️ 1 Min • Physical Prep",
       title: "Section 1: Physical Prep & Tension Release",
       drills: [
-        {
-          name: "1. Shoulder Drops & Gentle Neck Rolls",
-          pitch: "",
-          cues: "Release neck and trapezius stiffness that constricts throat resonance. Roll shoulders backwards 5 times with deep, relaxed breaths, followed by slow side-to-side chin tilts. Keep your chest elevated and collarbones wide."
-        },
-        {
-          name: "2. Gentle Jaw Drops & Chewing Motions",
-          pitch: "",
-          cues: "Drop the jaw vertically with loose, relaxed facial muscles as if yawning or gently chewing. Massage masseter muscles with fingertips to disengage jaw clenching. Creates maximum vertical space in the oral cavity for tall, resonant vowels."
-        }
+        { name: "1. Shoulder Drops & Gentle Neck Rolls", pitch: "", cues: "Release neck and trapezius stiffness that constricts throat resonance. Roll shoulders backwards 5 times with deep, relaxed breaths, followed by slow side-to-side chin tilts. Keep your chest elevated and collarbones wide." },
+        { name: "2. Gentle Jaw Drops & Chewing Motions", pitch: "", cues: "Drop the jaw vertically with loose, relaxed facial muscles as if yawning or gently chewing. Massage masseter muscles with fingertips to disengage jaw clenching. Creates maximum vertical space in the oral cavity for tall, resonant vowels." }
       ]
     },
     {
-      badge: "💨 Breath Support • Core Control",
-      badgeCls: "pdf-badge-breath",
-      catCls: "cat-breath",
+      key: 'breath', badge: "💨 Breath Support • Core Control",
       title: "Section 2: Breath Support & Core Control",
       drills: [
-        {
-          name: "1. 4-7-8 Breathing Count (Inhale 4, Suspend 7, Exhale 8)",
-          pitch: "",
-          cues: "Inhale silently through the nose for 4 counts, expanding lower ribs and back (avoid shoulder raising). Suspend breath gently for 7 counts without throat tension. Exhale through pursed lips for 8 smooth, steady counts. Builds breath endurance and calms performance jitters."
-        },
-        {
-          name: "2. Rhythmic \"Sss / Shh / Tss\" Diaphragm Pulses",
-          pitch: "",
-          cues: "Pulse short, unvoiced consonant bursts: \"Sss! Shh! Tss!\" on sharp, energetic core contractions. Keep the throat completely open and silent while the lower abdomen works like a bellows. Engages the transverse abdominis for crisp phrase attacks."
-        }
+        { name: "1. 4-7-8 Breathing Count (Inhale 4, Suspend 7, Exhale 8)", pitch: "", cues: "Inhale silently through the nose for 4 counts, expanding lower ribs and back (avoid shoulder raising). Suspend breath gently for 7 counts without throat tension. Exhale through pursed lips for 8 smooth, steady counts. Builds breath endurance and calms performance jitters." },
+        { name: "2. Rhythmic \"Sss / Shh / Tss\" Diaphragm Pulses", pitch: "", cues: "Pulse short, unvoiced consonant bursts: \"Sss! Shh! Tss!\" on sharp, energetic core contractions. Keep the throat completely open and silent while the lower abdomen works like a bellows. Engages the transverse abdominis for crisp phrase attacks." }
       ]
     },
     {
-      badge: "🐝 SOVT • Low Pressure",
-      badgeCls: "pdf-badge-sovt",
-      catCls: "cat-sovt",
+      key: 'sovt', badge: "🐝 SOVT • Low Pressure",
       title: "Section 3: Low-Pressure & Gentle Resonance (SOVT)",
       drills: [
-        {
-          name: "1. Lip Trills (Lip Bubbles) & Pitch Sirens",
-          pitch: "Starting Pitch: Middle C (261.6 Hz)",
-          cues: "Blow relaxed air through loose lips to produce a steady bubble sound (\"brrr\"). Glide smoothly upward an octave and back down without breaking connection or pushing air. Balances subglottic vocal fold pressure and gently warms thin vocal cord edges without strain."
-        },
-        {
-          name: "2. Gentle \"Mmm\" & \"Nnn\" Humming (5-4-3-2-1 Pattern)",
-          pitch: "",
-          cues: "Hum a quiet 5-note descending scale (5-4-3-2-1) feeling buzzing vibrations directly behind the front upper teeth and nose bridge. Imagine buzzing a kazoo in the mask of your face. Disengages throat clutching and shifts tone into the natural acoustic resonators."
-        }
+        { name: "1. Lip Trills (Lip Bubbles) & Pitch Sirens", pitch: "Starting Pitch: Middle C (261.6 Hz)", cues: "Blow relaxed air through loose lips to produce a steady bubble sound (\"brrr\"). Glide smoothly upward an octave and back down without breaking connection or pushing air. Balances subglottic vocal fold pressure and gently warms thin vocal cord edges without strain." },
+        { name: "2. Gentle \"Mmm\" & \"Nnn\" Humming (5-4-3-2-1 Pattern)", pitch: "", cues: "Hum a quiet 5-note descending scale (5-4-3-2-1) feeling buzzing vibrations directly behind the front upper teeth and nose bridge. Imagine buzzing a kazoo in the mask of your face. Disengages throat clutching and shifts tone into the natural acoustic resonators." }
       ]
     },
     {
-      badge: "🎯 Resonance • Forward Focus",
-      badgeCls: "pdf-badge-resonance",
-      catCls: "cat-resonance",
+      key: 'resonance', badge: "🎯 Resonance • Forward Focus",
       title: "Section 4: Forward Placement & Resonance",
       drills: [
-        {
-          name: "1. \"Mee - May - Mah - Moh - Moo\" (1-2-3-2-1 Pattern)",
-          pitch: "Starting Pitch: Middle C (261.6 Hz)",
-          cues: "Sing a 5-tone arched pattern (1-2-3-2-1) using pure Italian vowels, maintaining bright ring (\"chiaroscuro\") across all vowels. Keep each vowel placed right behind the front teeth without falling back into the throat. Connects bright consonant placement to open, warm vowel spaces."
-        },
-        {
-          name: "2. \"Ng - Ah\" Vocal Placement Drill",
-          pitch: "",
-          cues: "Sustain an unvoiced \"Ng\" (as in \"sing\") feeling the soft palate touch the back of the tongue, then drop the jaw into \"Ah\" without losing the forward ring. Transitions the focused buzzing placement of the nasal consonant directly into open choral vowel sound."
-        }
+        { name: "1. \"Mee - May - Mah - Moh - Moo\" (1-2-3-2-1 Pattern)", pitch: "Starting Pitch: Middle C (261.6 Hz)", cues: "Sing a 5-tone arched pattern (1-2-3-2-1) using pure Italian vowels, maintaining bright ring (\"chiaroscuro\") across all vowels. Keep each vowel placed right behind the front teeth without falling back into the throat. Connects bright consonant placement to open, warm vowel spaces." },
+        { name: "2. \"Ng - Ah\" Vocal Placement Drill", pitch: "", cues: "Sustain an unvoiced \"Ng\" (as in \"sing\") feeling the soft palate touch the back of the tongue, then drop the jaw into \"Ah\" without losing the forward ring. Transitions the focused buzzing placement of the nasal consonant directly into open choral vowel sound." }
       ]
     },
     {
-      badge: "🗣️ Articulation • Diction",
-      badgeCls: "pdf-badge-diction",
-      catCls: "cat-diction",
+      key: 'diction', badge: "🗣️ Articulation • Diction",
       title: "Section 5: Articulation & Agility",
       drills: [
-        {
-          name: "1. Crisp Staccato \"Hah-Hah-Hah\" Arpeggios (1-3-5-3-1)",
-          pitch: "Starting Pitch: Middle C (261.6 Hz)",
-          cues: "Sing 1-3-5-3-1 arpeggios on light, detached \"Hah-Hah-Hah\" syllables, bouncing from the abdominal wall. Keep glottal attacks soft by initiating with gentle \"H\" aspirations. Unifies vowel attack speed across choir sections on rapid rhythmic passages."
-        },
-        {
-          name: "2. \"Tip of the Tongue, the Teeth, and the Lips\"",
-          pitch: "",
-          cues: "Chant repeatedly on a single pitch: \"The tip of the tongue, the teeth, and the lips.\" Exaggerate consonant contact using only the tongue and lips without moving the jaw. Makes congregation lyrics crisp and intelligible in reverent chapels."
-        },
-        {
-          name: "3. \"B-D-G-P-T-K\" Plosive Consonants",
-          pitch: "",
-          cues: "Pulse rhythmic pairs: \"B-D-G, P-T-K\" on crisp unvoiced beats. Focus on energetic consonant releases without wasting extra breath. Trains clean consonant attacks that unify all voice parts at the ends of phrases."
-        }
+        { name: "1. Crisp Staccato \"Hah-Hah-Hah\" Arpeggios (1-3-5-3-1)", pitch: "Starting Pitch: Middle C (261.6 Hz)", cues: "Sing 1-3-5-3-1 arpeggios on light, detached \"Hah-Hah-Hah\" syllables, bouncing from the abdominal wall. Keep glottal attacks soft by initiating with gentle \"H\" aspirations. Unifies vowel attack speed across choir sections on rapid rhythmic passages." },
+        { name: "2. \"Tip of the Tongue, the Teeth, and the Lips\"", pitch: "", cues: "Chant repeatedly on a single pitch: \"The tip of the tongue, the teeth, and the lips.\" Exaggerate consonant contact using only the tongue and lips without moving the jaw. Makes congregation lyrics crisp and intelligible in reverent chapels." },
+        { name: "3. \"B-D-G-P-T-K\" Plosive Consonants", pitch: "", cues: "Pulse rhythmic pairs: \"B-D-G, P-T-K\" on crisp unvoiced beats. Focus on energetic consonant releases without wasting extra breath. Trains clean consonant attacks that unify all voice parts at the ends of phrases." }
       ]
     },
     {
-      badge: "🎶 Choir Blend • Legato",
-      badgeCls: "pdf-badge-blend",
-      catCls: "cat-blend",
+      key: 'blend', badge: "🎶 Choir Blend • Legato",
       title: "Section 6: Legato & Choir Blending",
       drills: [
-        {
-          name: "1. Five-Tone Vowel Chaining (1-2-3-4-5-4-3-2-1)",
-          pitch: "Starting Pitch: Middle C (261.6 Hz)",
-          cues: "Sing 1-2-3-4-5-4-3-2-1 smoothly on \"Ee-Eh-Ah-Oh-Oo\", connecting each note like pearls on a string. Morph smoothly between vowels without re-striking or pushing volume. Keep the mouth tall and the internal space consistent."
-        }
+        { name: "1. Five-Tone Vowel Chaining (1-2-3-4-5-4-3-2-1)", pitch: "Starting Pitch: Middle C (261.6 Hz)", cues: "Sing 1-2-3-4-5-4-3-2-1 smoothly on \"Ee-Eh-Ah-Oh-Oo\", connecting each note like pearls on a string. Morph smoothly between vowels without re-striking or pushing volume. Keep the mouth tall and the internal space consistent." }
       ],
       goldenRules: [
         { icon: "📐", title: "Tall Vowels", desc: "Drop your lower jaw vertically rather than spreading wide into horizontal smiles. Preserves warm, reverent choral acoustics." },
@@ -3788,117 +3735,137 @@ function exportVocalDrillsToPdf() {
     }
   ];
 
-  let bodyHtml = '<div class="pdf-vocal-container">';
+  let bodyHtml = '';
   sectionsData.forEach(sec => {
-    bodyHtml += `
-      <div class="pdf-vocal-card ${sec.catCls}">
-        <div class="pdf-vocal-card-header">
-          <span class="pdf-vocal-badge ${sec.badgeCls}">${escapeHtml(sec.badge)}</span>
-          <h4 class="pdf-vocal-section-title">${escapeHtml(sec.title)}</h4>
-        </div>
-        <div class="pdf-vocal-drills-list">
-    `;
-
-    sec.drills.forEach(d => {
-      bodyHtml += `
-        <div class="pdf-vocal-drill-row">
-          <div class="pdf-vocal-drill-title-row">
-            <span class="pdf-vocal-drill-title">${escapeHtml(d.name)}</span>
-            ${d.pitch ? `<span class="pdf-vocal-pitch-badge">${escapeHtml(d.pitch)}</span>` : ''}
+    const c = CAT_COLORS[sec.key];
+    let drillsHtml = '';
+    sec.drills.forEach((d, di) => {
+      const isLast = di === sec.drills.length - 1 && !sec.goldenRules;
+      drillsHtml += `
+        <div style="margin-bottom:${isLast ? '0' : '6px'};padding-bottom:${isLast ? '0' : '6px'};border-bottom:${isLast ? 'none' : '1px dashed #f1f5f9'};">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+            <span style="font-size:8.5pt;font-weight:700;color:#1e293b;">${escapeHtml(d.name)}</span>
+            ${d.pitch ? `<span style="font-size:6.5pt;font-weight:700;color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe;padding:1px 6px;border-radius:4px;">${escapeHtml(d.pitch)}</span>` : ''}
           </div>
-          <p class="pdf-vocal-cues">${escapeHtml(d.cues)}</p>
-        </div>
-      `;
+          <p style="font-size:7.8pt;color:#475569;line-height:1.4;margin:0;">${escapeHtml(d.cues)}</p>
+        </div>`;
     });
 
+    let goldenHtml = '';
     if (sec.goldenRules) {
-      bodyHtml += '<div style="margin-top: 8px;">';
-      bodyHtml += '<div style="font-size: 8pt; font-weight: 750; color: #1e293b; margin-bottom: 4px;">Choir Golden Rules for Section Unity:</div>';
+      goldenHtml = `<div style="margin-top:8px;">
+        <div style="font-size:8pt;font-weight:700;color:#1e293b;margin-bottom:4px;">Choir Golden Rules for Section Unity:</div>`;
       sec.goldenRules.forEach(r => {
-        bodyHtml += `
-          <div class="pdf-golden-rule-row">
-            <strong>${r.icon} ${escapeHtml(r.title)}:</strong> ${escapeHtml(r.desc)}
-          </div>
-        `;
+        goldenHtml += `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #f59e0b;border-radius:4px;padding:4px 8px;font-size:7.5pt;color:#334155;line-height:1.35;margin-bottom:4px;">
+          <strong style="color:#0f172a;">${r.icon} ${escapeHtml(r.title)}:</strong> ${escapeHtml(r.desc)}
+        </div>`;
       });
-      bodyHtml += '</div>';
+      goldenHtml += '</div>';
     }
 
     bodyHtml += `
+      <div style="background:#ffffff;border:1px solid #e2e8f0;border-left:4px solid ${c.left};border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:10px;page-break-inside:avoid;break-inside:avoid;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;border-bottom:1px solid #f1f5f9;padding-bottom:4px;">
+          <span style="background:${c.badgeBg};color:${c.badgeFg};border:1px solid ${c.badgeBorder};font-size:6.5pt;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;padding:2px 7px;border-radius:999px;">${escapeHtml(sec.badge)}</span>
+          <span style="font-size:10pt;font-weight:800;color:#0f172a;">${escapeHtml(sec.title)}</span>
+        </div>
+        <div>${drillsHtml}</div>
+        ${goldenHtml}
+      </div>`;
+  });
+
+  staging.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #1d4ed8;padding-bottom:12px;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-size:26pt;line-height:1;">🎤</span>
+        <div>
+          <div style="font-size:14pt;font-weight:900;color:#1e3a8a;line-height:1.2;margin:0 0 3px;">KanTime: Vocal Warm-Ups &amp; Singing Tips</div>
+          <div style="font-size:8.5pt;color:#475569;font-weight:600;margin:0;">All 6 Core Choir Drill Categories &bull; ${escapeHtml(targetDate)}</div>
         </div>
       </div>
-    `;
-  });
-  bodyHtml += '</div>';
-
-  const footerHtml = `
-    <div class="pdf-footer">
-      <div class="pdf-footer-left">Developed for Iloilo Stake Choir | Built by James Phillip De Guzman</div>
-      <div class="pdf-footer-right">&copy; ${year} KanTime Practice Hub &bull; All Vocal Drills</div>
+      <div style="text-align:right;font-size:7.5pt;color:#64748b;line-height:1.4;">
+        ${singerInfo ? `<div>Member: <strong style="color:#1e293b;">${escapeHtml(singerInfo)}</strong></div>` : ''}
+        <div>Stake Choir Practice Hub</div>
+        <div>${dateStr}</div>
+      </div>
     </div>
-  `;
+    <div style="background:#eff6ff;border-left:4px solid #1d4ed8;padding:8px 14px;border-radius:0 6px 6px 0;font-size:8.5pt;color:#1e40af;margin-bottom:14px;line-height:1.45;">
+      Essential drills for tension release, breath support, SOVT registration, resonance, articulation, and choir section blending. Practice these daily before repertoire rehearsals.
+    </div>
+    ${bodyHtml}
+    <div style="margin-top:18px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;font-size:7.5pt;color:#64748b;">
+      <span style="font-weight:600;">Developed for Iloilo Stake Choir | Built by James Phillip De Guzman</span>
+      <span style="color:#94a3b8;">&copy; ${year} KanTime Practice Hub &bull; All Vocal Drills</span>
+    </div>`;
 
-  clone.innerHTML = headerHtml + bodyHtml + footerHtml;
-  document.body.appendChild(clone);
+  document.body.appendChild(staging);
 
+  // ─── Phase 3: Cleanup ────────────────────────────────────────────────────
+  let cleaned = false;
   const cleanup = () => {
-    if (clone) {
-      clone.remove();
-    }
-    if (btnFooter) {
-      btnFooter.disabled = false;
-      btnFooter.innerHTML = origFooterText;
-    }
-    if (btnHeader) {
-      btnHeader.disabled = false;
-      btnHeader.innerHTML = origHeaderText;
+    if (!cleaned) {
+      cleaned = true;
+      if (staging.parentNode) staging.parentNode.removeChild(staging);
+      if (btnFooter) { btnFooter.disabled = false; btnFooter.innerHTML = origFooterText; }
+      if (btnHeader) { btnHeader.disabled = false; btnHeader.innerHTML = origHeaderText; }
     }
   };
 
-  const executeExport = () => {
-    window.scrollTo(0, 0);
+  // ─── Phase 4: Export with dimension validation ────────────────────────────
+  const doExport = () => {
+    const h = staging.scrollHeight;
+    console.log('[KanTime Vocal PDF] staging dimensions:', staging.offsetWidth, '×', h);
+
+    if (staging.offsetWidth === 0 || h === 0) {
+      console.error('[KanTime Vocal PDF] Zero-size container – aborting.');
+      showToast('PDF generation failed: container is zero-sized.');
+      cleanup();
+      return;
+    }
+
     const opt = {
-      margin: [10, 10, 10, 10],
+      margin: [8, 8, 8, 8],
       filename: 'KanTime-Vocal-WarmUps-All-Drills.pdf',
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: {
         scale: 2,
         useCORS: true,
-        scrollY: 0,
+        allowTaint: false,
         scrollX: 0,
-        windowWidth: 750
+        scrollY: -window.scrollY,
+        windowWidth: A4_PX,
+        windowHeight: h + 100
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    setTimeout(() => {
-      html2pdf().set(opt).from(clone).save().then(() => {
-        showToast("Vocal warm-ups PDF downloaded! 📄");
-        clone.remove();
-        cleanup();
-      }).catch((err) => {
-        console.error('PDF export error:', err);
-        showToast("PDF export failed. Opening browser print... 📄");
-        window.print();
-        clone.remove();
-        cleanup();
-      });
-    }, 100);
+    html2pdf().set(opt).from(staging).save().then(() => {
+      showToast('Vocal Warm-Ups PDF downloaded! 📄');
+      cleanup();
+    }).catch(err => {
+      console.error('[KanTime Vocal PDF] Export error:', err);
+      showToast('PDF export failed – opening print fallback.');
+      window.print();
+      cleanup();
+    });
   };
 
-  if (typeof html2pdf !== "undefined") {
-    executeExport();
-  } else {
-    const script = document.createElement("script");
-    script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
-    script.onload = () => executeExport();
-    script.onerror = () => {
-      cleanup();
-      showToast("PDF library unavailable. Opening print dialog... 📄");
-      window.print();
-    };
-    document.head.appendChild(script);
-  }
+  // Two rAF + 200 ms settle
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        if (typeof html2pdf !== 'undefined') {
+          doExport();
+        } else {
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+          script.onload = doExport;
+          script.onerror = () => { cleanup(); showToast('PDF library unavailable.'); window.print(); };
+          document.head.appendChild(script);
+        }
+      }, 200);
+    });
+  });
 }
 
 // Initial load
