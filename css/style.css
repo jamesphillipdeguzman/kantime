@@ -399,6 +399,42 @@
   color: #ffffff;
 }
 
+/* ── Dark Mode: Interactive Sheet & Audio btn-link (song-actions / resource card) ── */
+[data-theme="dark"] .song-actions .btn-link,
+[data-theme="dark"] .resource-unlocked-container .btn-link {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .song-actions .btn-link:hover,
+[data-theme="dark"] .resource-unlocked-container .btn-link:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #ffffff !important;
+}
+
+/* ── Dark Mode: External Link Info Banner (.external-note) ── */
+[data-theme="dark"] .external-note {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(99, 155, 255, 0.25);
+  color: #cbd5e1 !important;
+}
+
+/* ── Dark Mode: btn-outline (e.g., Refresh button in leaderboard heading) ── */
+[data-theme="dark"] .btn-outline {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .btn-outline:hover {
+  background: rgba(255, 255, 255, 0.13);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #ffffff !important;
+}
+
+
 /* Reset & Base Setup */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -2924,9 +2960,9 @@ input[type="text"].input-invalid {
    Isolated PDF Export Styles (Mobile-Safe Offscreen Container)
    ========================================================================== */
 .pdf-isolated-container {
-  width: 700px !important;
-  max-width: 700px !important;
-  min-width: 700px !important;
+  width: 794px !important;
+  max-width: 794px !important;
+  min-width: 794px !important;
   box-sizing: border-box !important;
   position: fixed !important;
   top: 0 !important;
@@ -2939,7 +2975,7 @@ input[type="text"].input-invalid {
   visibility: visible !important;
   display: block !important;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
-  padding: 24px 28px !important;
+  padding: 28px 32px !important;
   line-height: 1.5 !important;
   pointer-events: none !important;
 }
@@ -2961,13 +2997,16 @@ input[type="text"].input-invalid {
 .pdf-isolated-container h3,
 .pdf-isolated-container h4,
 .pdf-isolated-container h5,
-.pdf-isolated-container h6 {
+.pdf-isolated-container h6,
+.pdf-isolated-container strong,
+.pdf-isolated-container b {
   color: #0f172a !important;
 }
 
 .pdf-isolated-container p,
 .pdf-isolated-container span,
-.pdf-isolated-container div {
+.pdf-isolated-container div,
+.pdf-isolated-container li {
   color: #334155;
 }
 
