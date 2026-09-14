@@ -40,7 +40,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="KanTime">
   <link rel="icon" type="image/x-icon" href="images/favicon.ico">
-  <link rel="stylesheet" href="css/style.css?v=2.5.1">
+  <link rel="stylesheet" href="css/style.css?v=2.5.2">
 </head>
 
 <body>
@@ -50,11 +50,13 @@
       <div class="header-brand">
         <img src="images/kantime-logo.png" alt="KanTime Logo" class="header-logo" onerror="this.style.display='none'">
         <div class="header-text">
-          <h1>KanTime <span class="app-version-badge" title="KanTime v2.5.1">v2.5.1</span></h1>
+          <h1>KanTime <span class="app-version-badge" title="KanTime v2.5.2">v2.5.2</span></h1>
           <p id="headerSubtitle">Stake Choir Prep • Oct 24–25</p>
         </div>
       </div>
       <div class="header-actions">
+        <button type="button" class="header-action-btn" id="appRefreshBtn" onclick="forceAppUpdate()"
+          title="Refresh & Check for Updates" aria-label="Refresh and check for updates">🔄</button>
         <button type="button" class="theme-quick-btn" id="themeQuickToggleBtn" onclick="toggleQuickTheme()"
           aria-label="Toggle Dark / Light Theme" title="Toggle Dark/Light Mode">🌙</button>
         <button type="button" class="settings-btn" id="openSettingsBtn" onclick="openSettingsModal()"
@@ -334,7 +336,7 @@
         </p>
       </div>
       <p class="footer-credit">&copy; <span id="footerYear"></span> James Phillip De Guzman • <span
-          class="footer-version-tag">KanTime v2.5.1</span></p>
+          class="footer-version-tag">KanTime v2.5.2</span></p>
     </footer>
 
     <!-- Fixed Persistent Voice Pitch Checker Overlay (Corner Card) -->
@@ -418,7 +420,7 @@
     <div id="toast">Saved!</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="script.js?v=2.5.1"></script>
+    <script src="script.js?v=2.5.2"></script>
 
     <!-- In-App Resource Viewer Modal -->
     <div id="resourceModal" class="modal-backdrop" onclick="closeModalOnBackdrop(event)">
@@ -490,7 +492,7 @@
         <div class="modal-header">
           <div class="settings-modal-title-wrap">
             <h3 id="settingsModalTitle">⚙️ Practice Settings & Guide</h3>
-            <span class="settings-header-version">v2.5.1</span>
+            <span class="settings-header-version">v2.5.2</span>
           </div>
           <button class="modal-close-btn" type="button" onclick="closeSettingsModal()"
             aria-label="Close settings">&times;</button>

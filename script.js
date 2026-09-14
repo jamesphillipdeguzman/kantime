@@ -3,7 +3,7 @@
 // ==========================================================================
 
 // --- APPLICATION VERSION ---
-const APP_VERSION = "2.5.1";
+const APP_VERSION = "2.5.2";
 
 // --- APPS SCRIPT WEB APP URL ---
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6r8JCXFOeuDqk8mlrTFAY5G5jOUOcoljMIC-ow1tlStLj3EVBpEWE_q9iT_sRngEa/exec";
@@ -3320,7 +3320,55 @@ window.addEventListener("online", updateOnlineStatus);
 window.addEventListener("offline", updateOnlineStatus);
 
 // --------------------------------------------------------------------------
-// Service Worker Registration & Auto-Update Lifecycle
+// Force App Update — triggered by the 🔄 header button
+// --------------------------------------------------------------------------
+/**
+ * Purges all Service Worker caches, triggers a SW update check,
+ * then hard-reloads with a timestamp cache-buster so choir members
+ * always see the latest songs, videos and CSS immediately.
+ */
+async function forceAppUpdate() {
+  const btn = document.getElementById("appRefreshBtn");
+
+  // 1. Visual feedback — spin the icon & disable the button
+  if (btn) btn.classList.add("spinning");
+  showToast("Checking for choir updates... 🔄");
+
+  try {
+    // 2. Purge every Service Worker cache bucket
+    if ("caches" in window) {
+      const cacheNames = await caches.keys();
+      await Promise.all(cacheNames.map((name) => caches.delete(name)));
+    }
+
+    // 3. Tell the Service Worker to fetch a fresh copy of itself
+    if ("serviceWorker" in navigator) {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg) await reg.update();
+    }
+
+    // 4. Brief pause so the toast is readable, then notify & hard-reload
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    showToast("Updated! Reloading latest repertoire... ✨");
+
+    // 5. Hard reload with timestamp query-string to bypass disk cache
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    window.location.replace(
+      window.location.origin +
+      window.location.pathname +
+      "?t=" + Date.now()
+    );
+
+  } catch (err) {
+    console.warn("[KanTime] forceAppUpdate error:", err);
+    showToast("Refresh failed — retrying... 🔄");
+    if (btn) btn.classList.remove("spinning");
+    // Fallback: basic reload
+    setTimeout(() => window.location.reload(), 600);
+  }
+}
+
+
 // --------------------------------------------------------------------------
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;

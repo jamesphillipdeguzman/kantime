@@ -2,7 +2,7 @@
 // KanTime PWA Service Worker (v2.5.1 — Network-First HTML + Auto-Update)
 // ==========================================================================
 
-const APP_VERSION = "2.5.1";
+const APP_VERSION = "2.5.2";
 const CACHE_NAME = `kantime-cache-v${APP_VERSION}`;
 
 const PRECACHE_ASSETS = [
