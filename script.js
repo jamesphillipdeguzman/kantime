@@ -234,7 +234,7 @@ const DEFAULT_USER_SETTINGS = {
       title: "Holy Places (Primary)",
       part: "Primary",
       sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/holy-places?crumbs=hymns-for-home-and-church&order=number&lang=eng",
-      videoUrl: "",
+      videoUrl: "https://www.youtube.com/watch?v=cKb_U6AkoHU",
       note: "ℹ️ Opens in external tab. Your timer will keep running while you practice!"
     },
     {
@@ -242,7 +242,7 @@ const DEFAULT_USER_SETTINGS = {
       title: "I Will Walk with Jesus (Primary)",
       part: "Primary",
       sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/i-will-walk-with-jesus?crumbs=hymns-for-home-and-church&order=number&lang=eng",
-      videoUrl: "",
+      videoUrl: "https://www.youtube.com/watch?v=oB77rD2RlPU",
       note: "ℹ️ Opens in external tab. Your timer will keep running while you practice!"
     }
   ]
