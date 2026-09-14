@@ -236,6 +236,14 @@ const DEFAULT_USER_SETTINGS = {
       sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/holy-places?crumbs=hymns-for-home-and-church&order=number&lang=eng",
       videoUrl: "",
       note: "ℹ️ Opens in external tab. Your timer will keep running while you practice!"
+    },
+    {
+      id: "song_5",
+      title: "I Will Walk with Jesus (Primary)",
+      part: "Primary",
+      sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/i-will-walk-with-jesus?crumbs=hymns-for-home-and-church&order=number&lang=eng",
+      videoUrl: "",
+      note: "ℹ️ Opens in external tab. Your timer will keep running while you practice!"
     }
   ]
 };
