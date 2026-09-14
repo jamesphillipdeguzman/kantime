@@ -3,7 +3,7 @@
 // ==========================================================================
 
 // --- APPLICATION VERSION ---
-const APP_VERSION = "2.5.0";
+const APP_VERSION = "2.5.1";
 
 // --- APPS SCRIPT WEB APP URL ---
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6r8JCXFOeuDqk8mlrTFAY5G5jOUOcoljMIC-ow1tlStLj3EVBpEWE_q9iT_sRngEa/exec";
@@ -3319,16 +3319,80 @@ function updateOnlineStatus() {
 window.addEventListener("online", updateOnlineStatus);
 window.addEventListener("offline", updateOnlineStatus);
 
+// --------------------------------------------------------------------------
+// Service Worker Registration & Auto-Update Lifecycle
+// --------------------------------------------------------------------------
 function registerServiceWorker() {
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js")
-      .then(reg => {
-        console.log("KanTime ServiceWorker registered with scope:", reg.scope);
-      })
-      .catch(err => {
-        console.warn("KanTime ServiceWorker registration failed:", err);
-      });
+  if (!("serviceWorker" in navigator)) return;
+
+  // Track whether a reload is already in flight so we don't reload twice
+  let reloadPending = false;
+
+  // Show a dismissible toast and then reload once the new SW takes control
+  function showUpdateToast() {
+    // Reuse the existing #toast element if available, else create a temp one
+    const existing = document.getElementById("toast");
+    const el = existing || document.createElement("div");
+    if (!existing) {
+      el.id = "swUpdateToast";
+      el.style.cssText =
+        "position:fixed;bottom:24px;left:50%;transform:translateX(-50%);" +
+        "background:var(--accent,#1e3a8a);color:#fff;padding:12px 20px;" +
+        "border-radius:999px;font-size:0.88rem;z-index:9999;" +
+        "box-shadow:0 4px 20px rgba(0,0,0,.35);text-align:center;";
+      document.body.appendChild(el);
+    }
+    el.textContent = "🔄 App updated to latest repertoire! Refreshing...";
+    el.style.display = "block";
+    el.classList.add("toast-visible");
+    // Let the user read it for 1.5 s, then reload
+    setTimeout(() => window.location.reload(), 1500);
   }
+
+  navigator.serviceWorker.register("./sw.js")
+    .then((reg) => {
+      console.log("[SW] Registered — scope:", reg.scope);
+
+      // ── 1. Trigger an update check immediately on every page load ──────
+      reg.update().catch(() => {});
+
+      // ── 2. Trigger update checks whenever the tab regains focus ────────
+      const onFocusOrVisible = () => {
+        if (document.visibilityState === "visible") {
+          reg.update().catch(() => {});
+        }
+      };
+      document.addEventListener("visibilitychange", onFocusOrVisible);
+      window.addEventListener("focus", onFocusOrVisible);
+
+      // ── 3. Handle a SW that was already waiting when page loaded ───────
+      if (reg.waiting) {
+        reg.waiting.postMessage({ type: "SKIP_WAITING" });
+      }
+
+      // ── 4. Listen for a new SW being found & installed ─────────────────
+      reg.addEventListener("updatefound", () => {
+        const newWorker = reg.installing;
+        if (!newWorker) return;
+
+        newWorker.addEventListener("statechange", () => {
+          if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+            // A new version is ready and waiting — tell it to activate now
+            newWorker.postMessage({ type: "SKIP_WAITING" });
+          }
+        });
+      });
+    })
+    .catch((err) => {
+      console.warn("[SW] Registration failed:", err);
+    });
+
+  // ── 5. When the controller changes (new SW took over), reload once ──────
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (reloadPending) return;
+    reloadPending = true;
+    showUpdateToast();
+  });
 }
 
 // --- USER NAME REAL-TIME VALIDATION HELPERS ---

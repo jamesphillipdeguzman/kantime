@@ -1,8 +1,9 @@
 // ==========================================================================
-// KanTime PWA Service Worker (Cache-First Offline Strategy)
+// KanTime PWA Service Worker (v2.5.1 — Network-First HTML + Auto-Update)
 // ==========================================================================
 
-const CACHE_NAME = "kantime-pwa-v2.5.0";
+const APP_VERSION = "2.5.1";
+const CACHE_NAME = `kantime-cache-v${APP_VERSION}`;
 
 const PRECACHE_ASSETS = [
   "./",
@@ -35,15 +36,19 @@ const PRECACHE_ASSETS = [
   "./kantime-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day.pdf"
 ];
 
-// Service Worker Install & Pre-caching
+// --------------------------------------------------------------------------
+// INSTALL — Pre-cache all static assets & take over immediately
+// --------------------------------------------------------------------------
 self.addEventListener("install", (event) => {
+  // Immediately activate this SW without waiting for old SW to stop
   self.skipWaiting();
+
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return Promise.allSettled(
         PRECACHE_ASSETS.map((url) =>
           cache.add(url).catch((err) => {
-            console.warn("Failed to precache:", url, err);
+            console.warn("[SW] Failed to precache:", url, err);
           })
         )
       );
@@ -51,25 +56,41 @@ self.addEventListener("install", (event) => {
   );
 });
 
-// Service Worker Activation & Cache Cleanup
+// --------------------------------------------------------------------------
+// ACTIVATE — Delete all stale caches & claim all clients immediately
+// --------------------------------------------------------------------------
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
-      );
-    }).then(() => self.clients.claim())
+    caches.keys()
+      .then((cacheNames) => {
+        return Promise.all(
+          cacheNames
+            .filter((name) => name.startsWith("kantime-") && name !== CACHE_NAME)
+            .map((name) => {
+              console.log("[SW] Deleting stale cache:", name);
+              return caches.delete(name);
+            })
+        );
+      })
+      .then(() => self.clients.claim())
   );
 });
 
-// Helper to support HTTP Range requests for cached audio/video playback (Safari & Chrome)
+// --------------------------------------------------------------------------
+// MESSAGE — Handle SKIP_WAITING request from the page
+// --------------------------------------------------------------------------
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
+// --------------------------------------------------------------------------
+// Helper: Handle HTTP Range requests for cached audio/video (Safari & Chrome)
+// --------------------------------------------------------------------------
 async function handleRangeRequest(request, cachedResponse) {
   const rangeHeader = request.headers.get("range");
-  if (!rangeHeader) {
-    return cachedResponse;
-  }
+  if (!rangeHeader) return cachedResponse;
   try {
     const arrayBuffer = await cachedResponse.arrayBuffer();
     const bytes = rangeHeader.replace(/bytes=/, "").split("-");
@@ -92,14 +113,42 @@ async function handleRangeRequest(request, cachedResponse) {
   }
 }
 
-// Fetch Interception: Cache-First Strategy
+// --------------------------------------------------------------------------
+// FETCH — Tiered caching strategy
+//   • Google Apps Script API calls  → Always bypass (no caching)
+//   • HTML navigation requests       → Network-First (fallback to cache)
+//   • All other assets               → Cache-First (fallback to network)
+// --------------------------------------------------------------------------
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;
 
-  // Do not intercept external Google Apps Script requests
-  if (request.url.includes("script.google.com")) return;
+  const url = new URL(request.url);
 
+  // 1️⃣ Never intercept Google Apps Script / external API calls
+  if (url.hostname.includes("script.google.com")) return;
+
+  // 2️⃣ Network-First strategy for HTML navigation requests
+  if (request.mode === "navigate" || request.destination === "document") {
+    event.respondWith(
+      fetch(request)
+        .then((networkResponse) => {
+          // Only cache successful same-origin responses
+          if (networkResponse && networkResponse.status === 200 && networkResponse.type === "basic") {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          // Offline fallback: serve cached index.html
+          return caches.match("./index.html");
+        })
+    );
+    return;
+  }
+
+  // 3️⃣ Cache-First strategy for all other assets (CSS, JS, images, audio)
   event.respondWith(
     caches.match(request, { ignoreSearch: true }).then((cachedResponse) => {
       if (cachedResponse) {
@@ -111,19 +160,18 @@ self.addEventListener("fetch", (event) => {
 
       return fetch(request)
         .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && (networkResponse.type === "basic" || networkResponse.type === "cors")) {
+          if (
+            networkResponse &&
+            networkResponse.status === 200 &&
+            (networkResponse.type === "basic" || networkResponse.type === "cors")
+          ) {
             const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseToCache);
-            });
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
           }
           return networkResponse;
         })
         .catch(() => {
-          // If offline and request is an HTML navigation, return cached index.html
-          if (request.mode === "navigate") {
-            return caches.match("./index.html");
-          }
+          // Silent failure for non-critical offline assets
         });
     })
   );
