@@ -3320,7 +3320,7 @@ window.addEventListener("online", updateOnlineStatus);
 window.addEventListener("offline", updateOnlineStatus);
 
 // --------------------------------------------------------------------------
-// Force App Update — triggered by the 🔄 header button
+// Force App Update — triggered by tapping the KanTime logo
 // --------------------------------------------------------------------------
 /**
  * Purges all Service Worker caches, triggers a SW update check,
@@ -3328,11 +3328,11 @@ window.addEventListener("offline", updateOnlineStatus);
  * always see the latest songs, videos and CSS immediately.
  */
 async function forceAppUpdate() {
-  const btn = document.getElementById("appRefreshBtn");
+  const logo = document.getElementById("appLogoRefresh");
 
-  // 1. Visual feedback — spin the icon & disable the button
-  if (btn) btn.classList.add("spinning");
-  showToast("Checking for choir updates... 🔄");
+  // 1. Visual feedback — spin the logo & block further taps
+  if (logo) logo.classList.add("spinning");
+  showToast("Checking for updates... 🔄");
 
   try {
     // 2. Purge every Service Worker cache bucket
@@ -3349,7 +3349,7 @@ async function forceAppUpdate() {
 
     // 4. Brief pause so the toast is readable, then notify & hard-reload
     await new Promise((resolve) => setTimeout(resolve, 800));
-    showToast("Updated! Reloading latest repertoire... ✨");
+    showToast("Updated! Reloading latest songs... ✨");
 
     // 5. Hard reload with timestamp query-string to bypass disk cache
     await new Promise((resolve) => setTimeout(resolve, 900));
@@ -3362,7 +3362,7 @@ async function forceAppUpdate() {
   } catch (err) {
     console.warn("[KanTime] forceAppUpdate error:", err);
     showToast("Refresh failed — retrying... 🔄");
-    if (btn) btn.classList.remove("spinning");
+    if (logo) logo.classList.remove("spinning");
     // Fallback: basic reload
     setTimeout(() => window.location.reload(), 600);
   }

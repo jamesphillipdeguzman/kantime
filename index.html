@@ -48,15 +48,23 @@
   <header>
     <div class="header-inner">
       <div class="header-brand">
-        <img src="images/kantime-logo.png" alt="KanTime Logo" class="header-logo" onerror="this.style.display='none'">
+        <img src="images/kantime-logo.png"
+             alt="KanTime Logo"
+             class="header-logo"
+             id="appLogoRefresh"
+             role="button"
+             tabindex="0"
+             onclick="forceAppUpdate()"
+             onkeydown="if(event.key==='Enter'||event.key===' ')forceAppUpdate()"
+             title="Tap to refresh app and check for new songs"
+             aria-label="Refresh app and check for updates"
+             onerror="this.style.display='none'">
         <div class="header-text">
           <h1>KanTime <span class="app-version-badge" title="KanTime v2.5.2">v2.5.2</span></h1>
           <p id="headerSubtitle">Stake Choir Prep • Oct 24–25</p>
         </div>
       </div>
       <div class="header-actions">
-        <button type="button" class="header-action-btn" id="appRefreshBtn" onclick="forceAppUpdate()"
-          title="Refresh & Check for Updates" aria-label="Refresh and check for updates">🔄</button>
         <button type="button" class="theme-quick-btn" id="themeQuickToggleBtn" onclick="toggleQuickTheme()"
           aria-label="Toggle Dark / Light Theme" title="Toggle Dark/Light Mode">🌙</button>
         <button type="button" class="settings-btn" id="openSettingsBtn" onclick="openSettingsModal()"

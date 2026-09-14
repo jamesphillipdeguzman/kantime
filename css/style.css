@@ -614,7 +614,7 @@ header {
   max-width: 520px;
   margin: 0 auto;
   position: relative;
-  padding: 0 88px 0 0;
+  padding: 0 72px 0 0;
   /* allowance for theme toggle and gear buttons */
 }
 
@@ -665,52 +665,38 @@ header {
   transform: scale(0.94);
 }
 
-/* ── Refresh / Force-Update Header Button ──────────────────────────────── */
-.header-action-btn {
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  color: #ffffff;
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.15rem;
+/* ── Logo Tap-to-Refresh interaction ──────────────────────────────────── */
+#appLogoRefresh {
   cursor: pointer;
-  transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-              transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-              box-shadow 0.2s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
   user-select: none;
   touch-action: manipulation;
-  flex-shrink: 0;
 }
 
-.header-action-btn:hover {
-  background: rgba(255, 255, 255, 0.28);
+#appLogoRefresh:hover {
   transform: scale(1.08);
+  opacity: 0.88;
 }
 
-.header-action-btn:active {
-  transform: scale(0.94);
+#appLogoRefresh:active {
+  transform: scale(0.92);
 }
 
-/* Spin animation while checking for updates */
-.header-action-btn.spinning {
+/* Spin while forceAppUpdate() is running */
+#appLogoRefresh.spinning {
   pointer-events: none;
-  animation: spin-refresh 0.8s linear infinite;
+  animation: logoSpinRefresh 0.8s ease-in-out infinite;
 }
 
-@keyframes spin-refresh {
+@keyframes logoSpinRefresh {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
 
-/* Tighten gap on very small screens so 3 icons never overflow the title */
+/* Tighten gap on very small screens */
 @media (max-width: 360px) {
   .header-actions { gap: 5px; }
-  .header-action-btn,
   .theme-quick-btn,
   .settings-btn {
     width: 34px;
