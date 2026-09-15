@@ -1406,11 +1406,115 @@ function submitPracticeSession(minutes) {
 }
 
 // --- LOAD LEADERBOARDS ---
+let currentLeaderboardTab = "all";
+let cachedLeaderboardSingers = [];
+
+function escapeLeaderboardHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function switchLeaderboardTab(tab) {
+  if (tab !== "all" && tab !== "primary") return;
+  currentLeaderboardTab = tab;
+
+  const tabAll = document.getElementById("tabLeaderboardAll");
+  const tabPrimary = document.getElementById("tabLeaderboardPrimary");
+
+  if (tabAll) {
+    const isActive = tab === "all";
+    tabAll.classList.toggle("active", isActive);
+    tabAll.setAttribute("aria-selected", isActive ? "true" : "false");
+  }
+  if (tabPrimary) {
+    const isActive = tab === "primary";
+    tabPrimary.classList.toggle("active", isActive);
+    tabPrimary.setAttribute("aria-selected", isActive ? "true" : "false");
+  }
+
+  const titleEl = document.getElementById("leaderboardCardTitle");
+  if (titleEl) {
+    titleEl.textContent = tab === "primary" ? "🌟 Primary Stars" : "🏆 Top 10 Dedicated Singers";
+  }
+
+  renderLeaderboardSingers();
+}
+window.switchLeaderboardTab = switchLeaderboardTab;
+
+function renderLeaderboardSingers() {
+  const topSingersEl = document.getElementById("topSingersList");
+  const titleEl = document.getElementById("leaderboardCardTitle");
+  if (!topSingersEl) return;
+
+  if (titleEl) {
+    titleEl.textContent = currentLeaderboardTab === "primary" ? "🌟 Primary Stars" : "🏆 Top 10 Dedicated Singers";
+  }
+
+  if (!cachedLeaderboardSingers || cachedLeaderboardSingers.length === 0) {
+    return;
+  }
+
+  const currentUserName = (localStorage.getItem("choir_name") || "").trim().toLowerCase();
+  const currentUserAvatar = localStorage.getItem("choir_avatar") || "";
+
+  let singersToDisplay = [];
+  if (currentLeaderboardTab === "primary") {
+    // Displays an all-inclusive list of all participating Primary children (not capped at 10)
+    singersToDisplay = cachedLeaderboardSingers.filter(s => (s.section || "").trim().toLowerCase() === "primary");
+    if (singersToDisplay.length === 0) {
+      topSingersEl.innerHTML = `<div style="text-align:center; padding:16px; font-size:0.85rem; color:var(--text-muted);">No Primary children have logged practice yet. Be the first Primary Star! ⭐</div>`;
+      return;
+    }
+  } else {
+    // Displays the top 10 most dedicated singers across the whole stake
+    singersToDisplay = cachedLeaderboardSingers.slice(0, 10);
+    if (singersToDisplay.length === 0) {
+      topSingersEl.innerHTML = `<div style="text-align:center; padding:8px; font-size:0.85rem; color:var(--text-muted);">No practice sessions logged yet. Be the first!</div>`;
+      return;
+    }
+  }
+
+  let singersHtml = "";
+  singersToDisplay.forEach((s, idx) => {
+    const isTop3 = idx < 3 ? "rank-top3" : "";
+    const medal = idx === 0 ? "🥇 " : idx === 1 ? "🥈 " : idx === 2 ? "🥉 " : "";
+    const hours = (s.totalMins / 60).toFixed(1);
+
+    let avatarToShow = s.avatar;
+    if (!avatarToShow && currentUserName && s.name.toLowerCase() === currentUserName) {
+      avatarToShow = currentUserAvatar;
+    }
+
+    const avatarBadgeHtml = getLeaderboardAvatarHtml(avatarToShow, s.name);
+    const safeName = escapeLeaderboardHtml(s.name);
+    const safeSec = escapeLeaderboardHtml(s.section);
+
+    singersHtml += `
+        <div class="board-row">
+          <span class="rank ${isTop3}">${medal}#${idx + 1}</span>
+          ${avatarBadgeHtml}
+          <div class="board-user-info">
+            <span class="singer-name" title="${safeName}">${safeName}</span>
+            <span class="part-badge" data-voice="${safeSec}">${safeSec}</span>
+          </div>
+          <span class="mins-badge">${s.totalMins}m <span class="mins-sub">(${hours}h)</span></span>
+        </div>
+      `;
+  });
+  topSingersEl.innerHTML = singersHtml;
+}
+
 function loadLeaderboard() {
+  const topSingersEl = document.getElementById("topSingersList");
+  const sectionEl = document.getElementById("sectionList");
+
   if (!navigator.onLine) {
-    const topSingersEl = document.getElementById("topSingersList");
-    const sectionEl = document.getElementById("sectionList");
-    if (topSingersEl) {
+    if (topSingersEl && (!cachedLeaderboardSingers || cachedLeaderboardSingers.length === 0)) {
       topSingersEl.innerHTML = `<div style="text-align:center; padding:12px; font-size:0.85rem; color:var(--text-muted);">📡 Offline: Leaderboard syncs when reconnected.</div>`;
     }
     if (sectionEl) {
@@ -1422,9 +1526,6 @@ function loadLeaderboard() {
   fetch(APPS_SCRIPT_URL)
     .then(res => res.json())
     .then(data => {
-      const topSingersEl = document.getElementById("topSingersList");
-      const sectionEl = document.getElementById("sectionList");
-
       if (!data || data.length === 0) {
         if (topSingersEl) {
           topSingersEl.innerHTML = `<div style="text-align:center; padding:8px; font-size:0.85rem; color:var(--text-muted);">No practice sessions logged yet. Be the first!</div>`;
@@ -1463,36 +1564,8 @@ function loadLeaderboard() {
         }
       });
 
-      const sortedSingers = Object.values(singerTotals).sort((a, b) => b.totalMins - a.totalMins).slice(0, 10);
-      const currentUserName = (localStorage.getItem("choir_name") || "").trim().toLowerCase();
-      const currentUserAvatar = localStorage.getItem("choir_avatar") || "";
-
-      let singersHtml = "";
-      sortedSingers.forEach((s, idx) => {
-        const isTop3 = idx < 3 ? "rank-top3" : "";
-        const medal = idx === 0 ? "🥇 " : idx === 1 ? "🥈 " : idx === 2 ? "🥉 " : "";
-        const hours = (s.totalMins / 60).toFixed(1);
-
-        let avatarToShow = s.avatar;
-        if (!avatarToShow && currentUserName && s.name.toLowerCase() === currentUserName) {
-          avatarToShow = currentUserAvatar;
-        }
-
-        const avatarBadgeHtml = getLeaderboardAvatarHtml(avatarToShow, s.name);
-
-        singersHtml += `
-            <div class="board-row">
-              <span class="rank ${isTop3}">${medal}#${idx + 1}</span>
-              ${avatarBadgeHtml}
-              <div style="flex:1; min-width:0; padding-right:6px;">
-                <strong style="font-size:0.92rem;">${s.name}</strong>
-                <span class="part-badge" data-voice="${s.section}">${s.section}</span>
-              </div>
-              <span class="mins-badge">${s.totalMins}m <span style="font-weight:400; font-size:0.75rem; color:var(--text-muted);">(${hours}h)</span></span>
-            </div>
-          `;
-      });
-      if (topSingersEl) topSingersEl.innerHTML = singersHtml;
+      cachedLeaderboardSingers = Object.values(singerTotals).sort((a, b) => b.totalMins - a.totalMins);
+      renderLeaderboardSingers();
 
       const sortedSections = Object.entries(sectionTotals).sort((a, b) => b[1] - a[1]);
       let sectionHtml = "";
@@ -1500,14 +1573,14 @@ function loadLeaderboard() {
         const isTop3 = idx < 3 ? "rank-top3" : "";
         const medal = idx === 0 ? "🥇 " : idx === 1 ? "🥈 " : idx === 2 ? "🥉 " : "";
         const hours = (mins / 60).toFixed(1);
+        const safeSec = escapeLeaderboardHtml(sec);
         sectionHtml += `
-            <div class="board-row">
+            <div class="board-row section-standings-row">
               <span class="rank ${isTop3}">${medal}#${idx + 1}</span>
-              <div style="flex:1; display:flex; align-items:center; min-width:0;">
-                <span style="font-weight:700;">${sec}</span>
-                <span class="part-badge" data-voice="${sec}">Section</span>
+              <div class="section-name-wrap">
+                <span class="section-name">${safeSec}</span>
               </div>
-              <span class="mins-badge">${mins}m <span style="font-weight:400; font-size:0.75rem; color:var(--text-muted);">(${hours}h)</span></span>
+              <span class="mins-badge">${mins}m <span class="mins-sub">(${hours}h)</span></span>
             </div>
           `;
       });
@@ -1515,12 +1588,12 @@ function loadLeaderboard() {
 
     })
     .catch(() => {
-      const topSingersEl = document.getElementById("topSingersList");
-      if (topSingersEl) {
+      if (topSingersEl && (!cachedLeaderboardSingers || cachedLeaderboardSingers.length === 0)) {
         topSingersEl.innerHTML = `<div style="text-align:center; color:var(--text-muted); font-size:0.85rem;">Could not load standings.</div>`;
       }
     });
 }
+window.loadLeaderboard = loadLeaderboard;
 
 // --- REAL-TIME IN-BROWSER VOICE PITCH CHECKER & REFERENCE TONES ---
 const REFERENCE_PITCHES = {
@@ -3397,7 +3470,10 @@ function registerServiceWorker() {
     setTimeout(() => window.location.reload(), 1500);
   }
 
-  navigator.serviceWorker.register("./sw.js")
+  const swUrl = window.location.protocol === "file:" ? "./sw.js" : "/sw.js";
+  const swOptions = window.location.protocol === "file:" ? {} : { scope: "/" };
+
+  navigator.serviceWorker.register(swUrl, swOptions)
     .then((reg) => {
       console.log("[SW] Registered — scope:", reg.scope);
 
@@ -5022,74 +5098,28 @@ let deferredPrompt = null;
 function isRunningStandalone() {
   return (
     window.matchMedia("(display-mode: standalone)").matches ||
-    navigator.standalone === true
+    window.matchMedia("(display-mode: fullscreen)").matches ||
+    window.matchMedia("(display-mode: minimal-ui)").matches ||
+    navigator.standalone === true ||
+    document.referrer.includes("android-app://")
   );
 }
+window.isRunningStandalone = isRunningStandalone;
 
 /**
- * Initializes the PWA install banner logic.
- * - Listens for `beforeinstallprompt` (Android/Chrome).
- * - Detects iOS Safari and shows a delayed fallback toast.
+ * Displays the PWA install banner if not running standalone or dismissed.
  */
-function initPWAInstallBanner() {
-  // If already installed, do nothing
+function showPWAInstallBanner() {
   if (isRunningStandalone()) return;
+  if (sessionStorage.getItem("pwa_banner_dismissed")) return;
 
-  // ── Android / Chrome: capture the deferred install prompt ──────────────
-  window.addEventListener("beforeinstallprompt", function (e) {
-    e.preventDefault();
-    deferredPrompt = e;
-
-    // Only show if user hasn\'t dismissed this session
-    if (!sessionStorage.getItem("pwa_banner_dismissed")) {
-      const banner = document.getElementById("pwaInstallBanner");
-      if (banner) {
-        banner.style.display = "block";
-        // Animate in after a short tick so CSS transition fires
-        requestAnimationFrame(() => banner.classList.add("pwa-banner-visible"));
-      }
-    }
-  });
-
-  // Hide the banner if the app is installed via the browser\'s own UI
-  window.addEventListener("appinstalled", function () {
-    hidePWAInstallBanner();
-    deferredPrompt = null;
-  });
-
-  // ── iOS Safari fallback ─────────────────────────────────────────────────
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-  if (isIOS && !sessionStorage.getItem("ios_toast_dismissed")) {
-    // Show after a 2-second delay so the page has settled
-    setTimeout(function () {
-      const toast = document.getElementById("iosInstallToast");
-      if (toast) {
-        toast.style.display = "block";
-        requestAnimationFrame(() => toast.classList.add("ios-toast-visible"));
-        // Auto-dismiss after 10 seconds
-        setTimeout(dismissIosToast, 10000);
-      }
-    }, 2000);
+  const banner = document.getElementById("pwaInstallBanner");
+  if (banner) {
+    banner.style.display = "block";
+    requestAnimationFrame(() => banner.classList.add("pwa-banner-visible"));
   }
 }
-
-/**
- * Triggers the native install prompt (Android/Chrome).
- */
-async function installPWA() {
-  if (!deferredPrompt) return;
-
-  // Show the native install prompt
-  deferredPrompt.prompt();
-  const { outcome } = await deferredPrompt.userChoice;
-
-  if (outcome === "accepted") {
-    hidePWAInstallBanner();
-  }
-
-  // The prompt can only be used once; clear it either way
-  deferredPrompt = null;
-}
+window.showPWAInstallBanner = showPWAInstallBanner;
 
 /**
  * Hides the PWA install pill banner.
@@ -5102,6 +5132,7 @@ function hidePWAInstallBanner() {
     banner.style.display = "none";
   }, 350);
 }
+window.hidePWAInstallBanner = hidePWAInstallBanner;
 
 /**
  * Permanently dismisses the install banner for this browser session.
@@ -5110,6 +5141,7 @@ function dismissInstallBanner() {
   sessionStorage.setItem("pwa_banner_dismissed", "1");
   hidePWAInstallBanner();
 }
+window.dismissInstallBanner = dismissInstallBanner;
 
 /**
  * Hides and dismisses the iOS install toast.
@@ -5122,6 +5154,123 @@ function dismissIosToast() {
   setTimeout(() => {
     toast.style.display = "none";
   }, 400);
+}
+window.dismissIosToast = dismissIosToast;
+
+/**
+ * Triggers the native install prompt (Android/Chrome).
+ */
+async function installPWA() {
+  if (!deferredPrompt) {
+    if (isRunningStandalone()) {
+      showToast("KanTime is already running as an installed app! ✨");
+    } else {
+      showToast("To install, tap your browser's menu (⋮) and select 'Install app' or 'Add to Home screen'. 📲");
+    }
+    return;
+  }
+
+  try {
+    // Show native browser install prompt
+    await deferredPrompt.prompt();
+    const choiceResult = await deferredPrompt.userChoice;
+    console.log("[PWA] User response to install prompt:", choiceResult ? choiceResult.outcome : "prompted");
+
+    if (choiceResult && choiceResult.outcome === "accepted") {
+      hidePWAInstallBanner();
+      sessionStorage.setItem("pwa_banner_dismissed", "1");
+    }
+  } catch (err) {
+    console.warn("[PWA] Install prompt error:", err);
+  } finally {
+    deferredPrompt = null;
+  }
+}
+window.installPWA = installPWA;
+
+// ── Android / Chrome: capture beforeinstallprompt at top-level immediately ──
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  console.log("[PWA] beforeinstallprompt captured");
+
+  if (isRunningStandalone()) return;
+  if (sessionStorage.getItem("pwa_banner_dismissed")) return;
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", showPWAInstallBanner, { once: true });
+  } else {
+    showPWAInstallBanner();
+  }
+});
+
+// ── Hide banner if installed via browser menu or native prompt ───────────
+window.addEventListener("appinstalled", () => {
+  console.log("[PWA] KanTime installed successfully");
+  deferredPrompt = null;
+  sessionStorage.setItem("pwa_banner_dismissed", "1");
+  hidePWAInstallBanner();
+  const toast = document.getElementById("iosInstallToast");
+  if (toast) toast.style.display = "none";
+});
+
+// ── Watch for display-mode standalone changes ────────────────────────────
+if (window.matchMedia) {
+  try {
+    const standaloneMql = window.matchMedia("(display-mode: standalone)");
+    const handleDisplayModeChange = (e) => {
+      if (e.matches) {
+        hidePWAInstallBanner();
+        const toast = document.getElementById("iosInstallToast");
+        if (toast) toast.style.display = "none";
+      }
+    };
+    if (standaloneMql.addEventListener) {
+      standaloneMql.addEventListener("change", handleDisplayModeChange);
+    } else if (standaloneMql.addListener) {
+      standaloneMql.addListener(handleDisplayModeChange);
+    }
+  } catch (err) {
+    console.warn("[PWA] display-mode listener warning:", err);
+  }
+}
+
+/**
+ * Initializes the PWA install banner logic & iOS fallback.
+ */
+function initPWAInstallBanner() {
+  if (isRunningStandalone()) {
+    hidePWAInstallBanner();
+    const toast = document.getElementById("iosInstallToast");
+    if (toast) toast.style.display = "none";
+    return;
+  }
+
+  // If deferredPrompt was already captured before DOMContentLoaded, show banner
+  if (deferredPrompt && !sessionStorage.getItem("pwa_banner_dismissed")) {
+    showPWAInstallBanner();
+  }
+
+  // Ensure click listener on install button
+  const installBtn = document.getElementById("pwaInstallBtn");
+  if (installBtn && !installBtn._pwaBound) {
+    installBtn._pwaBound = true;
+    installBtn.addEventListener("click", installPWA);
+  }
+
+  // ── iOS Safari fallback ─────────────────────────────────────────────────
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  if (isIOS && !isRunningStandalone() && !sessionStorage.getItem("ios_toast_dismissed")) {
+    setTimeout(function () {
+      if (isRunningStandalone()) return;
+      const toast = document.getElementById("iosInstallToast");
+      if (toast) {
+        toast.style.display = "block";
+        requestAnimationFrame(() => toast.classList.add("ios-toast-visible"));
+        setTimeout(dismissIosToast, 10000);
+      }
+    }, 2000);
+  }
 }
 
 // Initial load

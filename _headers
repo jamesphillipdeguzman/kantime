@@ -1,10 +1,11 @@
-# Netlify _headers — KanTime PWA Cache-Control Rules
+# Netlify _headers — KanTime PWA Cache-Control & Service Worker Rules
 # Prevents browsers and Netlify CDN edge caches from serving stale
-# versions of the two files that control the PWA update lifecycle.
+# versions of the files that control the PWA update lifecycle.
 
 /sw.js
   Cache-Control: max-age=0, no-cache, no-store, must-revalidate
   Pragma: no-cache
+  Service-Worker-Allowed: /
 
 /index.html
   Cache-Control: max-age=0, no-cache, no-store, must-revalidate
@@ -12,3 +13,5 @@
 
 /manifest.json
   Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+  Content-Type: application/manifest+json; charset=utf-8
+  Access-Control-Allow-Origin: *

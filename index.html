@@ -14,8 +14,8 @@
     content="Access hymn repertoire, practice tracks, and track your daily 15-minute practice sessions for Oct 24–25!">
 
   <!-- Open Graph Image with explicit dimensions & cache buster -->
-  <meta property="og:image" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.0">
-  <meta property="og:image:secure_url" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.0">
+  <meta property="og:image" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.3">
+  <meta property="og:image:secure_url" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.3">
   <meta property="og:image:type" content="image/jpeg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -25,7 +25,7 @@
   <meta name="twitter:title" content="🎶 KanTime | Stake Choir Practice Hub">
   <meta name="twitter:description"
     content="Access hymn repertoire, practice tracks, and track your daily 15-minute practice sessions for Oct 24–25!">
-  <meta name="twitter:image" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.0">
+  <meta name="twitter:image" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.3">
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="🎶 KanTime | Stake Choir Practice Hub">
@@ -34,13 +34,16 @@
   <meta name="twitter:image" content="https://kantimes.netlify.app/images/kantime-bg.png">
 
   <meta name="theme-color" content="#1e3a8a">
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="images/kantime-logo.png">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/images/icon-192.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="/images/icon-192.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="/images/icon-512.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="KanTime">
-  <link rel="icon" type="image/x-icon" href="images/favicon.ico">
-  <link rel="stylesheet" href="css/style.css?v=2.5.2">
+  <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192.png">
+  <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+  <link rel="stylesheet" href="css/style.css?v=2.5.3">
 </head>
 
 <body>
@@ -48,19 +51,12 @@
   <header>
     <div class="header-inner">
       <div class="header-brand">
-        <img src="images/kantime-logo.png"
-             alt="KanTime Logo"
-             class="header-logo"
-             id="appLogoRefresh"
-             role="button"
-             tabindex="0"
-             onclick="forceAppUpdate()"
-             onkeydown="if(event.key==='Enter'||event.key===' ')forceAppUpdate()"
-             title="Tap to refresh app and check for new songs"
-             aria-label="Refresh app and check for updates"
-             onerror="this.style.display='none'">
+        <img src="images/kantime-logo.png" alt="KanTime Logo" class="header-logo" id="appLogoRefresh" role="button"
+          tabindex="0" onclick="forceAppUpdate()" onkeydown="if(event.key==='Enter'||event.key===' ')forceAppUpdate()"
+          title="Tap to refresh app and check for new songs" aria-label="Refresh app and check for updates"
+          onerror="this.style.display='none'">
         <div class="header-text">
-          <h1>KanTime <span class="app-version-badge" title="KanTime v2.5.2">v2.5.2</span></h1>
+          <h1>KanTime <span class="app-version-badge" title="KanTime v2.5.3">v2.5.3</span></h1>
           <p id="headerSubtitle">Stake Choir Prep • Oct 24–25</p>
         </div>
       </div>
@@ -307,10 +303,19 @@
         </div>
       </div>
 
-      <!-- Top 10 Dedicated Singers -->
-      <div class="card">
-        <h2>🏆 Top 10 Dedicated Singers <button class="btn btn-outline"
-            style="padding:4px 8px; font-size:0.75rem; width:auto;" onclick="loadLeaderboard()">Refresh</button></h2>
+      <!-- Top Dedicated Singers & Primary Stars -->
+      <div class="card" id="leaderboardCard">
+        <h2 id="leaderboardCardTitle">🏆 Top 10 Dedicated Singers</h2>
+        <div class="leaderboard-tabs" role="tablist" aria-label="Leaderboard views">
+          <button type="button" class="leaderboard-tab active" id="tabLeaderboardAll" role="tab" aria-selected="true"
+            onclick="switchLeaderboardTab('all')">
+            <span>🏆</span> All (Top 10)
+          </button>
+          <button type="button" class="leaderboard-tab" id="tabLeaderboardPrimary" role="tab" aria-selected="false"
+            onclick="switchLeaderboardTab('primary')">
+            <span>🌟</span> Primary Stars
+          </button>
+        </div>
         <div id="topSingersList">
           <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 12px;">Loading
             leaderboard...</div>
@@ -344,7 +349,7 @@
         </p>
       </div>
       <p class="footer-credit">&copy; <span id="footerYear"></span> James Phillip De Guzman • <span
-          class="footer-version-tag">KanTime v2.5.2</span></p>
+          class="footer-version-tag">KanTime v2.5.3</span></p>
     </footer>
 
     <!-- Fixed Persistent Voice Pitch Checker Overlay (Corner Card) -->
@@ -428,7 +433,7 @@
     <div id="toast">Saved!</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="script.js?v=2.5.2"></script>
+    <script src="script.js?v=2.5.3"></script>
 
     <!-- In-App Resource Viewer Modal -->
     <div id="resourceModal" class="modal-backdrop" onclick="closeModalOnBackdrop(event)">
@@ -500,7 +505,7 @@
         <div class="modal-header">
           <div class="settings-modal-title-wrap">
             <h3 id="settingsModalTitle">⚙️ Practice Settings & Guide</h3>
-            <span class="settings-header-version">v2.5.2</span>
+            <span class="settings-header-version">v2.5.3</span>
           </div>
           <button class="modal-close-btn" type="button" onclick="closeSettingsModal()"
             aria-label="Close settings">&times;</button>

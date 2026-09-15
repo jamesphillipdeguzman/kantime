@@ -1,8 +1,8 @@
 // ==========================================================================
-// KanTime PWA Service Worker (v2.5.1 — Network-First HTML + Auto-Update)
+// KanTime PWA Service Worker (v2.5.3 — Network-First HTML + Auto-Update)
 // ==========================================================================
 
-const APP_VERSION = "2.5.2";
+const APP_VERSION = "2.5.3";
 const CACHE_NAME = `kantime-cache-v${APP_VERSION}`;
 
 const PRECACHE_ASSETS = [
@@ -15,7 +15,11 @@ const PRECACHE_ASSETS = [
   // Images & Avatars
   "./images/favicon.ico",
   "./images/kantime-logo.png",
-  "./images/kantime-bg.jpg",
+  "./images/icon-192.png",
+  "./images/icon-512.png",
+  "./images/icon-maskable-192.png",
+  "./images/icon-maskable-512.png",
+  "./images/kantime-bg.png",
   "./images/iloilo-stake-choir-logo.jpg",
   "./images/boy-choir.jpg",
   "./images/girl-choir.jpg",
