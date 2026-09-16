@@ -353,9 +353,6 @@
               <button type="button" class="piano-opt-btn active" id="pianoToggleLabelsBtn" onclick="togglePianoLabels()" title="Toggle note names on keys">
                 🏷️ Labels
               </button>
-              <button type="button" class="piano-opt-btn" id="pianoToggleSustainBtn" onclick="togglePianoSustain()" title="Toggle sustain (hold note)">
-                🎵 Sustain: <span id="pianoSustainStatus">Off</span>
-              </button>
             </div>
           </div>
 
@@ -1224,6 +1221,46 @@
           </button>
           <button type="button" class="btn btn-primary" id="btnConfirmExistingSinger" onclick="handleDuplicateAction('accept')">
             Yes, That&rsquo;s Me!
+          </button>
+        </div>
+      </div>
+    <!-- Top 10 Dedicated Singers: Full Details Pop-Up Modal -->
+    <div id="singerDetailsModal" class="modal-backdrop singer-details-backdrop" onclick="closeSingerDetailsModalOnBackdrop(event)" role="dialog" aria-modal="true" aria-labelledby="singerDetailsModalTitle">
+      <div class="modal-box singer-details-modal-box">
+        <div class="modal-header singer-details-header">
+          <div class="singer-details-header-title">
+            <h3 id="singerDetailsModalTitle">Singer Rehearsal Profile 🎵</h3>
+          </div>
+          <button class="modal-close-btn" type="button" onclick="closeSingerDetailsModal()" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body singer-details-modal-body">
+          <div class="singer-details-hero">
+            <div class="singer-details-avatar-container" id="singerDetailsAvatarContainer">
+              <!-- Avatar or fallback 🎵 -->
+            </div>
+            <h4 class="singer-details-fullname" id="singerDetailsFullName">Singer Name</h4>
+            <div class="singer-details-badges">
+              <span class="part-badge singer-details-voice" id="singerDetailsVoicePart" data-voice="Soprano">Soprano</span>
+              <span class="singer-details-rank-pill" id="singerDetailsRankPill">Rank #1 in Stake Choir</span>
+            </div>
+          </div>
+
+          <div class="singer-details-stats-cards">
+            <div class="singer-stat-tile">
+              <span class="singer-stat-label">Total Practice</span>
+              <span class="singer-stat-value" id="singerDetailsTimeValue">0m</span>
+              <span class="singer-stat-subtitle" id="singerDetailsTimeSub">0.0 hours</span>
+            </div>
+            <div class="singer-stat-tile">
+              <span class="singer-stat-label">Rehearsal Rank</span>
+              <span class="singer-stat-value" id="singerDetailsRankValue">#1</span>
+              <span class="singer-stat-subtitle" id="singerDetailsRankSub">Stake Choir</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer singer-details-footer">
+          <button type="button" class="btn btn-primary btn-full-width" onclick="closeSingerDetailsModal()">
+            Done
           </button>
         </div>
       </div>
