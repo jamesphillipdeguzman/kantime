@@ -6368,25 +6368,52 @@ function getPianoFrequency(noteName) {
   return 440 * Math.pow(2, (midi - 69) / 12);
 }
 
+function unlockPianoAudioContext() {
+  const audioCtx = getPianoAudioContext();
+  if (audioCtx && audioCtx.state !== "running") {
+    audioCtx.resume().catch(() => {});
+  }
+}
+
 function getPianoAudioContext() {
   if (!pianoAudioCtx) {
     const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
     if (AudioCtxClass) {
-      pianoAudioCtx = new AudioCtxClass();
+      try {
+        pianoAudioCtx = new AudioCtxClass();
+      } catch (err) {
+        console.error("Failed to initialize piano AudioContext:", err);
+      }
+    }
+  }
+
+  if (pianoAudioCtx) {
+    // Ensure master gain node exists, is connected to destination, and is unmuted
+    if (!masterPianoGain || masterPianoGain.context !== pianoAudioCtx) {
       try {
         masterPianoGain = pianoAudioCtx.createGain();
         masterPianoGain.gain.setValueAtTime(1.0, pianoAudioCtx.currentTime);
+        masterPianoGain.gain.value = 1.0;
         masterPianoGain.connect(pianoAudioCtx.destination);
       } catch (e) {
         masterPianoGain = null;
       }
+    } else {
+      masterPianoGain.gain.value = 1.0;
+    }
+
+    if (pianoAudioCtx.state !== "running") {
+      pianoAudioCtx.resume().catch(() => {});
     }
   }
-  if (pianoAudioCtx && pianoAudioCtx.state === "suspended") {
-    pianoAudioCtx.resume();
-  }
+
   return pianoAudioCtx;
 }
+
+// Unlock audio context on initial user interaction anywhere on the window
+["pointerdown", "touchstart", "mousedown", "keydown"].forEach((evtName) => {
+  window.addEventListener(evtName, unlockPianoAudioContext, { once: true, passive: true });
+});
 
 function highlightPianoKey(noteName, isPressed) {
   const keyEl = document.querySelector(`.piano-keyboard [data-note="${noteName}"]`);
@@ -6414,8 +6441,13 @@ function playPianoNote(noteName, isTemporary = false) {
   const audioCtx = getPianoAudioContext();
   if (!audioCtx) return;
 
+  // Active autoplay unlock safeguard
+  if (audioCtx.state !== "running") {
+    audioCtx.resume().catch(() => {});
+  }
+
   const freq = getPianoFrequency(noteName);
-  const now = audioCtx.currentTime;
+  const now = Math.max(audioCtx.currentTime, 0.001);
 
   if (!isTemporary) {
     pianoKeysCurrentlyHeld.add(noteName);
@@ -6425,12 +6457,15 @@ function playPianoNote(noteName, isTemporary = false) {
   if (activePianoNotes[noteName]) {
     try {
       const oldNote = activePianoNotes[noteName];
+      const cutTime = now + 0.02;
       oldNote.gain.gain.cancelScheduledValues(now);
-      const safeOldVal = Math.max(oldNote.gain.gain.value, 0.0001);
-      oldNote.gain.gain.setValueAtTime(safeOldVal, now);
-      oldNote.gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
-      oldNote.osc1.stop(now + 0.05);
-      if (oldNote.osc2) oldNote.osc2.stop(now + 0.05);
+      const oldVal = (typeof oldNote.gain.gain.value === "number" && oldNote.gain.gain.value > 0.01)
+        ? oldNote.gain.gain.value
+        : 0.20;
+      oldNote.gain.gain.setValueAtTime(oldVal, now);
+      oldNote.gain.gain.exponentialRampToValueAtTime(0.0001, cutTime);
+      oldNote.osc1.stop(cutTime + 0.01);
+      if (oldNote.osc2) oldNote.osc2.stop(cutTime + 0.01);
     } catch (e) {
       // Handled
     }
@@ -6450,21 +6485,27 @@ function playPianoNote(noteName, isTemporary = false) {
 
     // Initial floor (non-zero for exponential ramp safety)
     noteGain.gain.setValueAtTime(0.0001, now);
-    // Quick, clean attack over 0.012s
-    noteGain.gain.linearRampToValueAtTime(0.30, now + 0.012);
+    // Quick, clean attack over 0.015s up to 0.32 volume
+    noteGain.gain.linearRampToValueAtTime(0.32, now + 0.015);
 
     // Natural acoustic decay:
-    // When sustain is ON, gentle natural acoustic ring-out decay over 3.0s
-    // When sustain is OFF, natural decay over 1.4s while key is held down
-    const decayDuration = (isSustainPedalOn || isTemporary) ? 3.0 : 1.4;
+    // When sustain is ON (or choir reference pitch), gentle natural acoustic ring-out decay over 3.2s
+    // When sustain is OFF, natural decay over 1.6s while key is held down
+    const decayDuration = (isSustainPedalOn || isTemporary) ? 3.2 : 1.6;
     noteGain.gain.exponentialRampToValueAtTime(0.0001, now + decayDuration);
-    osc1.stop(now + decayDuration + 0.02);
-    osc2.stop(now + decayDuration + 0.02);
+    osc1.stop(now + decayDuration + 0.05);
+    osc2.stop(now + decayDuration + 0.05);
 
     osc1.connect(noteGain);
     osc2.connect(noteGain);
+
+    // Master routing with robust direct destination fallback
     if (masterPianoGain) {
-      noteGain.connect(masterPianoGain);
+      try {
+        noteGain.connect(masterPianoGain);
+      } catch (err) {
+        noteGain.connect(audioCtx.destination);
+      }
     } else {
       noteGain.connect(audioCtx.destination);
     }
@@ -6507,20 +6548,32 @@ function stopPianoNote(noteName, forceMute = false) {
   const audioCtx = getPianoAudioContext();
   if (!audioCtx) return;
 
-  // If sustain pedal is ON and not forced, let the 3.0s decay continue naturally without choking!
+  // If sustain pedal is ON and not forced, let the 3.2s decay continue naturally without choking!
   if (isSustainPedalOn && !forceMute) {
     return;
   }
 
-  // If sustain is OFF, perform standard smooth quick release:
+  // If sustain is OFF (or forceMute), perform standard acoustic release
   const now = audioCtx.currentTime;
   try {
-    note.gain.gain.cancelScheduledValues(now);
-    const safeVal = Math.max(note.gain.gain.value, 0.0001);
-    note.gain.gain.setValueAtTime(safeVal, now);
-    note.gain.gain.exponentialRampToValueAtTime(0.0001, now + (forceMute ? 0.06 : 0.15));
-    note.osc1.stop(now + (forceMute ? 0.07 : 0.16));
-    if (note.osc2) note.osc2.stop(now + (forceMute ? 0.07 : 0.16));
+    // Ensure the attack phase had time to sound (at least 60ms) before dampening
+    const minSoundingDuration = 0.06;
+    const releaseStart = Math.max(now, (note.startTime || now) + minSoundingDuration);
+
+    note.gain.gain.cancelScheduledValues(releaseStart);
+
+    // Determine current envelope level (avoid clamping to 0.0001 prematurely)
+    const currentVal = (typeof note.gain.gain.value === "number" && note.gain.gain.value > 0.02)
+      ? note.gain.gain.value
+      : 0.26;
+    note.gain.gain.setValueAtTime(currentVal, releaseStart);
+
+    // Smooth acoustic damper release over 0.12s (or 0.05s on force mute)
+    const releaseDuration = forceMute ? 0.05 : 0.12;
+    note.gain.gain.exponentialRampToValueAtTime(0.0001, releaseStart + releaseDuration);
+
+    note.osc1.stop(releaseStart + releaseDuration + 0.02);
+    if (note.osc2) note.osc2.stop(releaseStart + releaseDuration + 0.02);
   } catch (e) {
     // Handled
   }
@@ -6533,6 +6586,7 @@ const startNote = playPianoNote;
 const stopNote = stopPianoNote;
 
 function playPianoVoicePart(part) {
+  unlockPianoAudioContext();
   const target = PIANO_VOICE_PART_PITCHES[part];
   if (!target) return;
 
@@ -6616,25 +6670,33 @@ function renderPianoKeyboard() {
     container.classList.remove("hide-labels");
   }
 
-  // Pointer event listeners for smooth touch & click
+  // Pointer event listeners with pointer capture for smooth touch & click
   const allKeys = container.querySelectorAll("[data-note]");
   allKeys.forEach((keyEl) => {
     const note = keyEl.getAttribute("data-note");
 
     const onStart = (e) => {
       e.preventDefault();
+      unlockPianoAudioContext();
+      try {
+        keyEl.setPointerCapture(e.pointerId);
+      } catch (err) {}
       playPianoNote(note);
     };
 
     const onEnd = (e) => {
       e.preventDefault();
+      try {
+        if (keyEl.hasPointerCapture && keyEl.hasPointerCapture(e.pointerId)) {
+          keyEl.releasePointerCapture(e.pointerId);
+        }
+      } catch (err) {}
       stopPianoNote(note);
     };
 
     keyEl.addEventListener("pointerdown", onStart);
     keyEl.addEventListener("pointerup", onEnd);
     keyEl.addEventListener("pointercancel", onEnd);
-    keyEl.addEventListener("pointerleave", onEnd);
   });
 }
 
@@ -6671,6 +6733,7 @@ function togglePianoLabels() {
 }
 
 function togglePianoSustain() {
+  unlockPianoAudioContext();
   isSustainPedalOn = !isSustainPedalOn;
   pianoSustain = isSustainPedalOn;
   window.isSustainPedalOn = isSustainPedalOn;
@@ -6702,11 +6765,13 @@ function dampLingeringSustainedNotes() {
       if (note && note.gain) {
         try {
           note.gain.gain.cancelScheduledValues(now);
-          const safeVal = Math.max(note.gain.gain.value, 0.0001);
-          note.gain.gain.setValueAtTime(safeVal, now);
+          const currentVal = (typeof note.gain.gain.value === "number" && note.gain.gain.value > 0.02)
+            ? note.gain.gain.value
+            : 0.20;
+          note.gain.gain.setValueAtTime(currentVal, now);
           note.gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.20);
-          note.osc1.stop(now + 0.21);
-          if (note.osc2) note.osc2.stop(now + 0.21);
+          note.osc1.stop(now + 0.22);
+          if (note.osc2) note.osc2.stop(now + 0.22);
         } catch (e) {
           // Handled
         }
@@ -6726,11 +6791,13 @@ function dampAllPianoNotes() {
     if (note && note.gain) {
       try {
         note.gain.gain.cancelScheduledValues(now);
-        const safeVal = Math.max(note.gain.gain.value, 0.0001);
-        note.gain.gain.setValueAtTime(safeVal, now);
+        const currentVal = (typeof note.gain.gain.value === "number" && note.gain.gain.value > 0.02)
+          ? note.gain.gain.value
+          : 0.20;
+        note.gain.gain.setValueAtTime(currentVal, now);
         note.gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
-        note.osc1.stop(now + 0.09);
-        if (note.osc2) note.osc2.stop(now + 0.09);
+        note.osc1.stop(now + 0.10);
+        if (note.osc2) note.osc2.stop(now + 0.10);
       } catch (e) {
         // Handled
       }
@@ -6747,6 +6814,7 @@ function togglePianoCollapse() {
 }
 
 function showPianoDrawer() {
+  unlockPianoAudioContext();
   const drawer = document.getElementById("pianoDrawer");
   const btn = document.getElementById("pianoToggleBtn");
   if (!drawer) return;
@@ -6784,6 +6852,7 @@ function togglePianoDrawer() {
   if (!drawer) return;
   const isHidden = (drawer.style.display === "none" || getComputedStyle(drawer).display === "none");
   if (isHidden) {
+    unlockPianoAudioContext();
     showPianoDrawer();
   } else {
     hidePianoDrawer();
@@ -6839,6 +6908,7 @@ window.addEventListener("keydown", function (e) {
 
   const note = keyMap[e.key.toLowerCase()];
   if (note) {
+    unlockPianoAudioContext();
     playPianoNote(note);
   }
 });
@@ -6935,3 +7005,4 @@ window.playPianoNote = playPianoNote;
 window.stopPianoNote = stopPianoNote;
 window.dampLingeringSustainedNotes = dampLingeringSustainedNotes;
 window.dampAllPianoNotes = dampAllPianoNotes;
+window.unlockPianoAudioContext = unlockPianoAudioContext;

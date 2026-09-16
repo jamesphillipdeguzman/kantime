@@ -1,72 +1,58 @@
-# Walkthrough: Settings Repertoire Badge Cleanup & In-Browser Practice Piano Drawer
+# Walkthrough - Piano Audio Playback Diagnosis & Fix
 
-We have completed both UI and feature updates across [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/index.html), [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/css/style.css), and [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js).
-
----
-
-## 1. Summary of Changes
-
-### Task 1: Remove Redundant "Repertoire Management" Badge in Settings Modal
-- **Location**: Settings Modal (⚙️) -> "Preferences & Repertoire" tab -> "Event Repertoire & Archives".
-- **Update**: Removed the blue pill badge `<span class="badge-settings-pill">Repertoire Management</span>` sitting directly beneath the header title.
-- **Outcome**: The section retains its clean title `Event Repertoire & Archives` and description without visual clutter.
-
-```diff
-             <div class="settings-section">
-               <div class="settings-section-title-wrap">
-                 <h4>Event Repertoire &amp; Archives</h4>
--                <span class="badge-settings-pill">Repertoire Management</span>
-               </div>
-               <p class="settings-hint">Group pieces by performance event and manage post-conference archiving.</p>
-```
+## Summary of Changes
+Investigated and resolved the piano audio playback issue in [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js) and [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/css/style.css) where keys produced no sound when pressed (both with sustain enabled and disabled).
 
 ---
 
-### Task 2: Interactive In-Browser Piano Drawer & Pitch Helper
-Added a third quick-tool button labeled **"🎹 Piano"** beside `⏱️ Metronome` and `ℹ️ Vocal Tips` on the practice workspace card, backed by an interactive virtual piano and pitch finder drawer.
+## Key Diagnostic Findings & Root Causes
 
-#### 1. Button Placement ([index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/index.html))
-Added the pill button into `.workspace-header-actions`:
-```html
-<button type="button" class="btn-tool-pill" id="pianoToggleBtn" onclick="togglePianoDrawer()"
-  title="Practice Piano &amp; Vocal Pitch Helper" aria-label="Toggle Piano">
-  🎹 Piano
-</button>
-```
+1. **AudioContext Autoplay Lock:**
+   - Browsers default the `AudioContext` to a `"suspended"` state until user interaction.
+   - When notes were triggered while suspended, `audioCtx.currentTime` was `0`, causing scheduled envelope ramps to evaluate out-of-sync with hardware presentation time once resumed.
+   - Resumption was not explicitly tied to early window gesture listeners (`pointerdown`, `touchstart`, `mousedown`, `keydown`).
 
-#### 2. Collapsible Drawer Component (`#pianoDrawer`)
-Integrated directly beneath the Metronome widget (`#metronomeWidget`) on the practice dashboard:
-- **Header**: Icon, title ("In-Browser Piano & Pitch Helper"), subtitle, current octave indicator badge (`Octave 4 (C4–C5)`), collapse button (`▼`), and close button (`×`).
-- **Choir Starting Pitch Shortcuts**:
-  - `Soprano (C5)` — 523.25 Hz
-  - `Alto (G4)` — 392.00 Hz
-  - `Tenor (E4)` — 329.63 Hz
-  - `Bass (C3)` — 130.81 Hz
-  Clicking any vocal part triggers its starting pitch, illuminates the key on the keyboard, displays the note frequency, and switches to the correct octave if necessary.
-- **Controls & Toolbar**:
-  - **Octave Selector**: Switch between `Oct 3 (Low: C3–B3)`, `Oct 4 (Middle C: C4–B4)`, and `Oct 5 (High: C5–B5)`.
-  - **Note Labels Toggle**: Option to show/hide note names and keyboard shortcuts on keys.
-  - **Sustain Toggle**: Toggle between standard tap-and-release and natural decay hold.
-- **Dynamic Note Display Strip**:
-  - Displays sounding note name (e.g. `Sounding: C4`) and real-time frequency in Hertz (`261.6 Hz`).
-- **Interactive Virtual Keyboard**:
-  - Realistic ivory white keys and elevated glossy black keys.
-  - Vocal part indicator markers (`S`, `A`, `T`, `B`) directly on the keys corresponding to choir voice starting pitches.
-  - Support for mouse click, mobile touch (`pointerdown` / `pointerup`), and desktop keyboard shortcuts (<kbd>A</kbd>–<kbd>K</kbd> for white keys, <kbd>W,E,T,Y,U</kbd> for black keys).
-- **Native Web Audio API Engine**:
-  - Pure client-side synthesis: dual-oscillator blend (fundamental sine + soft triangle harmonic) with warm acoustic attack, exponential decay, and smooth release to eliminate audio clicks.
-  - Zero external sound font dependencies, preserving 100% offline PWA capability.
+2. **Gain Envelope Clamping & Premature Cancellation:**
+   - In `stopPianoNote()`, fast taps or quick clicks were immediately calling `cancelScheduledValues(now)` and attempting to read `note.gain.gain.value`.
+   - In Chromium and WebKit engines, `AudioParam.value` returns the initial baseline (`0.0001`) during an ongoing ramp automation rather than the in-flight computed level.
+   - This caused the attack ramp to be canceled mid-flight and clamped to `0.0001` before audible sound could emerge.
+   - On keys styled with `transform: translateY(2px)`, a `pointerleave` listener was firing upon click, aborting the note instantaneously.
+
+3. **Touch Action Hijacking on Mobile:**
+   - Without `touch-action: none` on the keyboard container and keys, mobile browsers captured taps as scroll gestures, immediately dispatching `pointercancel` and choking notes.
+
+4. **Master Gain & Audio Routing Robustness:**
+   - `masterPianoGain` needed defensive verification to ensure its context is active, volume is unmuted (`1.0`), and node connections are securely wired to `audioCtx.destination`.
 
 ---
 
-## 2. Verification Results
+## Fixes Implemented
 
-| Check | Expected Behavior | Result |
-| :--- | :--- | :--- |
-| **Badge Removal** | "Repertoire Management" absent from Settings modal | ✅ Verified (0 matches in codebase) |
-| **Piano Quick Tool Button** | `id="pianoToggleBtn"` in workspace header with `togglePianoDrawer()` | ✅ Verified in DOM |
-| **Piano Drawer Structure** | `#pianoDrawer`, `#pianoKeyboard`, and voice part triggers in DOM | ✅ Verified in DOM |
-| **Web Audio Engine** | Polyphonic synthesis, oscillator lifecycle cleanup, release ramp | ✅ Verified in `script.js` |
-| **Theme Compatibility** | Light and Dark mode variables, key styling, and contrast | ✅ Verified in `css/style.css` |
-| **State Persistence** | `localStorage.getItem("piano_drawer_visible")` persistence | ✅ Verified in `script.js` |
-| **Version Bump** | App version and service worker cache bumped to `v2.5.5` | ✅ Verified in `index.html`, `sw.js`, `script.js`, `README.md` |
+### 1. Active Autoplay Unlocking ([script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js))
+- Added `unlockPianoAudioContext()` helper that proactively calls `audioCtx.resume()`.
+- Registered global one-time passive listeners on `pointerdown`, `touchstart`, `mousedown`, and `keydown` to automatically unlock audio on any initial user gesture.
+- Embedded `unlockPianoAudioContext()` directly into `showPianoDrawer()`, `togglePianoDrawer()`, `playPianoVoicePart()`, and `renderPianoKeyboard()`.
+- Ensured `getPianoAudioContext()` validates that `masterPianoGain` is alive, set to `gain.value = 1.0`, and connected to `destination`, with a direct destination fallback.
+
+### 2. Envelope Protection & Natural Damper Release ([script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js))
+- Enforced a minimum sounding duration (`minSoundingDuration = 0.06s`) in `stopPianoNote()` so quick taps and clicks complete their attack phase cleanly without being muted prematurely.
+- Guarded release starting level against indeterminate or zero `gain.value` reads (fallback `0.26`).
+- Implemented a smooth acoustic damper release over `0.12s` (or `0.05s` when force-muting).
+- Kept sustain pedal ring-out (`3.2s`) natural and uninterrupted when sustain is ON.
+
+### 3. Pointer Capture & Touch Action Optimization ([script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js) & [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/css/style.css))
+- In `renderPianoKeyboard()`, implemented `setPointerCapture(e.pointerId)` on `pointerdown` and `releasePointerCapture(e.pointerId)` on `pointerup`/`pointercancel`.
+- Removed the fragile `pointerleave` listener that caused immediate note cancellation when keys moved slightly or when mouse drifted.
+- Set `touch-action: none;` on `.piano-keyboard`, `.piano-key-white`, and `.piano-key-black` in `css/style.css` to prevent mobile scroll hijacking.
+
+---
+
+## Verification Results
+- **Automated Verification Script (`scratch/verify_piano.py`)**:
+  - Validated syntax and bracket balance.
+  - Verified presence of all 16 core piano functions.
+  - Confirmed active autoplay unlock listeners.
+  - Confirmed node connection graph and audio destination fallback.
+  - Confirmed attack ramp protection and release damping duration.
+  - Confirmed sustain pedal bypass logic and lingering note damping.
+  - All tests passed with zero errors.
