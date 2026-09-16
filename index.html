@@ -126,7 +126,7 @@
     <div class="card fade-in" id="profileCard">
       <h2 id="profileCardTitle">👤 Choir Member Setup</h2>
       <label for="memberName">Full Name (Required)</label>
-      <input type="text" id="memberName" placeholder="e.g. Juan dela Cruz">
+      <input type="text" id="memberName" placeholder="e.g. Juan dela Cruz" onblur="if(typeof toTitleCase==='function')this.value=toTitleCase(this.value)">
       <div class="input-validation-msg" id="memberNameValidationMsg" style="display: none;">⚠️ Please enter a valid full
         name (at least 5 characters).</div>
 
@@ -546,7 +546,7 @@
           <div id="tabPanelProfile" class="settings-tab-panel tab-content active" role="tabpanel">
             <div class="settings-section">
               <label for="settingMemberName">Full Name</label>
-              <input type="text" id="settingMemberName" placeholder="e.g. Juan dela Cruz">
+              <input type="text" id="settingMemberName" placeholder="e.g. Juan dela Cruz" onblur="if(typeof toTitleCase==='function')this.value=toTitleCase(this.value)">
               <div class="input-validation-msg" id="settingMemberNameValidationMsg" style="display: none;">⚠️ Please
                 enter a valid full name (at least 5 characters).</div>
             </div>

@@ -25,6 +25,27 @@ const CHOIR_AVATARS = [
 
 let selectedAvatarFile = "";
 
+// Helper to cleanly format name strings into Title Case
+// Handles multiple names, trims excess/duplicate whitespace, and capitalizes hyphenated names (e.g. "anne-marie" -> "Anne-Marie")
+function toTitleCase(str) {
+  if (!str || typeof str !== "string") return "";
+  return str
+    .trim()
+    .replace(/\s+/g, " ")
+    .split(" ")
+    .map(word => {
+      return word
+        .split("-")
+        .map(part => {
+          if (!part) return "";
+          return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+        })
+        .join("-");
+    })
+    .join(" ");
+}
+window.toTitleCase = toTitleCase;
+
 // Helper to normalize avatar image source path
 function getAvatarImgSrc(filename) {
   if (!filename) return "";
@@ -940,9 +961,13 @@ function loadProfile() {
   renderAvatarPicker(savedAvatar);
 
   if (savedName && savedName.trim().length >= 5 && savedSection) {
-    document.getElementById("memberName").value = savedName;
+    const formattedName = toTitleCase(savedName);
+    if (formattedName !== savedName) {
+      localStorage.setItem("choir_name", formattedName);
+    }
+    document.getElementById("memberName").value = formattedName;
     document.getElementById("memberSection").value = savedSection;
-    updateActiveProfileDisplay(savedName, savedSection, savedAvatar);
+    updateActiveProfileDisplay(formattedName, savedSection, savedAvatar);
 
     profileCard.style.display = "none";
     activeBanner.style.display = "flex";
@@ -974,7 +999,9 @@ function handleProfileSubmit() {
   const nameInput = document.getElementById("memberName");
   const msgEl = document.getElementById("memberNameValidationMsg");
   const submitBtn = document.getElementById("saveProfileBtn");
-  const name = nameInput ? nameInput.value.trim() : "";
+  const rawName = nameInput ? nameInput.value.trim() : "";
+  const name = toTitleCase(rawName);
+  if (nameInput) nameInput.value = name;
   const section = document.getElementById("memberSection").value;
   const avatar = selectedAvatarFile;
 
@@ -1034,7 +1061,9 @@ function saveProfileFromSettings() {
   const msgEl = document.getElementById("settingMemberNameValidationMsg");
   const saveBtn = document.getElementById("saveSettingsProfileBtn");
   const sectionSelect = document.getElementById("settingMemberSection");
-  const name = nameInput ? nameInput.value.trim() : "";
+  const rawName = nameInput ? nameInput.value.trim() : "";
+  const name = toTitleCase(rawName);
+  if (nameInput) nameInput.value = name;
   const section = sectionSelect ? sectionSelect.value : "";
   const avatar = selectedSettingAvatarFile;
 
@@ -1095,7 +1124,7 @@ function switchProfile() {
 }
 
 function cancelProfileEdit() {
-  const savedName = localStorage.getItem("choir_name");
+  const savedName = toTitleCase(localStorage.getItem("choir_name") || "");
   const savedSection = localStorage.getItem("choir_voice") || localStorage.getItem("choir_section");
   const savedAvatar = localStorage.getItem("choir_avatar") || "";
 
@@ -1111,7 +1140,12 @@ function cancelProfileEdit() {
 }
 
 function validateUser() {
-  const name = document.getElementById("memberName").value.trim();
+  const nameInput = document.getElementById("memberName");
+  const rawName = nameInput ? nameInput.value.trim() : "";
+  const name = toTitleCase(rawName);
+  if (nameInput && nameInput.value !== name) {
+    nameInput.value = name;
+  }
   const section = document.getElementById("memberSection").value;
   if (!name || name.length <= 4 || !section) {
     if (name && name.length <= 4) {
@@ -4076,8 +4110,17 @@ function initNameValidation() {
     setupInput.addEventListener("input", () => {
       validateNameInput(setupInput, setupMsg, setupBtn);
     });
+    setupInput.addEventListener("blur", () => {
+      if (setupInput.value) {
+        setupInput.value = toTitleCase(setupInput.value);
+      }
+      validateNameInput(setupInput, setupMsg, setupBtn);
+    });
     setupInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
+        if (setupInput.value) {
+          setupInput.value = toTitleCase(setupInput.value);
+        }
         if (!validateNameInput(setupInput, setupMsg, setupBtn)) {
           e.preventDefault();
           showToast("⚠️ Name must be at least 5 characters.");
@@ -4095,8 +4138,17 @@ function initNameValidation() {
     settingInput.addEventListener("input", () => {
       validateNameInput(settingInput, settingMsg, settingBtn);
     });
+    settingInput.addEventListener("blur", () => {
+      if (settingInput.value) {
+        settingInput.value = toTitleCase(settingInput.value);
+      }
+      validateNameInput(settingInput, settingMsg, settingBtn);
+    });
     settingInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
+        if (settingInput.value) {
+          settingInput.value = toTitleCase(settingInput.value);
+        }
         if (!validateNameInput(settingInput, settingMsg, settingBtn)) {
           e.preventDefault();
           showToast("⚠️ Name must be at least 5 characters.");
@@ -4104,6 +4156,18 @@ function initNameValidation() {
       }
     });
   }
+
+  // Also bind any inputs with #fullNameInput or #userNameInput for full compatibility
+  ["fullNameInput", "userNameInput"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener("blur", () => {
+        if (el.value) {
+          el.value = toTitleCase(el.value);
+        }
+      });
+    }
+  });
 }
 
 // ==========================================================================

@@ -862,6 +862,14 @@ input[type="text"].input-invalid {
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18) !important;
 }
 
+/* Full Name Auto Title Case Visual Feedback */
+#memberName,
+#settingMemberName,
+#fullNameInput,
+#userNameInput {
+  text-transform: capitalize;
+}
+
 .input-validation-msg {
   font-size: 0.76rem;
   color: #dc2626;
