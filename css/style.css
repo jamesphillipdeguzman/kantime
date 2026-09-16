@@ -523,8 +523,15 @@
 }
 
 /* Fix Repertoire List Items & Headings */
-[data-theme="dark"] .repertoire-header-row h4 {
-  color: var(--text-primary);
+[data-theme="dark"] .repertoire-header-row h4,
+[data-theme="dark"] .settings-section-title,
+[data-theme="dark"] .settings-section-title-wrap h4,
+[data-theme="dark"] .settings-section h4 {
+  color: var(--text-primary, #f1f5f9);
+}
+
+[data-theme="dark"] .settings-section-desc {
+  color: var(--text-muted, #94a3b8);
 }
 
 [data-theme="dark"] .repertoire-list-item {
@@ -2607,12 +2614,41 @@ input[type="text"].input-invalid {
   margin-bottom: 18px;
 }
 
+.settings-section-title-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.settings-section-title,
+.settings-section-title-wrap h4,
+.settings-section h4 {
+  font-size: 0.96rem;
+  font-weight: 750;
+  color: var(--text);
+  margin-top: 0;
+  margin-bottom: 6px !important;
+  line-height: 1.35;
+}
+
 .settings-hint {
   font-size: 0.74rem;
   color: var(--text-muted);
   margin-top: -8px;
   margin-bottom: 10px;
   line-height: 1.35;
+}
+
+/* Ensure descriptive subtext has proper breathing room and cannot overlap headers */
+.settings-section-desc,
+.settings-subtext,
+.settings-section-title-wrap + .settings-hint,
+.settings-section h4 + .settings-hint {
+  margin-top: 0 !important;
+  margin-bottom: 12px;
+  line-height: 1.4;
+  display: block;
 }
 
 .repertoire-header-row {

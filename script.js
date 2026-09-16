@@ -5044,8 +5044,13 @@ function initMetronomeVisibility() {
 }
 
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden && isMetronomeRunning) {
-    stopMetronome();
+  if (document.hidden) {
+    if (isMetronomeRunning) {
+      stopMetronome();
+    }
+    if (typeof dampAllPianoNotes === "function") {
+      dampAllPianoNotes();
+    }
   }
 });
 
@@ -6327,9 +6332,13 @@ function initPWAInstallBanner() {
 // IN-BROWSER PRACTICE PIANO DRAWER & PITCH HELPER
 // ==========================================================================
 let pianoAudioCtx = null;
-let activePianoOscillators = {};
+let masterPianoGain = null;
+let activePianoNotes = {};
+let activePianoOscillators = activePianoNotes; // backwards-compatibility alias
+let pianoKeysCurrentlyHeld = new Set();
 let pianoCurrentOctave = 4;
-let pianoSustain = false;
+let isSustainPedalOn = false;
+let pianoSustain = false; // sync with isSustainPedalOn
 let showPianoLabels = true;
 
 const PIANO_VOICE_PART_PITCHES = {
@@ -6364,6 +6373,13 @@ function getPianoAudioContext() {
     const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
     if (AudioCtxClass) {
       pianoAudioCtx = new AudioCtxClass();
+      try {
+        masterPianoGain = pianoAudioCtx.createGain();
+        masterPianoGain.gain.setValueAtTime(1.0, pianoAudioCtx.currentTime);
+        masterPianoGain.connect(pianoAudioCtx.destination);
+      } catch (e) {
+        masterPianoGain = null;
+      }
     }
   }
   if (pianoAudioCtx && pianoAudioCtx.state === "suspended") {
@@ -6399,42 +6415,71 @@ function playPianoNote(noteName, isTemporary = false) {
   if (!audioCtx) return;
 
   const freq = getPianoFrequency(noteName);
+  const now = audioCtx.currentTime;
 
-  // Cleanly stop any already ringing oscillator for this note
-  stopPianoNote(noteName, true);
+  if (!isTemporary) {
+    pianoKeysCurrentlyHeld.add(noteName);
+  }
+
+  // Smoothly damp any existing note on the exact same pitch to prevent click
+  if (activePianoNotes[noteName]) {
+    try {
+      const oldNote = activePianoNotes[noteName];
+      oldNote.gain.gain.cancelScheduledValues(now);
+      const safeOldVal = Math.max(oldNote.gain.gain.value, 0.0001);
+      oldNote.gain.gain.setValueAtTime(safeOldVal, now);
+      oldNote.gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
+      oldNote.osc1.stop(now + 0.05);
+      if (oldNote.osc2) oldNote.osc2.stop(now + 0.05);
+    } catch (e) {
+      // Handled
+    }
+  }
 
   try {
-    const now = audioCtx.currentTime;
     const osc1 = audioCtx.createOscillator();
     const osc2 = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
+    const noteGain = audioCtx.createGain();
 
-    // Fundamental sine + warm harmonic triangle
+    // Dual-oscillator: fundamental sine + warm harmonic triangle
     osc1.type = "sine";
     osc1.frequency.setValueAtTime(freq, now);
 
     osc2.type = "triangle";
     osc2.frequency.setValueAtTime(freq * 2, now);
 
-    // Warm envelope
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.linearRampToValueAtTime(0.28, now + 0.012);
-    gain.gain.exponentialRampToValueAtTime(pianoSustain || isTemporary ? 0.18 : 0.12, now + 0.22);
+    // Initial floor (non-zero for exponential ramp safety)
+    noteGain.gain.setValueAtTime(0.0001, now);
+    // Quick, clean attack over 0.012s
+    noteGain.gain.linearRampToValueAtTime(0.30, now + 0.012);
 
-    if (isTemporary || pianoSustain) {
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);
-      osc1.stop(now + 1.82);
-      osc2.stop(now + 1.82);
+    // Natural acoustic decay:
+    // When sustain is ON, gentle natural acoustic ring-out decay over 3.0s
+    // When sustain is OFF, natural decay over 1.4s while key is held down
+    const decayDuration = (isSustainPedalOn || isTemporary) ? 3.0 : 1.4;
+    noteGain.gain.exponentialRampToValueAtTime(0.0001, now + decayDuration);
+    osc1.stop(now + decayDuration + 0.02);
+    osc2.stop(now + decayDuration + 0.02);
+
+    osc1.connect(noteGain);
+    osc2.connect(noteGain);
+    if (masterPianoGain) {
+      noteGain.connect(masterPianoGain);
+    } else {
+      noteGain.connect(audioCtx.destination);
     }
-
-    osc1.connect(gain);
-    osc2.connect(gain);
-    gain.connect(audioCtx.destination);
 
     osc1.start(now);
     osc2.start(now);
 
-    activePianoOscillators[noteName] = { osc1, osc2, gain, startTime: now };
+    activePianoNotes[noteName] = {
+      osc1,
+      osc2,
+      gain: noteGain,
+      startTime: now,
+      decayDuration,
+      isTemporary
+    };
 
     updatePianoNoteDisplay(noteName, freq);
     highlightPianoKey(noteName, true);
@@ -6442,7 +6487,9 @@ function playPianoNote(noteName, isTemporary = false) {
     if (isTemporary) {
       setTimeout(() => {
         highlightPianoKey(noteName, false);
-        delete activePianoOscillators[noteName];
+        if (activePianoNotes[noteName] && activePianoNotes[noteName].startTime === now) {
+          delete activePianoNotes[noteName];
+        }
       }, 1800);
     }
   } catch (err) {
@@ -6450,35 +6497,40 @@ function playPianoNote(noteName, isTemporary = false) {
   }
 }
 
-function stopPianoNote(noteName, immediate = false) {
-  const active = activePianoOscillators[noteName];
-  if (!active) {
-    highlightPianoKey(noteName, false);
-    return;
-  }
+function stopPianoNote(noteName, forceMute = false) {
+  pianoKeysCurrentlyHeld.delete(noteName);
+  highlightPianoKey(noteName, false);
+
+  const note = activePianoNotes[noteName];
+  if (!note) return;
 
   const audioCtx = getPianoAudioContext();
   if (!audioCtx) return;
 
-  if (pianoSustain && !immediate) {
-    highlightPianoKey(noteName, false);
+  // If sustain pedal is ON and not forced, let the 3.0s decay continue naturally without choking!
+  if (isSustainPedalOn && !forceMute) {
     return;
   }
 
+  // If sustain is OFF, perform standard smooth quick release:
   const now = audioCtx.currentTime;
   try {
-    active.gain.gain.cancelScheduledValues(now);
-    active.gain.gain.setValueAtTime(active.gain.gain.value, now);
-    active.gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
-    active.osc1.stop(now + 0.13);
-    active.osc2.stop(now + 0.13);
+    note.gain.gain.cancelScheduledValues(now);
+    const safeVal = Math.max(note.gain.gain.value, 0.0001);
+    note.gain.gain.setValueAtTime(safeVal, now);
+    note.gain.gain.exponentialRampToValueAtTime(0.0001, now + (forceMute ? 0.06 : 0.15));
+    note.osc1.stop(now + (forceMute ? 0.07 : 0.16));
+    if (note.osc2) note.osc2.stop(now + (forceMute ? 0.07 : 0.16));
   } catch (e) {
     // Handled
   }
 
-  delete activePianoOscillators[noteName];
-  highlightPianoKey(noteName, false);
+  delete activePianoNotes[noteName];
 }
+
+// Aliases for note triggering
+const startNote = playPianoNote;
+const stopNote = stopPianoNote;
 
 function playPianoVoicePart(part) {
   const target = PIANO_VOICE_PART_PITCHES[part];
@@ -6619,15 +6671,73 @@ function togglePianoLabels() {
 }
 
 function togglePianoSustain() {
-  pianoSustain = !pianoSustain;
+  isSustainPedalOn = !isSustainPedalOn;
+  pianoSustain = isSustainPedalOn;
+  window.isSustainPedalOn = isSustainPedalOn;
+
   const btn = document.getElementById("pianoToggleSustainBtn");
   const status = document.getElementById("pianoSustainStatus");
   if (btn) {
-    btn.classList.toggle("active", pianoSustain);
+    btn.classList.toggle("active", isSustainPedalOn);
   }
   if (status) {
-    status.innerText = pianoSustain ? "On" : "Off";
+    status.innerText = isSustainPedalOn ? "On" : "Off";
   }
+
+  // When turning sustain OFF, cleanly damp any lingering sustained notes that are no longer held down by a finger so they fade out smoothly over 0.20s
+  if (!isSustainPedalOn) {
+    dampLingeringSustainedNotes();
+  }
+}
+
+function dampLingeringSustainedNotes() {
+  const audioCtx = getPianoAudioContext();
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+
+  Object.keys(activePianoNotes).forEach((noteName) => {
+    // Only damp if key is NOT physically held down by user
+    if (!pianoKeysCurrentlyHeld.has(noteName)) {
+      const note = activePianoNotes[noteName];
+      if (note && note.gain) {
+        try {
+          note.gain.gain.cancelScheduledValues(now);
+          const safeVal = Math.max(note.gain.gain.value, 0.0001);
+          note.gain.gain.setValueAtTime(safeVal, now);
+          note.gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.20);
+          note.osc1.stop(now + 0.21);
+          if (note.osc2) note.osc2.stop(now + 0.21);
+        } catch (e) {
+          // Handled
+        }
+        delete activePianoNotes[noteName];
+      }
+    }
+  });
+}
+
+function dampAllPianoNotes() {
+  const audioCtx = getPianoAudioContext();
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+
+  Object.keys(activePianoNotes).forEach((noteName) => {
+    const note = activePianoNotes[noteName];
+    if (note && note.gain) {
+      try {
+        note.gain.gain.cancelScheduledValues(now);
+        const safeVal = Math.max(note.gain.gain.value, 0.0001);
+        note.gain.gain.setValueAtTime(safeVal, now);
+        note.gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+        note.osc1.stop(now + 0.09);
+        if (note.osc2) note.osc2.stop(now + 0.09);
+      } catch (e) {
+        // Handled
+      }
+    }
+  });
+  activePianoNotes = {};
+  pianoKeysCurrentlyHeld.clear();
 }
 
 function togglePianoCollapse() {
@@ -6661,7 +6771,7 @@ function hidePianoDrawer() {
   drawer.style.display = "none";
   localStorage.setItem("piano_drawer_visible", "false");
 
-  Object.keys(activePianoOscillators).forEach((note) => stopPianoNote(note, true));
+  dampAllPianoNotes();
 
   if (btn) {
     btn.classList.remove("active");
@@ -6819,3 +6929,9 @@ window.playPianoVoicePart = playPianoVoicePart;
 window.setPianoOctave = setPianoOctave;
 window.togglePianoLabels = togglePianoLabels;
 window.togglePianoSustain = togglePianoSustain;
+window.startNote = playPianoNote;
+window.stopNote = stopPianoNote;
+window.playPianoNote = playPianoNote;
+window.stopPianoNote = stopPianoNote;
+window.dampLingeringSustainedNotes = dampLingeringSustainedNotes;
+window.dampAllPianoNotes = dampAllPianoNotes;
