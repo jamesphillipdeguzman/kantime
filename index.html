@@ -14,8 +14,8 @@
     content="Access hymn repertoire, practice tracks, and track your daily 15-minute practice sessions for Oct 24–25!">
 
   <!-- Open Graph Image with explicit dimensions & cache buster -->
-  <meta property="og:image" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.3">
-  <meta property="og:image:secure_url" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.3">
+  <meta property="og:image" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.4">
+  <meta property="og:image:secure_url" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.4">
   <meta property="og:image:type" content="image/jpeg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -25,7 +25,7 @@
   <meta name="twitter:title" content="🎶 KanTime | Stake Choir Practice Hub">
   <meta name="twitter:description"
     content="Access hymn repertoire, practice tracks, and track your daily 15-minute practice sessions for Oct 24–25!">
-  <meta name="twitter:image" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.3">
+  <meta name="twitter:image" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.4">
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="🎶 KanTime | Stake Choir Practice Hub">
@@ -43,7 +43,7 @@
   <meta name="apple-mobile-web-app-title" content="KanTime">
   <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192.png">
   <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
-  <link rel="stylesheet" href="css/style.css?v=2.5.3">
+  <link rel="stylesheet" href="css/style.css?v=2.5.4">
 </head>
 
 <body>
@@ -56,7 +56,7 @@
           title="Tap to refresh app and check for new songs" aria-label="Refresh app and check for updates"
           onerror="this.style.display='none'">
         <div class="header-text">
-          <h1>KanTime <span class="app-version-badge" title="KanTime v2.5.3">v2.5.3</span></h1>
+          <h1>KanTime <span class="app-version-badge" title="KanTime v2.5.4">v2.5.4</span></h1>
           <p id="headerSubtitle">Stake Choir Prep • Oct 24–25</p>
         </div>
       </div>
@@ -368,7 +368,7 @@
         </p>
       </div>
       <p class="footer-credit">&copy; <span id="footerYear"></span> James Phillip De Guzman • <span
-          class="footer-version-tag">KanTime v2.5.3</span></p>
+          class="footer-version-tag">KanTime v2.5.4</span></p>
     </footer>
 
     <!-- Fixed Persistent Voice Pitch Checker Overlay (Corner Card) -->
@@ -452,7 +452,7 @@
     <div id="toast">Saved!</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="script.js?v=2.5.3"></script>
+    <script src="script.js?v=2.5.4"></script>
 
     <!-- In-App Resource Viewer Modal -->
     <div id="resourceModal" class="modal-backdrop" onclick="closeModalOnBackdrop(event)">
@@ -524,7 +524,7 @@
         <div class="modal-header">
           <div class="settings-modal-title-wrap">
             <h3 id="settingsModalTitle">⚙️ Practice Settings & Guide</h3>
-            <span class="settings-header-version">v2.5.3</span>
+            <span class="settings-header-version">v2.5.4</span>
           </div>
           <button class="modal-close-btn" type="button" onclick="closeSettingsModal()"
             aria-label="Close settings">&times;</button>
@@ -1101,6 +1101,48 @@
         <div class="modal-footer vocal-tips-modal-footer">
           <button type="button" class="btn btn-primary" onclick="closeVocalTipsModal()">Done / Return to
             Practice</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Duplicate Singer Confirmation Modal -->
+    <div id="duplicateConfirmModal" class="modal-backdrop duplicate-modal-backdrop" onclick="closeDuplicateModalOnBackdrop(event)" role="dialog" aria-modal="true" aria-labelledby="duplicateModalTitle">
+      <div class="modal-box duplicate-modal-box">
+        <div class="modal-header">
+          <div class="duplicate-header-title">
+            <h3 id="duplicateModalTitle">Existing Singer Found! 🎵</h3>
+          </div>
+          <button class="modal-close-btn" type="button" onclick="closeDuplicateConfirmModal()" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body duplicate-modal-body">
+          <p class="duplicate-modal-intro">
+            Did you mean <strong id="duplicateMatchedNameLead">[Matched Name]</strong>? A profile with a similar name already exists in the choir roster.
+          </p>
+
+          <div class="duplicate-match-card">
+            <div class="duplicate-match-avatar" id="duplicateMatchAvatar">
+              <!-- Avatar or fallback 🎵 -->
+            </div>
+            <div class="duplicate-match-info">
+              <div class="duplicate-match-name" id="duplicateMatchedName">Juan dela Cruz</div>
+              <div class="duplicate-match-meta">
+                <span class="part-badge" id="duplicateMatchedVoice">Soprano</span>
+                <span class="duplicate-match-stats" id="duplicateMatchedStats">0m practiced</span>
+              </div>
+            </div>
+          </div>
+
+          <p class="duplicate-modal-subtext">
+            If this is you, tap <strong>&ldquo;Yes, That&rsquo;s Me!&rdquo;</strong> to link this device and keep your practice stats unified. If you are a different singer, tap <strong>&ldquo;No, Create New Profile&rdquo;</strong>.
+          </p>
+        </div>
+        <div class="modal-footer duplicate-modal-footer">
+          <button type="button" class="btn btn-outline" id="btnConfirmNewSinger" onclick="handleDuplicateAction('new')">
+            No, Create New Profile
+          </button>
+          <button type="button" class="btn btn-primary" id="btnConfirmExistingSinger" onclick="handleDuplicateAction('accept')">
+            Yes, That&rsquo;s Me!
+          </button>
         </div>
       </div>
     </div>

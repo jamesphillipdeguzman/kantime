@@ -995,6 +995,391 @@ function loadProfile() {
   }
 }
 
+// ─── FUZZY NAME DEDUPLICATION & ROSTER CACHE ──────────────────────────────
+let cachedKnownSingers = [];
+let pendingProfileSubmission = null;
+
+/**
+ * Loads known choir singers from localStorage for instant offline deduplication.
+ */
+function loadKnownSingersCache() {
+  try {
+    const raw = localStorage.getItem("kantime_known_singers");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        cachedKnownSingers = parsed;
+      }
+    }
+  } catch (err) {
+    console.warn("Could not parse kantime_known_singers cache:", err);
+  }
+}
+
+/**
+ * Updates the known singers cache in memory and persists to localStorage.
+ */
+function updateKnownSingersFromRoster(singers) {
+  if (!singers || !Array.isArray(singers)) return;
+  cachedKnownSingers = singers.map(s => ({
+    name: (s.name || "").trim(),
+    section: s.section || "Choir",
+    avatar: s.avatar || "",
+    totalMins: Number(s.totalMins) || 0
+  })).filter(s => s.name.length > 0);
+
+  try {
+    localStorage.setItem("kantime_known_singers", JSON.stringify(cachedKnownSingers));
+  } catch (err) {
+    console.warn("Could not persist kantime_known_singers to localStorage:", err);
+  }
+}
+
+/**
+ * Background fetch of the Google Sheets roster on startup to keep known singers up-to-date.
+ */
+function fetchKnownSingersRoster() {
+  if (!navigator.onLine) return;
+  fetch(APPS_SCRIPT_URL)
+    .then(res => res.json())
+    .then(data => {
+      if (!data || !Array.isArray(data) || data.length === 0) return;
+      const singerTotals = {};
+      data.forEach(entry => {
+        const trimmedName = (entry.name || "Unknown").trim();
+        const sec = entry.section || "Choir";
+        const mins = Number(entry.minutes) || 0;
+        const av = (entry.avatar || "").trim();
+
+        if (!singerTotals[trimmedName]) {
+          singerTotals[trimmedName] = {
+            name: trimmedName,
+            section: sec,
+            avatar: av,
+            totalMins: 0
+          };
+        } else if (av) {
+          singerTotals[trimmedName].avatar = av;
+        }
+        singerTotals[trimmedName].totalMins += mins;
+      });
+
+      const list = Object.values(singerTotals);
+      if (list.length > 0) {
+        updateKnownSingersFromRoster(list);
+      }
+    })
+    .catch(err => {
+      console.warn("Background fetch of known singers roster failed:", err);
+    });
+}
+
+/**
+ * Initialize known singers cache on page boot.
+ */
+function initKnownSingers() {
+  loadKnownSingersCache();
+  fetchKnownSingersRoster();
+}
+
+/**
+ * Normalizes a singer name by trimming, lowercasing, stripping diacritics, and collapsing spaces.
+ */
+function normalizeSingerName(str) {
+  if (!str) return "";
+  return String(str)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // strip accents
+    .replace(/[^a-z0-9\s]/g, " ")     // replace punctuation with spaces
+    .replace(/\s+/g, " ")             // collapse multi-spaces
+    .trim();
+}
+
+/**
+ * Calculates Levenshtein distance between two strings.
+ */
+function levenshteinDistance(s1, s2) {
+  const m = s1.length;
+  const n = s2.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,      // deletion
+        dp[i][j - 1] + 1,      // insertion
+        dp[i - 1][j - 1] + cost // substitution
+      );
+    }
+  }
+  return dp[m][n];
+}
+
+/**
+ * Calculates a similarity score [0.0 - 1.0] between two names, handling:
+ * - Exact and space-collapsed matches (e.g., "dela cruz" vs "de la cruz")
+ * - Missing or omitted middle initials/names (e.g., "Maria Sotero" vs "Maria Elena Sotero")
+ * - Typographical errors (e.g., "Jonathan" vs "Jonathon")
+ */
+function calculateNameSimilarity(nameA, nameB) {
+  const nA = normalizeSingerName(nameA);
+  const nB = normalizeSingerName(nameB);
+
+  if (!nA || !nB) return 0;
+  if (nA === nB) return 1.0;
+
+  // Space-free comparison (handles "juandelacruz" vs "juan de la cruz")
+  const compactA = nA.replace(/\s+/g, "");
+  const compactB = nB.replace(/\s+/g, "");
+  if (compactA === compactB) return 1.0;
+
+  const wordsA = nA.split(" ").filter(Boolean);
+  const wordsB = nB.split(" ").filter(Boolean);
+
+  // Exact words match in different order (e.g. "Cruz Juan" vs "Juan Cruz")
+  if (wordsA.length === wordsB.length && wordsA.length > 1) {
+    const sortedA = [...wordsA].sort().join(" ");
+    const sortedB = [...wordsB].sort().join(" ");
+    if (sortedA === sortedB) return 0.95;
+  }
+
+  let wordMatchScore = 0;
+  if (wordsA.length >= 2 && wordsB.length >= 2) {
+    const firstA = wordsA[0];
+    const lastA = wordsA[wordsA.length - 1];
+    const firstB = wordsB[0];
+    const lastB = wordsB[wordsB.length - 1];
+
+    // First and last name are identical (e.g. "Maria Elena Sotero" vs "Maria Sotero" or "Maria E. Sotero")
+    if (firstA === firstB && lastA === lastB) {
+      wordMatchScore = 0.88;
+    } else {
+      // Check if one is a word subset of the other with same first name
+      const setA = new Set(wordsA);
+      const setB = new Set(wordsB);
+      const isSubset = wordsA.every(w => setB.has(w)) || wordsB.every(w => setA.has(w));
+      if (isSubset && firstA === firstB) {
+        wordMatchScore = 0.85;
+      }
+    }
+  }
+
+  // Levenshtein character similarity
+  const maxLen = Math.max(nA.length, nB.length);
+  const levDist = levenshteinDistance(nA, nB);
+  const levSim = 1.0 - (levDist / maxLen);
+
+  return Math.max(levSim, wordMatchScore);
+}
+
+/**
+ * Searches the cached roster for a close similarity match (>= 80%),
+ * ignoring the user's currently active profile name.
+ */
+function findSimilarSinger(inputName) {
+  const normInput = normalizeSingerName(inputName);
+  if (!normInput || normInput.length < 4) return null;
+
+  // If user already has a saved profile, do not trigger match against themselves
+  const currentSavedName = normalizeSingerName(localStorage.getItem("choir_name") || "");
+
+  // Combine cachedKnownSingers and cachedLeaderboardSingers without duplicates
+  const candidateMap = new Map();
+  (cachedKnownSingers || []).forEach(s => {
+    if (s && s.name) candidateMap.set(s.name.trim().toLowerCase(), s);
+  });
+  (cachedLeaderboardSingers || []).forEach(s => {
+    if (s && s.name) candidateMap.set(s.name.trim().toLowerCase(), s);
+  });
+
+  let bestMatch = null;
+  let highestSim = 0;
+
+  for (const singer of candidateMap.values()) {
+    const candidateNorm = normalizeSingerName(singer.name);
+    // Ignore if it's the exact same name as the user's currently signed-in profile
+    if (candidateNorm === currentSavedName && currentSavedName.length > 0) {
+      continue;
+    }
+
+    const sim = calculateNameSimilarity(normInput, candidateNorm);
+    if (sim >= 0.80 && sim > highestSim) {
+      highestSim = sim;
+      bestMatch = singer;
+    }
+  }
+
+  if (bestMatch) {
+    return {
+      matchedSinger: bestMatch,
+      similarity: highestSim
+    };
+  }
+  return null;
+}
+
+/**
+ * Shows the existing singer confirmation modal with the matched profile details.
+ */
+function showDuplicateConfirmModal(matchedSinger, pendingData) {
+  pendingProfileSubmission = {
+    matchedSinger: matchedSinger,
+    ...pendingData
+  };
+
+  const nameLead = document.getElementById("duplicateMatchedNameLead");
+  if (nameLead) nameLead.textContent = `${matchedSinger.name} (${matchedSinger.section || "Choir"})`;
+
+  const nameEl = document.getElementById("duplicateMatchedName");
+  if (nameEl) nameEl.textContent = matchedSinger.name;
+
+  const voiceEl = document.getElementById("duplicateMatchedVoice");
+  if (voiceEl) {
+    voiceEl.textContent = matchedSinger.section || "Choir";
+    voiceEl.setAttribute("data-voice", matchedSinger.section || "Choir");
+  }
+
+  const statsEl = document.getElementById("duplicateMatchedStats");
+  if (statsEl) {
+    const mins = Number(matchedSinger.totalMins) || 0;
+    const hours = (mins / 60).toFixed(1);
+    statsEl.textContent = mins > 0 ? `• ${mins}m (${hours}h) practiced` : "• Active choir member";
+  }
+
+  const avatarWrap = document.getElementById("duplicateMatchAvatar");
+  if (avatarWrap) {
+    if (matchedSinger.avatar) {
+      avatarWrap.innerHTML = `<img src="${matchedSinger.avatar}" alt="${escapeLeaderboardHtml(matchedSinger.name)}">`;
+    } else {
+      avatarWrap.innerHTML = `🎵`;
+    }
+  }
+
+  const modal = document.getElementById("duplicateConfirmModal");
+  if (modal) modal.classList.add("active");
+}
+
+/**
+ * Closes the duplicate singer confirmation modal.
+ */
+function closeDuplicateConfirmModal() {
+  const modal = document.getElementById("duplicateConfirmModal");
+  if (modal) modal.classList.remove("active");
+}
+
+/**
+ * Closes the duplicate singer confirmation modal when clicking on the frosted backdrop.
+ */
+function closeDuplicateModalOnBackdrop(e) {
+  if (e.target && e.target.id === "duplicateConfirmModal") {
+    closeDuplicateConfirmModal();
+  }
+}
+
+/**
+ * Handles confirmation actions from the duplicate singer modal:
+ * - 'accept': Links device directly to existing profile without creating duplicate Google Sheets record.
+ * - 'new': Confirms distinct singer identity and proceeds to create the profile.
+ */
+function handleDuplicateAction(actionType) {
+  if (!pendingProfileSubmission) {
+    closeDuplicateConfirmModal();
+    return;
+  }
+
+  const submission = pendingProfileSubmission;
+  closeDuplicateConfirmModal();
+
+  if (actionType === "accept") {
+    // Links device localStorage directly to existing matched profile/voice
+    applyProfileData(
+      submission.matchedSinger.name,
+      submission.matchedSinger.section,
+      submission.matchedSinger.avatar || submission.avatar
+    );
+    showToast(`Welcome back, ${submission.matchedSinger.name}! 🎵 Profile linked.`);
+    if (submission.isSetting) {
+      closeSettingsModal();
+    }
+  } else if (actionType === "new") {
+    // User confirms they are a distinct singer -> proceed with new profile
+    applyProfileData(
+      submission.name,
+      submission.section,
+      submission.avatar
+    );
+    showToast(`Welcome to KanTime, ${submission.name}! ✨`);
+    if (submission.isSetting) {
+      closeSettingsModal();
+    }
+  }
+
+  pendingProfileSubmission = null;
+}
+
+/**
+ * Common helper to persist profile data to localStorage and synchronize the UI.
+ */
+function applyProfileData(name, section, avatar) {
+  localStorage.setItem("choir_name", name);
+  localStorage.setItem("choir_section", section);
+  localStorage.setItem("choir_voice", section);
+  if (avatar) {
+    localStorage.setItem("choir_avatar", avatar);
+  } else {
+    localStorage.removeItem("choir_avatar");
+  }
+
+  // Update inputs on main setup card & settings modal
+  const pageNameInput = document.getElementById("memberName");
+  if (pageNameInput) pageNameInput.value = name;
+  const pageSecSelect = document.getElementById("memberSection");
+  if (pageSecSelect) pageSecSelect.value = section;
+
+  const settingNameInput = document.getElementById("settingMemberName");
+  if (settingNameInput) settingNameInput.value = name;
+  const settingSecSelect = document.getElementById("settingMemberSection");
+  if (settingSecSelect) settingSecSelect.value = section;
+
+  selectedAvatarFile = avatar || "";
+  selectedSettingAvatarFile = avatar || "";
+  renderAvatarPicker(avatar);
+  renderSettingAvatarPicker(avatar);
+
+  updateActiveProfileDisplay(name, section, avatar);
+
+  const profileCard = document.getElementById("profileCard");
+  if (profileCard) profileCard.style.display = "none";
+  const activeBanner = document.getElementById("activeProfileBanner");
+  if (activeBanner) activeBanner.style.display = "flex";
+  const mainDashboard = document.getElementById("mainDashboard");
+  if (mainDashboard) mainDashboard.style.display = "block";
+
+  const cancelBtn = document.getElementById("cancelProfileBtn");
+  if (cancelBtn) cancelBtn.style.display = "inline-flex";
+
+  const targetSelect = document.getElementById("targetSong");
+  const currentSong = (targetSelect && targetSelect.value) ? targetSelect.value : (localStorage.getItem("kantime_target_song") || "Know This, That Every Soul Is Free");
+  if (currentSong) renderSelectedSongResource(currentSong);
+
+  loadLeaderboard();
+  initEncouragementBanner();
+
+  const pitchWidget = document.getElementById("pitchCheckerWidget");
+  if (pitchWidget) pitchWidget.style.display = "block";
+  updatePitchTargetVoice();
+
+  const practiceWorkspace = document.getElementById("practiceWorkspace");
+  if (practiceWorkspace) {
+    practiceWorkspace.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
 function handleProfileSubmit() {
   const nameInput = document.getElementById("memberName");
   const msgEl = document.getElementById("memberNameValidationMsg");
@@ -1019,41 +1404,20 @@ function handleProfileSubmit() {
     return;
   }
 
-  localStorage.setItem("choir_name", name);
-  localStorage.setItem("choir_section", section);
-  localStorage.setItem("choir_voice", section);
-  if (avatar) {
-    localStorage.setItem("choir_avatar", avatar);
-  } else {
-    localStorage.removeItem("choir_avatar");
+  // ── Fuzzy Name Deduplication Check ──
+  const matchResult = findSimilarSinger(name);
+  if (matchResult) {
+    showDuplicateConfirmModal(matchResult.matchedSinger, {
+      name,
+      section,
+      avatar,
+      isSetting: false
+    });
+    return;
   }
 
-  updateActiveProfileDisplay(name, section, avatar);
-
-  document.getElementById("profileCard").style.display = "none";
-  document.getElementById("activeProfileBanner").style.display = "flex";
-
-  const dashboard = document.getElementById("mainDashboard");
-  dashboard.style.display = "block";
-
-  const cancelBtn = document.getElementById("cancelProfileBtn");
-  if (cancelBtn) cancelBtn.style.display = "inline-flex";
-
-  const currentSong = document.getElementById("targetSong").value || "Know This, That Every Soul Is Free";
-  renderSelectedSongResource(currentSong);
-
+  applyProfileData(name, section, avatar);
   showToast("Profile updated!");
-  loadLeaderboard();
-  initEncouragementBanner();
-
-  const pitchWidget = document.getElementById("pitchCheckerWidget");
-  if (pitchWidget) pitchWidget.style.display = "block";
-  updatePitchTargetVoice();
-
-  const practiceWorkspace = document.getElementById("practiceWorkspace");
-  if (practiceWorkspace) {
-    practiceWorkspace.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
 }
 
 function saveProfileFromSettings() {
@@ -1081,36 +1445,19 @@ function saveProfileFromSettings() {
     return false;
   }
 
-  localStorage.setItem("choir_name", name);
-  localStorage.setItem("choir_section", section);
-  localStorage.setItem("choir_voice", section);
-  if (avatar) {
-    localStorage.setItem("choir_avatar", avatar);
-  } else {
-    localStorage.removeItem("choir_avatar");
+  // ── Fuzzy Name Deduplication Check ──
+  const matchResult = findSimilarSinger(name);
+  if (matchResult) {
+    showDuplicateConfirmModal(matchResult.matchedSinger, {
+      name,
+      section,
+      avatar,
+      isSetting: true
+    });
+    return false;
   }
 
-  const pageNameInput = document.getElementById("memberName");
-  if (pageNameInput) pageNameInput.value = name;
-  const pageSecSelect = document.getElementById("memberSection");
-  if (pageSecSelect) pageSecSelect.value = section;
-  renderAvatarPicker(avatar);
-
-  updateActiveProfileDisplay(name, section, avatar);
-
-  const profileCard = document.getElementById("profileCard");
-  if (profileCard) profileCard.style.display = "none";
-  const activeBanner = document.getElementById("activeProfileBanner");
-  if (activeBanner) activeBanner.style.display = "flex";
-  const mainDashboard = document.getElementById("mainDashboard");
-  if (mainDashboard) mainDashboard.style.display = "block";
-
-  const targetSelect = document.getElementById("targetSong");
-  const currentSong = (targetSelect && targetSelect.value) ? targetSelect.value : (localStorage.getItem("kantime_target_song") || "");
-  if (currentSong) renderSelectedSongResource(currentSong);
-
-  loadLeaderboard();
-  updatePitchTargetVoice();
+  applyProfileData(name, section, avatar);
   showToast("Profile & Voice updated! ✨");
   return true;
 }
@@ -1920,6 +2267,7 @@ function loadLeaderboard() {
       });
 
       cachedLeaderboardSingers = Object.values(singerTotals).sort((a, b) => b.totalMins - a.totalMins);
+      updateKnownSingersFromRoster(cachedLeaderboardSingers);
       renderLeaderboardSingers();
 
       const sortedSections = Object.entries(sectionTotals).sort((a, b) => b[1] - a[1]);
@@ -2673,7 +3021,10 @@ function closeSettingsModal() {
     const savedAv = localStorage.getItem("choir_avatar") || "";
 
     if (curName && curName.length >= 5 && curSec && (curName !== savedName || curSec !== savedSec || selectedSettingAvatarFile !== savedAv)) {
-      saveProfileFromSettings();
+      const saved = saveProfileFromSettings();
+      if (saved === false) {
+        return;
+      }
     }
   }
 
@@ -5872,6 +6223,7 @@ window.addEventListener("DOMContentLoaded", function () {
   applyTimerDuration(getUserSettings().timerMinutes, false);
   populateSongSelectDropdown();
   renderArchivedRepertoireSection();
+  initKnownSingers();
   loadProfile();
   initNameValidation();
   restoreTimerState();
@@ -5883,6 +6235,16 @@ window.addEventListener("DOMContentLoaded", function () {
   initPWAInstallBanner();
 });
 
+// Close duplicate singer confirmation modal on Escape key
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Escape") {
+    const dupModal = document.getElementById("duplicateConfirmModal");
+    if (dupModal && dupModal.classList.contains("active")) {
+      closeDuplicateConfirmModal();
+    }
+  }
+});
+
 window.handleSettingPastRepertoireToggle = handleSettingPastRepertoireToggle;
 window.renderArchivedRepertoireSection = renderArchivedRepertoireSection;
 window.toggleArchivedRepertoireCollapse = toggleArchivedRepertoireCollapse;
@@ -5891,3 +6253,8 @@ window.toggleSongArchiveState = toggleSongArchiveState;
 window.startSelfCheckRecording = startSelfCheckRecording;
 window.stopSelfCheckRecording = stopSelfCheckRecording;
 window.discardSelfCheckRecording = discardSelfCheckRecording;
+window.handleDuplicateAction = handleDuplicateAction;
+window.closeDuplicateConfirmModal = closeDuplicateConfirmModal;
+window.closeDuplicateModalOnBackdrop = closeDuplicateModalOnBackdrop;
+window.findSimilarSinger = findSimilarSinger;
+window.calculateNameSimilarity = calculateNameSimilarity;

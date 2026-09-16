@@ -92,6 +92,7 @@ It provides choir members with:
 
 | Version | Date | Key Highlights |
 |:---|:---:|:---|
+| **v2.5.4** | 2026-09-16 | Added **Fuzzy Name Deduplication** during profile registration/setup (Levenshtein distance, first/last name matching, offline roster caching, and interactive confirmation modal with "Yes, That's Me!" profile linking); provided backend Google Apps Script deduplication safety guard. |
 | **v2.5.0** | 2026-09-10 | Added **Vocal Warm-Ups & Singing Tips** modal with 6 drill categories, Middle C Web Audio pitch helper, and **Export All Drills to PDF**; standardized timer action button to **"Start Practice"**; added in-app **Version Number Badges** (Header, Footer, Settings); tucked **Metronome behind an on-demand toggle** (hidden by default); updated full project documentation. |
 | **v2.2.0** | 2026-09-10 | Implemented built-in Web Audio **In-Browser Metronome** (BPM 40–220, tap tempo, 2/4, 3/4, 4/4, 6/8, pulsing LEDs) and **Dark/Light Theme System** with 1-click header toggle and system auto-detection. |
 | **v2.1.0** | 2026-09-10 | Added **Quick Timer Duration Adjuster** pills (5m–60m) directly on landing page; enforced strict **5+ character member name validation** across setup and settings modals. |
