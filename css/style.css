@@ -2030,7 +2030,8 @@ input[type="text"].input-invalid {
   transition: opacity 0.22s ease;
 }
 
-.modal-backdrop.active {
+.modal-backdrop.active,
+.modal-backdrop.show {
   opacity: 1;
   pointer-events: auto;
 }
@@ -2050,7 +2051,8 @@ input[type="text"].input-invalid {
   border: 1px solid var(--border);
 }
 
-.modal-backdrop.active .modal-box {
+.modal-backdrop.active .modal-box,
+.modal-backdrop.show .modal-box {
   transform: translateY(0) scale(1);
 }
 
@@ -6253,6 +6255,10 @@ input[type="text"].input-invalid {
   padding-right: 8px;
   transition: background-color 0.15s ease, transform 0.08s ease;
   user-select: none;
+}
+
+.board-row.clickable-singer * {
+  cursor: pointer;
 }
 
 .board-row.clickable-singer:hover {
