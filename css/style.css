@@ -2110,6 +2110,10 @@ input[type="text"].input-invalid {
   flex: 1;
   display: flex;
   flex-direction: column;
+  background: var(--bg-modal, var(--card-bg, #ffffff));
+}
+
+#videoModal .modal-body {
   background: #0f172a;
 }
 
@@ -6335,8 +6339,17 @@ input[type="text"].input-invalid {
   color: var(--text-main, #f8fafc);
 }
 
+#singerDetailsModal .singer-details-modal-body,
 .singer-details-modal-body {
   padding: 24px 20px 16px;
+  background: var(--bg-modal, var(--card-bg, #ffffff));
+}
+
+[data-theme="dark"] #singerDetailsModal .singer-details-modal-body,
+[data-theme="dark"] .singer-details-modal-body,
+.dark #singerDetailsModal .singer-details-modal-body,
+.dark .singer-details-modal-body {
+  background: var(--bg-modal, #131b2e);
 }
 
 #singerDetailsModal .singer-details-hero,
@@ -6434,57 +6447,92 @@ input[type="text"].input-invalid {
   border-color: rgba(245, 158, 11, 0.45);
 }
 
+#singerDetailsModal .singer-details-stats-cards,
 .singer-details-stats-cards {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin-top: 14px;
+  background: transparent;
 }
 
+#singerDetailsModal .singer-stat-tile,
 .singer-stat-tile {
-  background: var(--bg-card-inner, rgba(15, 23, 42, 0.03));
-  border: 1px solid var(--border);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 14px;
   padding: 16px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
+[data-theme="dark"] #singerDetailsModal .singer-stat-tile,
 [data-theme="dark"] .singer-stat-tile,
+.dark #singerDetailsModal .singer-stat-tile,
 .dark .singer-stat-tile {
-  background: rgba(255, 255, 255, 0.04);
+  background: #1e293b;
+  border: 1px solid #334155;
 }
 
+#singerDetailsModal .singer-stat-label,
 .singer-stat-label {
   font-size: 0.74rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--text-muted);
+  color: #64748b;
 }
 
+[data-theme="dark"] #singerDetailsModal .singer-stat-label,
+[data-theme="dark"] .singer-stat-label,
+.dark #singerDetailsModal .singer-stat-label,
+.dark .singer-stat-label {
+  color: #94a3b8;
+}
+
+#singerDetailsModal .singer-stat-value,
 .singer-stat-value {
   font-size: 1.45rem;
   font-weight: 900;
-  color: var(--primary, #2563eb);
+  color: #1d4ed8;
 }
 
+[data-theme="dark"] #singerDetailsModal .singer-stat-value,
 [data-theme="dark"] .singer-stat-value,
+.dark #singerDetailsModal .singer-stat-value,
 .dark .singer-stat-value {
   color: #60a5fa;
 }
 
+#singerDetailsModal .singer-stat-subtitle,
 .singer-stat-subtitle {
   font-size: 0.78rem;
   font-weight: 550;
-  color: var(--text-muted);
+  color: #475569;
 }
 
+[data-theme="dark"] #singerDetailsModal .singer-stat-subtitle,
+[data-theme="dark"] .singer-stat-subtitle,
+.dark #singerDetailsModal .singer-stat-subtitle,
+.dark .singer-stat-subtitle {
+  color: #94a3b8;
+}
+
+#singerDetailsModal .singer-details-footer,
 .singer-details-footer {
   padding: 12px 20px 20px;
   border-top: none;
+  background: var(--bg-modal, var(--card-bg, #ffffff));
+}
+
+[data-theme="dark"] #singerDetailsModal .singer-details-footer,
+[data-theme="dark"] .singer-details-footer,
+.dark #singerDetailsModal .singer-details-footer,
+.dark .singer-details-footer {
+  background: var(--bg-modal, #131b2e);
 }
 
 .btn-full-width {
