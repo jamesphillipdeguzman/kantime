@@ -6606,15 +6606,15 @@ function playPianoNote(noteName, isTemporary = false) {
     gain.gain.exponentialRampToValueAtTime(0.12, now + 0.18);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
 
-    osc1.stop(now + 1.22);
-    osc2.stop(now + 1.22);
-
     osc1.connect(gain);
     osc2.connect(gain);
     gain.connect(audioCtx.destination);
 
     osc1.start(now);
     osc2.start(now);
+
+    osc1.stop(now + 1.22);
+    osc2.stop(now + 1.22);
 
     activePianoOscillators[noteName] = { osc1, osc2, gain, startTime: now };
 

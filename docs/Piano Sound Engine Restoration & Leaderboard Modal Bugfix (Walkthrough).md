@@ -13,10 +13,19 @@ Inspected and resolved the issues across [index.html](file:///c:/Users/PC/OneDri
   - **Display Logic & Affordance**: Modal display explicitly applies `modal.style.display = 'flex'` and `.classList.add('active', 'show')`. Added `cursor: pointer` to `.board-row.clickable-singer *`.
   - **Dismissal**: Functional close button (`✕`), "Close" footer button, backdrop click, and Escape key listener.
 
-### 2. Piano Sound Engine Clean Restoration (from commit `1517ec0`)
-- Restored dual oscillator synthesis (fundamental sine + harmonic triangle) with direct routing `gain.connect(audioCtx.destination)`.
-- Restored natural decay (~1.2s) with fast attack (`0.012s`) and pure acoustic decay (`0.18s` down to `0.12`, then exponential to `0.0001` at `1.2s`).
-- Keyboard shortcuts (`A–K`, `W, E, T, Y, U`) trigger both audio and visual states (`.key-pressed` and `.is-pressed`) with input typing guards.
+### 2. Piano Sound Engine InvalidStateError Fix & Clean Audio Playback
+- **Root Cause Caught via Browser Console**:
+  ```text
+  InvalidStateError: Failed to execute 'stop' on 'AudioScheduledSourceNode': cannot call stop without calling start first.
+      at playPianoNote (script.js:6609)
+  ```
+  In Web Audio, calling `osc1.stop(now + 1.22)` while the oscillator is still in `UNSCHEDULED_STATE` (before `osc1.start(now)` has been executed) throws an immediate fatal `InvalidStateError`. This aborted execution at line 6609 into `catch (err)`, preventing `osc.start()` from ever running and muting all keys.
+- **Fix Applied**:
+  - Reordered the lifecycle in `playPianoNote()` in [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js):
+    1. Connect nodes: `osc1.connect(gain); osc2.connect(gain); gain.connect(audioCtx.destination);`
+    2. Start nodes: `osc1.start(now); osc2.start(now);`
+    3. Schedule stop: `osc1.stop(now + 1.22); osc2.stop(now + 1.22);`
+  - Fixed rapid re-triggering in `stopPianoNote(note, true)` with `try / catch` around immediate damp stops.
 
 ---
 
@@ -27,5 +36,14 @@ Inspected and resolved the issues across [index.html](file:///c:/Users/PC/OneDri
   - Confirmed `showSingerDetails` exists and is exported to `window`.
   - Confirmed rank pill format `#${displayRank} • ${mins}m (${hours}h)`.
   - Confirmed delegated click listener on `#topSingersList`.
-  - Confirmed clean piano synthesis from `1517ec0`.
+  - Confirmed `osc1.start()` strictly precedes `osc1.stop()`.
   - All tests passed 100% clean.
+
+- **Real Browser Live Testing (Browser Subagent)**:
+  - Opened `index.html` in Chrome:
+    - Clicked `🎹 Piano` button (`#pianoToggleBtn`) -> Piano drawer opened smoothly.
+    - Clicked white key `C4` -> Display updated: `Sounding: C4 (261.6 Hz)`.
+    - Clicked white key `E4` -> Display updated: `Sounding: E4 (329.6 Hz)`.
+    - Clicked choir reference button `Soprano (C5)` -> Display updated: `Sounding: C5 (523.3 Hz)`.
+    - Pressed physical keyboard key `A` -> Display updated: `Sounding: C4 (261.6 Hz)`.
+    - Console inspected: **0 runtime errors** during playback. Complete session video recorded.
