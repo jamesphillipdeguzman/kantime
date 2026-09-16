@@ -222,26 +222,6 @@ const DEFAULT_USER_SETTINGS = {
     // 🌟 ACTIVE REPERTOIRE (Oct 24–25 Prep)
     // ==========================================
     {
-      id: "song_active_1",
-      title: "The Lord Is My Light (#89)",
-      part: "Adult Choir",
-      event: "Oct 24–25 Stake Conference",
-      isArchived: false,
-      sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/the-lord-is-my-light?crumbs=hymns&order=number&lang=eng",
-      videoUrl: "",
-      note: "ℹ️ Opens in external tab. Your timer will keep running while you practice!"
-    },
-    {
-      id: "song_active_2",
-      title: "I Need Thee Every Hour (#98)",
-      part: "All Parts",
-      event: "Oct 24–25 Stake Conference",
-      isArchived: false,
-      sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/i-need-thee-every-hour?crumbs=hymns&order=number&lang=eng",
-      videoUrl: "",
-      note: "ℹ️ Opens in external tab. Your timer will keep running while you practice!"
-    },
-    {
       id: "song_oct_1",
       title: "Know This, That Every Soul Is Free (#240)",
       part: "Adult Choir #1",

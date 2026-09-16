@@ -133,22 +133,93 @@
   color: #f87171;
 }
 
+[data-theme="dark"] .quick-duration-wrapper {
+  background: var(--card-bg-subtle, #182238);
+  border-color: var(--border-subtle, rgba(255, 255, 255, 0.1));
+}
+
+[data-theme="dark"] .quick-duration-label {
+  color: var(--text-primary, #f8fafc);
+}
+
 [data-theme="dark"] .quick-duration-pill {
-  background: var(--card-bg-subtle);
-  border-color: var(--border);
-  color: var(--text-secondary);
+  background: var(--bg-card, #131b2e);
+  border-color: var(--border-subtle, rgba(255, 255, 255, 0.1));
+  color: var(--text-secondary, #cbd5e1);
 }
 
 [data-theme="dark"] .quick-duration-pill:hover:not(:disabled) {
-  background: var(--primary-light);
-  border-color: var(--primary);
-  color: var(--primary);
+  background: var(--primary-light, rgba(59, 130, 246, 0.16));
+  border-color: var(--primary, #60a5fa);
+  color: var(--primary, #60a5fa);
 }
 
 [data-theme="dark"] .quick-duration-pill.active {
-  background: var(--primary);
-  border-color: var(--primary);
+  background: var(--primary, #3b82f6);
+  border-color: var(--primary, #3b82f6);
   color: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .timer-display {
+  background: linear-gradient(180deg, rgba(30, 58, 138, 0.28) 0%, rgba(15, 23, 42, 0.65) 100%);
+  border-color: rgba(96, 165, 250, 0.35);
+  color: #60a5fa;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4), 0 0 16px rgba(59, 130, 246, 0.15);
+}
+
+[data-theme="dark"] .encouragement-banner {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.28);
+  color: #6ee7b7;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="dark"] .encouragement-banner.halfway {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.28);
+  color: #fcd34d;
+}
+
+[data-theme="dark"] .encouragement-banner.milestone {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.28);
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .local-audio-card {
+  background: var(--bg-card, #131b2e);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+}
+
+[data-theme="dark"] .local-audio-title,
+[data-theme="dark"] .local-audio-title span {
+  color: var(--text-primary, #f8fafc) !important;
+}
+
+[data-theme="dark"] .badge-cached-offline {
+  background: rgba(16, 185, 129, 0.16);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #34d399;
+}
+
+[data-theme="dark"] .audio-part-pill {
+  background: var(--card-bg-subtle, #182238);
+  border-color: var(--border-subtle, rgba(255, 255, 255, 0.1));
+  color: var(--text-muted, #94a3b8);
+}
+
+[data-theme="dark"] .audio-part-pill:hover {
+  background: var(--primary-light, rgba(59, 130, 246, 0.16));
+  color: var(--primary, #60a5fa);
+  border-color: var(--primary-border, #1e3a8a);
+}
+
+[data-theme="dark"] .audio-part-pill.active {
+  background: var(--primary, #3b82f6);
+  color: #ffffff;
+  border-color: var(--primary, #3b82f6);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 [data-theme="dark"] .board-row {
@@ -1027,7 +1098,7 @@ input[type="text"].input-invalid {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 8px;
-  background: #f8fafc;
+  background: var(--card-bg-subtle, #f8fafc);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 8px 12px;
@@ -1063,7 +1134,7 @@ input[type="text"].input-invalid {
   font-weight: 750;
   border-radius: var(--radius-full);
   border: 1px solid var(--border);
-  background: #ffffff;
+  background: var(--bg-card, #ffffff);
   color: var(--text-muted);
   cursor: pointer;
   white-space: nowrap;
@@ -1199,7 +1270,7 @@ input[type="text"].input-invalid {
 }
 
 .btn-outline {
-  background: #ffffff;
+  background: var(--bg-card, #ffffff);
   border: 1.5px solid var(--border);
   color: var(--text);
   box-shadow: var(--shadow-sm);
@@ -1413,7 +1484,7 @@ input[type="text"].input-invalid {
 
 /* Bundled Local Audio Rehearsal Card */
 .local-audio-card {
-  background: #ffffff;
+  background: var(--card-bg, #ffffff);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 12px 14px;
@@ -1467,7 +1538,7 @@ input[type="text"].input-invalid {
   font-weight: 700;
   border-radius: var(--radius-full);
   border: 1px solid var(--border);
-  background: #f8fafc;
+  background: var(--card-bg-subtle, #f8fafc);
   color: var(--text-muted);
   cursor: pointer;
   white-space: nowrap;
