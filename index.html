@@ -303,6 +303,25 @@
         </div>
       </div>
 
+      <!-- Archived / Past Conferences Section (Collapsible, shown when enabled in Settings) -->
+      <div class="card archived-repertoire-card" id="archivedRepertoireCard" style="display: none;">
+        <div class="archived-header-row" onclick="toggleArchivedRepertoireCollapse()" role="button" tabindex="0"
+          onkeydown="if(event.key==='Enter'||event.key===' ')toggleArchivedRepertoireCollapse()"
+          aria-expanded="false" aria-controls="archivedRepertoireContent">
+          <div class="archived-title-wrap">
+            <h2>📁 Archived / Past Conferences</h2>
+            <span class="archived-count-pill" id="archivedCountPill">0 pieces</span>
+          </div>
+          <button type="button" class="btn-icon-collapse" id="archivedCollapseBtn" aria-label="Toggle archived repertoire">▼</button>
+        </div>
+        <div class="archived-repertoire-content" id="archivedRepertoireContent" style="display: none;">
+          <p class="archived-subtitle">Repertoire from past events &amp; conferences. Tap any piece to load it into the rehearsal workspace.</p>
+          <div class="archived-items-grid" id="archivedItemsGrid">
+            <!-- Dynamically populated from archived songs -->
+          </div>
+        </div>
+      </div>
+
       <!-- Top Dedicated Singers & Primary Stars -->
       <div class="card" id="leaderboardCard">
         <h2 id="leaderboardCardTitle">🏆 Top 10 Dedicated Singers</h2>
@@ -617,8 +636,22 @@
 
             <div class="settings-section-divider"></div>
 
-            <div class="repertoire-header-row">
-              <h4>Custom Repertoire (<span id="repertoireCount">0</span>)</h4>
+            <div class="settings-section">
+              <div class="settings-section-title-wrap">
+                <h4>Event Repertoire &amp; Archives</h4>
+                <span class="badge-settings-pill">Repertoire Management</span>
+              </div>
+              <p class="settings-hint">Group pieces by performance event and manage post-conference archiving.</p>
+
+              <label class="setting-checkbox-row" for="settingShowPastRepertoire" style="margin-top: 10px;">
+                <input type="checkbox" id="settingShowPastRepertoire" onchange="handleSettingPastRepertoireToggle(this.checked)">
+                <span>Show Past Repertoire (Oct 24–25 Stake Conference)</span>
+              </label>
+              <p class="settings-hint">When disabled (default for post-conference mode), archived pieces are hidden from the active practice hub. When enabled, they appear in a collapsible "Archived / Past Conferences" section on your practice dashboard.</p>
+            </div>
+
+            <div class="repertoire-header-row" style="margin-top: 16px;">
+              <h4>Choir Pieces (<span id="repertoireCount">0</span>)</h4>
               <button type="button" class="btn-link" id="toggleAddSongBtn" onclick="openSongForm()">➕ Add Song</button>
             </div>
 
@@ -629,6 +662,21 @@
 
               <label for="songFormTitle">Song Title *</label>
               <input type="text" id="songFormTitle" placeholder="e.g. Choose You This Day">
+
+              <label for="songFormEvent">Event / Conference Group</label>
+              <input type="text" id="songFormEvent" list="eventSuggestions" placeholder="e.g. Oct 24–25 Stake Conference">
+              <datalist id="eventSuggestions">
+                <option value="Oct 24–25 Stake Conference"></option>
+                <option value="Active Repertoire"></option>
+                <option value="Sacrament Meeting"></option>
+                <option value="Easter / Christmas Program"></option>
+                <option value="Special Musical Number"></option>
+              </datalist>
+
+              <label class="setting-checkbox-row" for="songFormArchived" style="margin: 8px 0 12px;">
+                <input type="checkbox" id="songFormArchived">
+                <span>Archive this piece (Past Event / Conference)</span>
+              </label>
 
               <label for="songFormPart">Target Voice Part / Choir</label>
               <select id="songFormPart">

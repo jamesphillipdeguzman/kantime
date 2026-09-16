@@ -195,11 +195,34 @@ function getLeaderboardAvatarHtml(avatarFile, singerName) {
 const DEFAULT_USER_SETTINGS = {
   targetDate: "Stake Choir Prep • Oct 24–25",
   timerMinutes: 15,
+  showPastRepertoire: false,
   songs: [
+    {
+      id: "song_active_1",
+      title: "The Lord Is My Light (#89)",
+      part: "Adult Choir",
+      event: "Active Repertoire",
+      isArchived: false,
+      sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/the-lord-is-my-light?crumbs=hymns&order=number&lang=eng",
+      videoUrl: "",
+      note: "ℹ️ Opens in external tab. Your timer will keep running while you practice!"
+    },
+    {
+      id: "song_active_2",
+      title: "I Need Thee Every Hour (#98)",
+      part: "All Parts",
+      event: "Active Repertoire",
+      isArchived: false,
+      sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/i-need-thee-every-hour?crumbs=hymns&order=number&lang=eng",
+      videoUrl: "",
+      note: "ℹ️ Opens in external tab. Your timer will keep running while you practice!"
+    },
     {
       id: "song_1",
       title: "Know This, That Every Soul Is Free (#240)",
       part: "Adult Choir #1",
+      event: "Oct 24–25 Stake Conference",
+      isArchived: true,
       sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/know-this-that-every-soul-is-free?crumbs=hymns&order=number&lang=eng",
       videoUrl: "",
       note: "ℹ️ Opens in external tab. Your timer will keep running while you practice!"
@@ -208,6 +231,8 @@ const DEFAULT_USER_SETTINGS = {
       id: "song_2",
       title: "Rise, Ye Saints, and Temples Enter (#287)",
       part: "Adult Choir #2",
+      event: "Oct 24–25 Stake Conference",
+      isArchived: true,
       sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/rise-ye-saints-and-temples-enter?crumbs=hymns&order=number&lang=eng",
       videoUrl: "",
       note: "ℹ️ Opens in external tab. Your timer will keep running while you practice!"
@@ -216,6 +241,8 @@ const DEFAULT_USER_SETTINGS = {
       id: "song_3",
       title: "Choose You This Day",
       part: "Adult Choir #3",
+      event: "Oct 24–25 Stake Conference",
+      isArchived: true,
       sheetUrl: "https://drive.google.com/embeddedfolderview?id=1bBnCakJGBj-zfka8wVbz42_ykvipMnwU#grid",
       localSheetUrl: "kantime-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day.pdf",
       videoUrl: "https://www.youtube.com/embed/q54H2OqWBcY?enablejsapi=1",
@@ -233,6 +260,8 @@ const DEFAULT_USER_SETTINGS = {
       id: "song_4",
       title: "Holy Places (Primary)",
       part: "Primary",
+      event: "Oct 24–25 Stake Conference",
+      isArchived: true,
       sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/holy-places?crumbs=hymns-for-home-and-church&order=number&lang=eng",
       videoUrl: "https://www.youtube.com/watch?v=cKb_U6AkoHU",
       note: "ℹ️ Opens in external tab. Your timer will keep running while you practice!"
@@ -241,6 +270,8 @@ const DEFAULT_USER_SETTINGS = {
       id: "song_5",
       title: "I Will Walk with Jesus (Primary)",
       part: "Primary",
+      event: "Oct 24–25 Stake Conference",
+      isArchived: true,
       sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/i-will-walk-with-jesus?crumbs=hymns-for-home-and-church&order=number&lang=eng",
       videoUrl: "https://www.youtube.com/watch?v=oB77rD2RlPU",
       note: "ℹ️ Opens in external tab. Your timer will keep running while you practice!"
@@ -279,11 +310,27 @@ function getUserSettings() {
     const parsed = JSON.parse(stored);
     let songs = Array.isArray(parsed.songs) && parsed.songs.length > 0 ? parsed.songs : DEFAULT_USER_SETTINGS.songs;
 
+    // Backward compatibility: If stored songs only contained old Stake Conference pieces,
+    // merge the new active default repertoire pieces so the active dashboard is populated immediately.
+    const hasActiveSongs = songs.some(s => s.isArchived === false);
+    if (!hasActiveSongs && songs.every(s => s.id === "song_1" || s.id === "song_2" || s.id === "song_3" || s.id === "song_4" || s.id === "song_5")) {
+      const activeDefaults = DEFAULT_USER_SETTINGS.songs.filter(s => !s.isArchived);
+      songs = [...activeDefaults, ...songs];
+    }
+
     songs = songs.map(s => {
       const def = DEFAULT_USER_SETTINGS.songs.find(d => d.id === s.id || d.title === s.title);
       if (def) {
         if (!s.audioTracks && def.audioTracks) s.audioTracks = def.audioTracks;
         if (!s.localSheetUrl && def.localSheetUrl) s.localSheetUrl = def.localSheetUrl;
+        if (!s.event && def.event) s.event = def.event;
+        if (s.isArchived === undefined && def.isArchived !== undefined) s.isArchived = def.isArchived;
+      }
+      if (!s.event) {
+        s.event = (s.title && s.title.includes("Oct 24–25")) ? "Oct 24–25 Stake Conference" : "Active Repertoire";
+      }
+      if (s.isArchived === undefined) {
+        s.isArchived = (s.event === "Oct 24–25 Stake Conference");
       }
       return s;
     });
@@ -291,6 +338,7 @@ function getUserSettings() {
     return {
       targetDate: parsed.targetDate !== undefined ? parsed.targetDate : DEFAULT_USER_SETTINGS.targetDate,
       timerMinutes: Number(parsed.timerMinutes) || DEFAULT_USER_SETTINGS.timerMinutes,
+      showPastRepertoire: parsed.showPastRepertoire !== undefined ? Boolean(parsed.showPastRepertoire) : DEFAULT_USER_SETTINGS.showPastRepertoire,
       songs: songs
     };
   } catch (e) {
@@ -404,22 +452,59 @@ function populateSongSelectDropdown() {
 
   const settings = getUserSettings();
   const songs = settings.songs || [];
+  const showPast = Boolean(settings.showPastRepertoire);
   const savedSong = localStorage.getItem("kantime_target_song");
+
+  const activeSongs = songs.filter(s => !s.isArchived);
+  const archivedSongs = songs.filter(s => Boolean(s.isArchived));
 
   let html = "";
   let matched = false;
-  songs.forEach(s => {
-    const isSelected = (savedSong === s.title || savedSong === s.id);
-    if (isSelected) matched = true;
-    const partLabel = s.part && s.part !== "All" ? ` (${s.part})` : "";
-    html += `<option value="${escapeHtml(s.title)}" ${isSelected ? "selected" : ""}>${escapeHtml(s.title)}${escapeHtml(partLabel)}</option>`;
-  });
+
+  if (!showPast) {
+    // Post-conference mode: Hide archived songs from main practice dropdown
+    if (activeSongs.length === 0) {
+      html = `<option value="" disabled selected>No active pieces (Enable past archives in Settings)</option>`;
+    } else {
+      activeSongs.forEach(s => {
+        const isSelected = (savedSong === s.title || savedSong === s.id);
+        if (isSelected) matched = true;
+        const partLabel = s.part && s.part !== "All" ? ` (${s.part})` : "";
+        html += `<option value="${escapeHtml(s.title)}" ${isSelected ? "selected" : ""}>${escapeHtml(s.title)}${escapeHtml(partLabel)}</option>`;
+      });
+    }
+  } else {
+    // When enabled, show both active pieces and past conference archives grouped
+    if (activeSongs.length > 0) {
+      html += `<optgroup label="🎵 Active Repertoire">`;
+      activeSongs.forEach(s => {
+        const isSelected = (savedSong === s.title || savedSong === s.id);
+        if (isSelected) matched = true;
+        const partLabel = s.part && s.part !== "All" ? ` (${s.part})` : "";
+        html += `<option value="${escapeHtml(s.title)}" ${isSelected ? "selected" : ""}>${escapeHtml(s.title)}${escapeHtml(partLabel)}</option>`;
+      });
+      html += `</optgroup>`;
+    }
+
+    if (archivedSongs.length > 0) {
+      html += `<optgroup label="📁 Archived / Past Conferences">`;
+      archivedSongs.forEach(s => {
+        const isSelected = (savedSong === s.title || savedSong === s.id);
+        if (isSelected) matched = true;
+        const partLabel = s.part && s.part !== "All" ? ` (${s.part})` : "";
+        const eventLabel = s.event ? ` [${s.event}]` : "";
+        html += `<option value="${escapeHtml(s.title)}" ${isSelected ? "selected" : ""}>${escapeHtml(s.title)}${escapeHtml(partLabel)}${escapeHtml(eventLabel)}</option>`;
+      });
+      html += `</optgroup>`;
+    }
+  }
 
   select.innerHTML = html;
 
-  if (!matched && songs.length > 0) {
-    select.value = songs[0].title;
-    localStorage.setItem("kantime_target_song", songs[0].title);
+  const visibleSongs = !showPast ? activeSongs : songs;
+  if (!matched && visibleSongs.length > 0) {
+    select.value = visibleSongs[0].title;
+    localStorage.setItem("kantime_target_song", visibleSongs[0].title);
   }
 }
 
@@ -428,7 +513,8 @@ function getSongResource(songKeyOrTitle) {
   const songs = settings.songs || [];
   let found = songs.find(s => s.id === songKeyOrTitle || s.title === songKeyOrTitle);
   if (!found && songs.length > 0) {
-    found = songs[0];
+    const visibleSongs = settings.showPastRepertoire ? songs : songs.filter(s => !s.isArchived);
+    found = visibleSongs.length > 0 ? visibleSongs[0] : songs[0];
   }
   return found;
 }
@@ -438,6 +524,240 @@ function isPracticeSessionActive() {
   const pausedVal = localStorage.getItem("kantime_paused_remaining");
   const hasPausedProgress = Boolean(pausedVal && Number(pausedVal) > 0 && Number(pausedVal) < timerDuration);
   return isRunning || hasPausedProgress;
+}
+
+// --- IN-BROWSER AUDIO SCRATCHPAD (SELF-CHECK MIC) ---
+let selfCheckMediaRecorder = null;
+let selfCheckAudioStream = null;
+let selfCheckAudioChunks = [];
+let selfCheckBlobUrl = null;
+let selfCheckCountdownTimer = null;
+let selfCheckSecondsLeft = 30;
+let selfCheckState = "idle"; // "idle" | "recording" | "recorded"
+let selfCheckSupportedMime = "";
+
+function getSupportedAudioMimeType() {
+  if (typeof MediaRecorder === "undefined") return "";
+  const types = [
+    "audio/webm;codecs=opus",
+    "audio/webm",
+    "audio/mp4",
+    "audio/aac",
+    "audio/ogg;codecs=opus"
+  ];
+  for (const t of types) {
+    if (MediaRecorder.isTypeSupported(t)) return t;
+  }
+  return "";
+}
+
+function renderSelfCheckMicHtml() {
+  let bodyContent = "";
+
+  if (selfCheckState === "recording") {
+    const mins = Math.floor(selfCheckSecondsLeft / 60);
+    const secs = selfCheckSecondsLeft % 60;
+    const timeStr = `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+
+    bodyContent = `
+      <div class="recording-active-bar">
+        <div class="recording-status-left">
+          <span class="rec-pulsing-dot" aria-hidden="true"></span>
+          <span class="rec-countdown" id="selfCheckCountdownDisplay">${timeStr}</span>
+          <div class="rec-waveform-bars" aria-hidden="true">
+            <span class="rec-bar"></span>
+            <span class="rec-bar"></span>
+            <span class="rec-bar"></span>
+            <span class="rec-bar"></span>
+            <span class="rec-bar"></span>
+          </div>
+        </div>
+        <button type="button" class="btn-stop-rec" onclick="stopSelfCheckRecording()" title="Stop recording snippet">
+          ⏹️ Stop
+        </button>
+      </div>
+      <p class="self-check-prompt" style="font-size:0.72rem; color:var(--text-muted); margin-top:4px;">
+        Sing your voice part. Auto-stops at 30 seconds.
+      </p>
+    `;
+  } else if (selfCheckState === "recorded" && selfCheckBlobUrl) {
+    bodyContent = `
+      <div class="self-check-playback-box">
+        <div class="self-check-playback-row">
+          <audio id="selfCheckAudioPlayback" class="self-check-audio-el" controls src="${selfCheckBlobUrl}">
+            Your browser does not support audio playback.
+          </audio>
+        </div>
+        <div class="self-check-playback-actions">
+          <button type="button" class="btn-mic-rerecord" onclick="startSelfCheckRecording()" title="Record a new take">
+            🔄 Re-record
+          </button>
+          <button type="button" class="btn-mic-discard" onclick="discardSelfCheckRecording()" title="Discard recording and reset" aria-label="Discard recording">
+            🗑️ Discard
+          </button>
+        </div>
+      </div>
+    `;
+  } else {
+    bodyContent = `
+      <div class="self-check-controls-row">
+        <button type="button" class="btn-record-mic" onclick="startSelfCheckRecording()" title="Record up to 30-second practice snippet">
+          🔴 Record Snippet (Max 30s)
+        </button>
+      </div>
+      <p class="self-check-prompt">
+        Tap to record up to a 30-second snippet of your voice to check your tone, blend, and pitch.
+      </p>
+    `;
+  }
+
+  return `
+    <div class="self-check-mic-card" id="selfCheckMicCard">
+      <div class="self-check-header">
+        <div class="self-check-title">
+          <span>🎙️ Self-Check Mic</span>
+          <span class="self-check-badge">In-Browser Scratchpad</span>
+        </div>
+      </div>
+      <div class="self-check-body" id="selfCheckMicBody">
+        ${bodyContent}
+      </div>
+    </div>
+  `;
+}
+
+async function startSelfCheckRecording() {
+  if (selfCheckState === "recording") return;
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === "undefined") {
+    showToast("Audio recording not supported in this browser.");
+    return;
+  }
+
+  try {
+    selfCheckAudioStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+      }
+    });
+  } catch (err) {
+    console.warn("Microphone access error:", err);
+    showToast("Microphone access required to record practice snippets.");
+    return;
+  }
+
+  selfCheckAudioChunks = [];
+  selfCheckSupportedMime = getSupportedAudioMimeType();
+
+  try {
+    const options = selfCheckSupportedMime ? { mimeType: selfCheckSupportedMime } : {};
+    selfCheckMediaRecorder = new MediaRecorder(selfCheckAudioStream, options);
+  } catch (e) {
+    try {
+      selfCheckMediaRecorder = new MediaRecorder(selfCheckAudioStream);
+    } catch (err2) {
+      console.error("Failed to create MediaRecorder:", err2);
+      showToast("Could not start microphone recorder.");
+      if (selfCheckAudioStream) {
+        selfCheckAudioStream.getTracks().forEach(t => t.stop());
+        selfCheckAudioStream = null;
+      }
+      return;
+    }
+  }
+
+  selfCheckMediaRecorder.ondataavailable = (e) => {
+    if (e.data && e.data.size > 0) {
+      selfCheckAudioChunks.push(e.data);
+    }
+  };
+
+  selfCheckMediaRecorder.onstop = () => {
+    finishSelfCheckRecording();
+  };
+
+  selfCheckSecondsLeft = 30;
+  selfCheckState = "recording";
+  updateSelfCheckMicUI();
+
+  selfCheckMediaRecorder.start(200);
+
+  if (selfCheckCountdownTimer) clearInterval(selfCheckCountdownTimer);
+  selfCheckCountdownTimer = setInterval(() => {
+    selfCheckSecondsLeft--;
+    const countdownEl = document.getElementById("selfCheckCountdownDisplay");
+    if (countdownEl) {
+      const mins = Math.floor(selfCheckSecondsLeft / 60);
+      const secs = selfCheckSecondsLeft % 60;
+      countdownEl.innerText = `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+    }
+    if (selfCheckSecondsLeft <= 0) {
+      stopSelfCheckRecording();
+    }
+  }, 1000);
+}
+
+function stopSelfCheckRecording() {
+  if (selfCheckCountdownTimer) {
+    clearInterval(selfCheckCountdownTimer);
+    selfCheckCountdownTimer = null;
+  }
+
+  if (selfCheckMediaRecorder && selfCheckMediaRecorder.state !== "inactive") {
+    try {
+      selfCheckMediaRecorder.stop();
+    } catch (e) {
+      console.warn("Error stopping MediaRecorder:", e);
+    }
+  }
+
+  if (selfCheckAudioStream) {
+    selfCheckAudioStream.getTracks().forEach(track => track.stop());
+    selfCheckAudioStream = null;
+  }
+}
+
+function finishSelfCheckRecording() {
+  if (selfCheckBlobUrl) {
+    URL.revokeObjectURL(selfCheckBlobUrl);
+    selfCheckBlobUrl = null;
+  }
+
+  const mime = selfCheckSupportedMime || (selfCheckAudioChunks[0] ? selfCheckAudioChunks[0].type : "audio/webm");
+  const blob = new Blob(selfCheckAudioChunks, { type: mime || "audio/webm" });
+  selfCheckBlobUrl = URL.createObjectURL(blob);
+
+  selfCheckState = "recorded";
+  updateSelfCheckMicUI();
+  showToast("Snippet recorded! Listen back below 🎧");
+}
+
+function discardSelfCheckRecording() {
+  stopSelfCheckRecording();
+  if (selfCheckBlobUrl) {
+    URL.revokeObjectURL(selfCheckBlobUrl);
+    selfCheckBlobUrl = null;
+  }
+  selfCheckAudioChunks = [];
+  selfCheckState = "idle";
+  selfCheckSecondsLeft = 30;
+  updateSelfCheckMicUI();
+  showToast("Recording discarded.");
+}
+
+function updateSelfCheckMicUI() {
+  const card = document.getElementById("selfCheckMicCard");
+  if (!card) return;
+  const parent = card.parentElement;
+  if (!parent) return;
+
+  const temp = document.createElement("div");
+  temp.innerHTML = renderSelfCheckMicHtml();
+  if (temp.firstElementChild) {
+    parent.replaceChild(temp.firstElementChild, card);
+  }
 }
 
 function renderSelectedSongResource(songKey) {
@@ -559,6 +879,7 @@ function renderSelectedSongResource(songKey) {
         
         <div class="resource-unlocked-container">
           ${localAudioHtml}
+          ${renderSelfCheckMicHtml()}
           <div class="song-actions">${actionsHtml}</div>
           ${noteHtml}
           ${embedHtml}
@@ -2286,6 +2607,11 @@ function openSettingsModal(defaultTab = 'profile') {
     metronomeSettingCheckbox.checked = (localStorage.getItem("metronome_visible") === "true");
   }
 
+  const pastRepertoireCheckbox = document.getElementById("settingShowPastRepertoire");
+  if (pastRepertoireCheckbox) {
+    pastRepertoireCheckbox.checked = Boolean(settings.showPastRepertoire);
+  }
+
   closeSongForm();
   renderRepertoireList();
 
@@ -2435,6 +2761,156 @@ function handleTimerDurationChange(val) {
   showToast(`Timer set to ${newMins} minutes! ⏱️`);
 }
 
+function handleSettingPastRepertoireToggle(checked) {
+  const settings = getUserSettings();
+  settings.showPastRepertoire = checked;
+  saveUserSettings(settings);
+
+  populateSongSelectDropdown();
+  renderArchivedRepertoireSection();
+
+  const select = document.getElementById("targetSong");
+  if (select && select.value) {
+    renderSelectedSongResource(select.value);
+  }
+
+  showToast(checked ? "Showing past conference repertoire! 📁" : "Past repertoire hidden from active hub. 🔒");
+}
+
+function renderArchivedRepertoireSection() {
+  const card = document.getElementById("archivedRepertoireCard");
+  if (!card) return;
+
+  const settings = getUserSettings();
+  if (!settings.showPastRepertoire) {
+    card.style.display = "none";
+    return;
+  }
+
+  const songs = settings.songs || [];
+  const archivedSongs = songs.filter(s => Boolean(s.isArchived));
+
+  const countPill = document.getElementById("archivedCountPill");
+  if (countPill) {
+    countPill.innerText = `${archivedSongs.length} ${archivedSongs.length === 1 ? "piece" : "pieces"}`;
+  }
+
+  const grid = document.getElementById("archivedItemsGrid");
+  if (grid) {
+    if (archivedSongs.length === 0) {
+      grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 14px;">No archived pieces found. You can archive pieces from Settings (⚙️).</div>`;
+    } else {
+      let gridHtml = "";
+      archivedSongs.forEach(song => {
+        const partBadge = song.part && song.part !== "All"
+          ? `<span class="part-badge" data-voice="${escapeHtml(song.part)}">${escapeHtml(song.part)}</span>`
+          : `<span class="part-badge" style="background:#f1f5f9; color:#475569;">All Parts</span>`;
+
+        const eventLabel = song.event ? escapeHtml(song.event) : "Past Conference";
+        const hasAudioTracks = song.audioTracks && song.audioTracks.length > 0;
+        const tracksBadge = hasAudioTracks ? `<span class="badge-cached-offline">🎧 Tracks</span>` : "";
+
+        let linksHtml = "";
+        if (song.localSheetUrl) {
+          linksHtml += `<button type="button" class="btn-link" style="font-size:0.75rem; padding:0;" onclick="openResourceModal('${escapeHtml(song.title)} (Local Sheet)', '${escapeHtml(song.localSheetUrl)}', 'doc')">🎼 PDF</button>`;
+        } else if (song.sheetUrl) {
+          linksHtml += `<button type="button" class="btn-link" style="font-size:0.75rem; padding:0;" onclick="openResourceModal('${escapeHtml(song.title)} (Sheet)', '${escapeHtml(song.sheetUrl)}', 'doc')">🎼 Sheet</button>`;
+        }
+
+        if (song.videoUrl) {
+          const embed = formatYouTubeEmbedUrl(song.videoUrl);
+          linksHtml += `<button type="button" class="btn-link" style="font-size:0.75rem; padding:0;" onclick="openResourceModal('${escapeHtml(song.title)} (Video)', '${escapeHtml(embed)}', 'video')">▶️ Video</button>`;
+        }
+
+        gridHtml += `
+          <div class="archived-song-card fade-in">
+            <div class="archived-song-card-top">
+              <div class="archived-song-badges">
+                <span class="badge-event">🏷️ ${eventLabel}</span>
+                <span class="badge-archived-pill">Archived</span>
+                ${partBadge}
+                ${tracksBadge}
+              </div>
+              <div class="archived-song-title">${escapeHtml(song.title)}</div>
+            </div>
+            <div class="archived-song-actions">
+              <div class="archived-song-links">${linksHtml}</div>
+              <button type="button" class="btn-rehearse-archived" onclick="selectAndRehearseArchivedSong('${escapeHtml(song.title)}')">
+                ▶️ Rehearse
+              </button>
+            </div>
+          </div>
+        `;
+      });
+      grid.innerHTML = gridHtml;
+    }
+  }
+
+  card.style.display = "block";
+}
+
+function toggleArchivedRepertoireCollapse() {
+  const card = document.getElementById("archivedRepertoireCard");
+  const content = document.getElementById("archivedRepertoireContent");
+  const btn = document.getElementById("archivedCollapseBtn");
+  if (!card || !content) return;
+
+  const isOpen = card.classList.contains("open");
+  if (isOpen) {
+    card.classList.remove("open");
+    content.style.display = "none";
+    if (btn) btn.innerText = "▼";
+  } else {
+    card.classList.add("open");
+    content.style.display = "block";
+    if (btn) btn.innerText = "▲";
+  }
+}
+
+function selectAndRehearseArchivedSong(songTitle) {
+  const select = document.getElementById("targetSong");
+  if (!select) return;
+
+  const settings = getUserSettings();
+  if (!settings.showPastRepertoire) {
+    settings.showPastRepertoire = true;
+    saveUserSettings(settings);
+    const cb = document.getElementById("settingShowPastRepertoire");
+    if (cb) cb.checked = true;
+  }
+
+  populateSongSelectDropdown();
+  select.value = songTitle;
+  localStorage.setItem("kantime_target_song", songTitle);
+  renderSelectedSongResource(songTitle);
+
+  const workspace = document.getElementById("practiceWorkspace");
+  if (workspace) {
+    workspace.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  showToast(`Loaded "${songTitle}" for rehearsal! 🎶`);
+}
+
+function toggleSongArchiveState(songId) {
+  const settings = getUserSettings();
+  const song = settings.songs.find(s => s.id === songId);
+  if (!song) return;
+
+  song.isArchived = !song.isArchived;
+  saveUserSettings(settings);
+
+  renderRepertoireList();
+  populateSongSelectDropdown();
+  renderArchivedRepertoireSection();
+
+  const select = document.getElementById("targetSong");
+  if (select && select.value) {
+    renderSelectedSongResource(select.value);
+  }
+
+  showToast(song.isArchived ? `Archived "${song.title}" 📦` : `Restored "${song.title}" to active list 🎶`);
+}
+
 function renderRepertoireList() {
   const container = document.getElementById("repertoireListContainer");
   const countEl = document.getElementById("repertoireCount");
@@ -2449,21 +2925,45 @@ function renderRepertoireList() {
     return;
   }
 
-  let html = "";
+  // Group songs by event
+  const groups = {};
   songs.forEach(song => {
-    const partBadge = song.part && song.part !== "All"
-      ? `<span class="part-badge" data-voice="${escapeHtml(song.part)}">${escapeHtml(song.part)}</span>`
-      : `<span class="part-badge" style="background:#f1f5f9; color:#475569;">All Parts</span>`;
+    const groupName = song.event || "Active Repertoire";
+    if (!groups[groupName]) {
+      groups[groupName] = [];
+    }
+    groups[groupName].push(song);
+  });
 
-    const videoTag = song.videoUrl ? `<span class="link-tag">📹 Video</span>` : "";
-    const sheetTag = song.sheetUrl ? `<span class="link-tag">🎼 Sheet</span>` : "";
+  let html = "";
+  Object.keys(groups).forEach(groupName => {
+    const groupSongs = groups[groupName];
+    const isArchivedGroup = groupSongs.every(s => Boolean(s.isArchived));
 
     html += `
+      <div class="repertoire-event-group">
+        <div class="repertoire-event-group-header">
+          <span>🏷️ ${escapeHtml(groupName)}</span>
+          <span class="badge-settings-pill">${groupSongs.length} ${groupSongs.length === 1 ? 'piece' : 'pieces'}${isArchivedGroup ? ' (Archived)' : ''}</span>
+        </div>
+    `;
+
+    groupSongs.forEach(song => {
+      const partBadge = song.part && song.part !== "All"
+        ? `<span class="part-badge" data-voice="${escapeHtml(song.part)}">${escapeHtml(song.part)}</span>`
+        : `<span class="part-badge" style="background:#f1f5f9; color:#475569;">All Parts</span>`;
+
+      const videoTag = song.videoUrl ? `<span class="link-tag">📹 Video</span>` : "";
+      const sheetTag = song.sheetUrl ? `<span class="link-tag">🎼 Sheet</span>` : "";
+      const archiveTag = song.isArchived ? `<span class="badge-archived-pill">Archived</span>` : "";
+
+      html += `
         <div class="repertoire-list-item">
           <div class="repertoire-item-info">
             <div class="repertoire-item-title-row">
               <strong>${escapeHtml(song.title)}</strong>
               ${partBadge}
+              ${archiveTag}
             </div>
             <div class="repertoire-item-links">
               ${videoTag}
@@ -2471,11 +2971,15 @@ function renderRepertoireList() {
             </div>
           </div>
           <div class="repertoire-item-actions">
+            <button type="button" class="btn-icon" onclick="toggleSongArchiveState('${song.id}')" title="${song.isArchived ? 'Restore to active repertoire' : 'Archive this piece'}" aria-label="${song.isArchived ? 'Restore piece' : 'Archive piece'}">${song.isArchived ? '📤' : '📦'}</button>
             <button type="button" class="btn-icon" onclick="openSongForm('${song.id}')" title="Edit piece" aria-label="Edit ${escapeHtml(song.title)}">✏️</button>
             <button type="button" class="btn-icon btn-icon-danger" onclick="deleteSong('${song.id}')" title="Delete piece" aria-label="Delete ${escapeHtml(song.title)}">🗑️</button>
           </div>
         </div>
       `;
+    });
+
+    html += `</div>`;
   });
 
   container.innerHTML = html;
@@ -2485,6 +2989,8 @@ function openSongForm(songId) {
   const formCard = document.getElementById("songEditorForm");
   const heading = document.getElementById("songFormHeading");
   const titleInput = document.getElementById("songFormTitle");
+  const eventInput = document.getElementById("songFormEvent");
+  const archivedCheckbox = document.getElementById("songFormArchived");
   const partSelect = document.getElementById("songFormPart");
   const videoInput = document.getElementById("songFormVideo");
   const sheetInput = document.getElementById("songFormSheet");
@@ -2500,6 +3006,8 @@ function openSongForm(songId) {
     idInput.value = songId;
     heading.innerText = `✏️ Edit Repertoire Piece`;
     titleInput.value = song.title || "";
+    if (eventInput) eventInput.value = song.event || "";
+    if (archivedCheckbox) archivedCheckbox.checked = Boolean(song.isArchived);
     partSelect.value = song.part || "All";
     videoInput.value = song.videoUrl || "";
     sheetInput.value = song.sheetUrl || "";
@@ -2507,6 +3015,8 @@ function openSongForm(songId) {
     idInput.value = "";
     heading.innerText = `➕ Add New Repertoire Piece`;
     titleInput.value = "";
+    if (eventInput) eventInput.value = "Active Repertoire";
+    if (archivedCheckbox) archivedCheckbox.checked = false;
     partSelect.value = "All";
     videoInput.value = "";
     sheetInput.value = "";
@@ -2525,6 +3035,8 @@ function closeSongForm() {
 function saveSongFromForm() {
   const title = document.getElementById("songFormTitle").value.trim();
   const part = document.getElementById("songFormPart").value;
+  const eventGroup = document.getElementById("songFormEvent") ? document.getElementById("songFormEvent").value.trim() || "Active Repertoire" : "Active Repertoire";
+  const isArchived = document.getElementById("songFormArchived") ? document.getElementById("songFormArchived").checked : false;
   let videoUrl = document.getElementById("songFormVideo").value.trim();
   const sheetUrl = document.getElementById("songFormSheet").value.trim();
   const songId = document.getElementById("editingSongId").value;
@@ -2548,6 +3060,8 @@ function saveSongFromForm() {
         ...settings.songs[idx],
         title: title,
         part: part,
+        event: eventGroup,
+        isArchived: isArchived,
         videoUrl: videoUrl,
         sheetUrl: sheetUrl
       };
@@ -2558,6 +3072,8 @@ function saveSongFromForm() {
       id: newId,
       title: title,
       part: part,
+      event: eventGroup,
+      isArchived: isArchived,
       videoUrl: videoUrl,
       sheetUrl: sheetUrl,
       note: sheetUrl ? `ℹ️ Opens in external tab. Your timer will keep running while you practice!` : ""
@@ -2568,6 +3084,7 @@ function saveSongFromForm() {
   closeSongForm();
   renderRepertoireList();
   populateSongSelectDropdown();
+  renderArchivedRepertoireSection();
 
   const targetSelect = document.getElementById("targetSong");
   if (targetSelect) {
@@ -2594,6 +3111,7 @@ function deleteSong(songId) {
 
   renderRepertoireList();
   populateSongSelectDropdown();
+  renderArchivedRepertoireSection();
 
   const targetSelect = document.getElementById("targetSong");
   if (targetSelect) {
@@ -2628,7 +3146,11 @@ function resetUserSettingsToDefault() {
   const timerDurSelect = document.getElementById("settingTimerDuration");
   if (timerDurSelect) timerDurSelect.value = defaults.timerMinutes;
 
+  const pastCheckbox = document.getElementById("settingShowPastRepertoire");
+  if (pastCheckbox) pastCheckbox.checked = false;
+
   renderRepertoireList();
+  renderArchivedRepertoireSection();
 
   showToast("Reset to Choir Defaults! ✨");
 }
@@ -5285,6 +5807,7 @@ window.addEventListener("DOMContentLoaded", function () {
   applyHeaderTargetDate();
   applyTimerDuration(getUserSettings().timerMinutes, false);
   populateSongSelectDropdown();
+  renderArchivedRepertoireSection();
   loadProfile();
   initNameValidation();
   restoreTimerState();
@@ -5295,3 +5818,12 @@ window.addEventListener("DOMContentLoaded", function () {
   syncOfflinePracticeQueue();
   initPWAInstallBanner();
 });
+
+window.handleSettingPastRepertoireToggle = handleSettingPastRepertoireToggle;
+window.renderArchivedRepertoireSection = renderArchivedRepertoireSection;
+window.toggleArchivedRepertoireCollapse = toggleArchivedRepertoireCollapse;
+window.selectAndRehearseArchivedSong = selectAndRehearseArchivedSong;
+window.toggleSongArchiveState = toggleSongArchiveState;
+window.startSelfCheckRecording = startSelfCheckRecording;
+window.stopSelfCheckRecording = stopSelfCheckRecording;
+window.discardSelfCheckRecording = discardSelfCheckRecording;
