@@ -14,8 +14,8 @@
     content="Access hymn repertoire, practice tracks, and track your daily 15-minute practice sessions for Oct 24–25!">
 
   <!-- Open Graph Image with explicit dimensions & cache buster -->
-  <meta property="og:image" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.4">
-  <meta property="og:image:secure_url" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.4">
+  <meta property="og:image" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.5">
+  <meta property="og:image:secure_url" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.5">
   <meta property="og:image:type" content="image/jpeg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -25,7 +25,7 @@
   <meta name="twitter:title" content="🎶 KanTime | Stake Choir Practice Hub">
   <meta name="twitter:description"
     content="Access hymn repertoire, practice tracks, and track your daily 15-minute practice sessions for Oct 24–25!">
-  <meta name="twitter:image" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.4">
+  <meta name="twitter:image" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.5">
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="🎶 KanTime | Stake Choir Practice Hub">
@@ -43,7 +43,7 @@
   <meta name="apple-mobile-web-app-title" content="KanTime">
   <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192.png">
   <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
-  <link rel="stylesheet" href="css/style.css?v=2.5.4">
+  <link rel="stylesheet" href="css/style.css?v=2.5.5">
 </head>
 
 <body>
@@ -56,7 +56,7 @@
           title="Tap to refresh app and check for new songs" aria-label="Refresh app and check for updates"
           onerror="this.style.display='none'">
         <div class="header-text">
-          <h1>KanTime <span class="app-version-badge" title="KanTime v2.5.4">v2.5.4</span></h1>
+          <h1>KanTime <span class="app-version-badge" title="KanTime v2.5.5">v2.5.5</span></h1>
           <p id="headerSubtitle">Stake Choir Prep • Oct 24–25</p>
         </div>
       </div>
@@ -170,6 +170,10 @@
               onclick="toggleMetronomeVisibility()" title="Show/hide rehearsal metronome" aria-label="Toggle Metronome">
               <span class="tool-icon">⏱️</span>
               <span class="tool-text">Metronome</span>
+            </button>
+            <button type="button" class="btn-tool-pill" id="pianoToggleBtn" onclick="togglePianoDrawer()"
+              title="Practice Piano &amp; Vocal Pitch Helper" aria-label="Toggle Piano">
+              🎹 Piano
             </button>
             <button type="button" class="btn-vocal-tips" onclick="openVocalTipsModal()"
               title="Vocal Warm-Ups &amp; Singing Tips" aria-label="Open Vocal Warm-Ups &amp; Singing Tips">
@@ -295,6 +299,85 @@
         </div>
       </div>
 
+      <!-- Built-in In-Browser Piano Drawer / Pitch Helper (Hidden by default unless user shows it) -->
+      <div class="card piano-card fade-in" id="pianoDrawer" style="display: none;">
+        <div class="piano-header">
+          <div class="piano-header-left" onclick="togglePianoCollapse()" role="button" tabindex="0"
+            aria-expanded="true" style="cursor: pointer; flex: 1;">
+            <span class="piano-header-icon">🎹</span>
+            <div>
+              <h3 class="piano-title">In-Browser Piano &amp; Pitch Helper</h3>
+              <p class="piano-subtitle">Web Audio precision pitch finder for choir rehearsal</p>
+            </div>
+          </div>
+          <div class="piano-header-right">
+            <span class="piano-badge" id="pianoHeaderBadge">Octave 4 (C4–B4)</span>
+            <button type="button" class="piano-collapse-btn" id="pianoCollapseBtn"
+              onclick="togglePianoCollapse()" aria-label="Toggle Piano Controls"
+              title="Collapse/Expand Piano">▼</button>
+            <button type="button" class="piano-close-btn" id="pianoCloseBtn" onclick="hidePianoDrawer()"
+              aria-label="Hide Piano" title="Hide Piano">&times;</button>
+          </div>
+        </div>
+
+        <div class="piano-body" id="pianoBody">
+          <!-- Voice Part Quick Pitch Row -->
+          <div class="piano-voice-parts-row">
+            <span class="piano-voice-label">Choir Starting Pitches:</span>
+            <div class="piano-voice-buttons">
+              <button type="button" class="piano-part-btn part-soprano" onclick="playPianoVoicePart('Soprano')" title="Soprano Reference Pitch: C5">
+                <span class="part-badge">S</span> Soprano (C5)
+              </button>
+              <button type="button" class="piano-part-btn part-alto" onclick="playPianoVoicePart('Alto')" title="Alto Reference Pitch: G4">
+                <span class="part-badge">A</span> Alto (G4)
+              </button>
+              <button type="button" class="piano-part-btn part-tenor" onclick="playPianoVoicePart('Tenor')" title="Tenor Reference Pitch: E4">
+                <span class="part-badge">T</span> Tenor (E4)
+              </button>
+              <button type="button" class="piano-part-btn part-bass" onclick="playPianoVoicePart('Bass')" title="Bass Reference Pitch: C3">
+                <span class="part-badge">B</span> Bass (C3)
+              </button>
+            </div>
+          </div>
+
+          <!-- Controls: Octave Selector, Note Labels, Sustain -->
+          <div class="piano-toolbar">
+            <div class="piano-octave-selector" role="radiogroup" aria-label="Keyboard Octave">
+              <span class="piano-toolbar-label">Octave:</span>
+              <button type="button" class="piano-octave-pill" data-octave="3" onclick="setPianoOctave(3)">Oct 3 (C3–B3)</button>
+              <button type="button" class="piano-octave-pill active" data-octave="4" onclick="setPianoOctave(4)">Oct 4 (Middle C)</button>
+              <button type="button" class="piano-octave-pill" data-octave="5" onclick="setPianoOctave(5)">Oct 5 (C5–B5)</button>
+            </div>
+
+            <div class="piano-options-group">
+              <button type="button" class="piano-opt-btn active" id="pianoToggleLabelsBtn" onclick="togglePianoLabels()" title="Toggle note names on keys">
+                🏷️ Labels
+              </button>
+              <button type="button" class="piano-opt-btn" id="pianoToggleSustainBtn" onclick="togglePianoSustain()" title="Toggle sustain (hold note)">
+                🎵 Sustain: <span id="pianoSustainStatus">Off</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Currently Playing Note Display / Feedback -->
+          <div class="piano-status-strip">
+            <span class="piano-active-note-display" id="pianoActiveNoteDisplay">Ready — Tap a key or vocal part</span>
+            <span class="piano-frequency-display" id="pianoFrequencyDisplay"></span>
+          </div>
+
+          <!-- Interactive Virtual Piano Keyboard -->
+          <div class="piano-keyboard-wrapper">
+            <div class="piano-keyboard" id="pianoKeyboard" role="region" aria-label="Virtual Piano Keyboard">
+              <!-- Rendered dynamically by renderPianoKeyboard() -->
+            </div>
+          </div>
+
+          <div class="piano-hint-text">
+            <span>💡 Tip: Click or tap any key to sound the note. Keyboard shortcuts: <kbd>A</kbd>–<kbd>K</kbd> play white keys, <kbd>W,E,T,Y,U</kbd> play black keys.</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Active Song Resources (Dynamically Filtered) -->
       <div class="card" id="activeResourcesCard">
         <h2>🎵 Active Song Repertoire</h2>
@@ -368,7 +451,7 @@
         </p>
       </div>
       <p class="footer-credit">&copy; <span id="footerYear"></span> James Phillip De Guzman • <span
-          class="footer-version-tag">KanTime v2.5.4</span></p>
+          class="footer-version-tag">KanTime v2.5.5</span></p>
     </footer>
 
     <!-- Fixed Persistent Voice Pitch Checker Overlay (Corner Card) -->
@@ -452,7 +535,7 @@
     <div id="toast">Saved!</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="script.js?v=2.5.4"></script>
+    <script src="script.js?v=2.5.5"></script>
 
     <!-- In-App Resource Viewer Modal -->
     <div id="resourceModal" class="modal-backdrop" onclick="closeModalOnBackdrop(event)">
@@ -524,7 +607,7 @@
         <div class="modal-header">
           <div class="settings-modal-title-wrap">
             <h3 id="settingsModalTitle">⚙️ Practice Settings & Guide</h3>
-            <span class="settings-header-version">v2.5.4</span>
+            <span class="settings-header-version">v2.5.5</span>
           </div>
           <button class="modal-close-btn" type="button" onclick="closeSettingsModal()"
             aria-label="Close settings">&times;</button>
@@ -639,7 +722,6 @@
             <div class="settings-section">
               <div class="settings-section-title-wrap">
                 <h4>Event Repertoire &amp; Archives</h4>
-                <span class="badge-settings-pill">Repertoire Management</span>
               </div>
               <p class="settings-hint">Group pieces by performance event and manage post-conference archiving.</p>
 

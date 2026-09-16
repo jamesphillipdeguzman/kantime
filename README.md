@@ -47,6 +47,12 @@ It provides choir members with:
 - **Time Signatures & Pulsing LEDs**: Selectable `2/4`, `3/4`, `4/4`, and `6/8` meters with synchronized pulsing beat LEDs (accented downbeat on beat 1).
 - **Battery Auto-Pause**: Automatically halts audio playback when minimizing the app, switching tabs, or collapsing the metronome drawer.
 
+### 🎹 Built-in In-Browser Practice Piano & Pitch Helper
+- **Native Web Audio Synthesis**: Dual-oscillator acoustic piano profile (fundamental sine + soft harmonic overtone with warm attack and exponential decay release) requiring zero external sound font downloads.
+- **Choir Starting Pitch Shortcuts**: Instant one-tap triggers for **Soprano (C5)**, **Alto (G4)**, **Tenor (E4)**, and **Bass (C3)** reference starting notes.
+- **Interactive Responsive Virtual Keyboard**: Realistic ivory white keys and elevated black keys with note labels, octave switching (`Oct 3`, `Oct 4`, `Oct 5`), sustain hold mode, and keyboard shortcuts (<kbd>A</kbd>–<kbd>K</kbd>, <kbd>W,E,T,Y,U</kbd>).
+- **Collapsible Drawer**: Dedicated quick-access `🎹 Piano` tool pill on the practice card that smoothly toggles open and closed without obstructing sheet music or lyrics.
+
 ### 🌙 Adaptive Dark & Light Theme System
 - **CSS Design Tokens**: Complete semantic color system (`--bg-page`, `--bg-card`, `--bg-modal`, `--bg-input`, `--text-primary`, `--border-subtle`).
 - **Dark Slate Aesthetic (`[data-theme="dark"]`)**: Deep slate backgrounds (`#090d16`, `#131b2e`, `#1a243c`) with high-contrast text and zero contrast clipping.
@@ -92,6 +98,7 @@ It provides choir members with:
 
 | Version | Date | Key Highlights |
 |:---|:---:|:---|
+| **v2.5.5** | 2026-09-16 | Added interactive **In-Browser Web Audio Piano** quick tool with pitch note labels; removed redundant `"Repertoire Management"` badge in Settings; bumped cache version for clean asset hydration. |
 | **v2.5.4** | 2026-09-16 | Added **Fuzzy Name Deduplication** during profile registration/setup (Levenshtein distance, first/last name matching, offline roster caching, and interactive confirmation modal with "Yes, That's Me!" profile linking); provided backend Google Apps Script deduplication safety guard. |
 | **v2.5.0** | 2026-09-10 | Added **Vocal Warm-Ups & Singing Tips** modal with 6 drill categories, Middle C Web Audio pitch helper, and **Export All Drills to PDF**; standardized timer action button to **"Start Practice"**; added in-app **Version Number Badges** (Header, Footer, Settings); tucked **Metronome behind an on-demand toggle** (hidden by default); updated full project documentation. |
 | **v2.2.0** | 2026-09-10 | Implemented built-in Web Audio **In-Browser Metronome** (BPM 40–220, tap tempo, 2/4, 3/4, 4/4, 6/8, pulsing LEDs) and **Dark/Light Theme System** with 1-click header toggle and system auto-detection. |
@@ -109,6 +116,7 @@ It provides choir members with:
 - **HTML5 & Vanilla JavaScript (ES6+)**
 - **Vanilla CSS3** with semantic `:root` design tokens and `[data-theme="dark"]` overrides
 - **Web Audio API**:
+  - Precision Virtual Practice Piano synthesizer with responsive touch keyboard
   - Autocorrelation pitch detection engine (`AnalyserNode`)
   - Precision Metronome lookahead scheduler (`AudioContext`, `OscillatorNode`, `GainNode`)
   - Vocal reference starting pitches (Middle C / voice section starting notes)

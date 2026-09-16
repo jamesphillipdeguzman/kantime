@@ -3,7 +3,7 @@
 // ==========================================================================
 
 // --- APPLICATION VERSION ---
-const APP_VERSION = "2.5.2";
+const APP_VERSION = "2.5.5";
 
 // --- APPS SCRIPT WEB APP URL ---
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6r8JCXFOeuDqk8mlrTFAY5G5jOUOcoljMIC-ow1tlStLj3EVBpEWE_q9iT_sRngEa/exec";
@@ -6323,6 +6323,445 @@ function initPWAInstallBanner() {
   }
 }
 
+// ==========================================================================
+// IN-BROWSER PRACTICE PIANO DRAWER & PITCH HELPER
+// ==========================================================================
+let pianoAudioCtx = null;
+let activePianoOscillators = {};
+let pianoCurrentOctave = 4;
+let pianoSustain = false;
+let showPianoLabels = true;
+
+const PIANO_VOICE_PART_PITCHES = {
+  Soprano: { note: "C5", octave: 4, freq: 523.25, label: "C5" },
+  Alto: { note: "G4", octave: 4, freq: 392.00, label: "G4" },
+  Tenor: { note: "E4", octave: 4, freq: 329.63, label: "E4" },
+  Bass: { note: "C3", octave: 3, freq: 130.81, label: "C3" }
+};
+
+const PIANO_SEMITONE_OFFSETS = {
+  "C": 0, "C#": 1, "Db": 1,
+  "D": 2, "D#": 3, "Eb": 3,
+  "E": 4,
+  "F": 5, "F#": 6, "Gb": 6,
+  "G": 7, "G#": 8, "Ab": 8,
+  "A": 9, "A#": 10, "Bb": 10,
+  "B": 11
+};
+
+function getPianoFrequency(noteName) {
+  const match = noteName.match(/^([A-G][#b]?)([0-8])$/);
+  if (!match) return 440;
+  const pitchName = match[1];
+  const octave = parseInt(match[2], 10);
+  const offset = PIANO_SEMITONE_OFFSETS[pitchName] !== undefined ? PIANO_SEMITONE_OFFSETS[pitchName] : 0;
+  const midi = (octave + 1) * 12 + offset;
+  return 440 * Math.pow(2, (midi - 69) / 12);
+}
+
+function getPianoAudioContext() {
+  if (!pianoAudioCtx) {
+    const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtxClass) {
+      pianoAudioCtx = new AudioCtxClass();
+    }
+  }
+  if (pianoAudioCtx && pianoAudioCtx.state === "suspended") {
+    pianoAudioCtx.resume();
+  }
+  return pianoAudioCtx;
+}
+
+function highlightPianoKey(noteName, isPressed) {
+  const keyEl = document.querySelector(`.piano-keyboard [data-note="${noteName}"]`);
+  if (keyEl) {
+    if (isPressed) {
+      keyEl.classList.add("is-pressed");
+    } else {
+      keyEl.classList.remove("is-pressed");
+    }
+  }
+}
+
+function updatePianoNoteDisplay(noteName, freq) {
+  const display = document.getElementById("pianoActiveNoteDisplay");
+  const freqDisplay = document.getElementById("pianoFrequencyDisplay");
+  if (display) {
+    display.innerText = `Sounding: ${noteName}`;
+  }
+  if (freqDisplay) {
+    freqDisplay.innerText = `${freq.toFixed(1)} Hz`;
+  }
+}
+
+function playPianoNote(noteName, isTemporary = false) {
+  const audioCtx = getPianoAudioContext();
+  if (!audioCtx) return;
+
+  const freq = getPianoFrequency(noteName);
+
+  // Cleanly stop any already ringing oscillator for this note
+  stopPianoNote(noteName, true);
+
+  try {
+    const now = audioCtx.currentTime;
+    const osc1 = audioCtx.createOscillator();
+    const osc2 = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    // Fundamental sine + warm harmonic triangle
+    osc1.type = "sine";
+    osc1.frequency.setValueAtTime(freq, now);
+
+    osc2.type = "triangle";
+    osc2.frequency.setValueAtTime(freq * 2, now);
+
+    // Warm envelope
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(0.28, now + 0.012);
+    gain.gain.exponentialRampToValueAtTime(pianoSustain || isTemporary ? 0.18 : 0.12, now + 0.22);
+
+    if (isTemporary || pianoSustain) {
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);
+      osc1.stop(now + 1.82);
+      osc2.stop(now + 1.82);
+    }
+
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc1.start(now);
+    osc2.start(now);
+
+    activePianoOscillators[noteName] = { osc1, osc2, gain, startTime: now };
+
+    updatePianoNoteDisplay(noteName, freq);
+    highlightPianoKey(noteName, true);
+
+    if (isTemporary) {
+      setTimeout(() => {
+        highlightPianoKey(noteName, false);
+        delete activePianoOscillators[noteName];
+      }, 1800);
+    }
+  } catch (err) {
+    console.error("Error playing piano note:", err);
+  }
+}
+
+function stopPianoNote(noteName, immediate = false) {
+  const active = activePianoOscillators[noteName];
+  if (!active) {
+    highlightPianoKey(noteName, false);
+    return;
+  }
+
+  const audioCtx = getPianoAudioContext();
+  if (!audioCtx) return;
+
+  if (pianoSustain && !immediate) {
+    highlightPianoKey(noteName, false);
+    return;
+  }
+
+  const now = audioCtx.currentTime;
+  try {
+    active.gain.gain.cancelScheduledValues(now);
+    active.gain.gain.setValueAtTime(active.gain.gain.value, now);
+    active.gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+    active.osc1.stop(now + 0.13);
+    active.osc2.stop(now + 0.13);
+  } catch (e) {
+    // Handled
+  }
+
+  delete activePianoOscillators[noteName];
+  highlightPianoKey(noteName, false);
+}
+
+function playPianoVoicePart(part) {
+  const target = PIANO_VOICE_PART_PITCHES[part];
+  if (!target) return;
+
+  if (target.octave !== pianoCurrentOctave) {
+    setPianoOctave(target.octave);
+  }
+
+  const btn = document.querySelector(`.piano-part-btn.part-${part.toLowerCase()}`);
+  if (btn) {
+    btn.classList.add("is-sounding");
+    setTimeout(() => btn.classList.remove("is-sounding"), 1800);
+  }
+
+  const display = document.getElementById("pianoActiveNoteDisplay");
+  if (display) {
+    display.innerText = `${part}: ${target.note}`;
+  }
+
+  playPianoNote(target.note, true);
+}
+
+function renderPianoKeyboard() {
+  const container = document.getElementById("pianoKeyboard");
+  if (!container) return;
+
+  const oct = pianoCurrentOctave;
+  const whiteNotes = [
+    { note: `C${oct}`, base: "C", shortcut: "A" },
+    { note: `D${oct}`, base: "D", shortcut: "S" },
+    { note: `E${oct}`, base: "E", shortcut: "D" },
+    { note: `F${oct}`, base: "F", shortcut: "F" },
+    { note: `G${oct}`, base: "G", shortcut: "G" },
+    { note: `A${oct}`, base: "A", shortcut: "H" },
+    { note: `B${oct}`, base: "B", shortcut: "J" },
+    { note: `C${oct + 1}`, base: "C", shortcut: "K" }
+  ];
+
+  const blackNotes = [
+    { note: `C#${oct}`, base: "C#", shortcut: "W", seamAfter: 1 },
+    { note: `D#${oct}`, base: "D#", shortcut: "E", seamAfter: 2 },
+    { note: `F#${oct}`, base: "F#", shortcut: "T", seamAfter: 4 },
+    { note: `G#${oct}`, base: "G#", shortcut: "Y", seamAfter: 5 },
+    { note: `A#${oct}`, base: "A#", shortcut: "U", seamAfter: 6 }
+  ];
+
+  let html = "";
+
+  // White keys
+  whiteNotes.forEach((item) => {
+    let voiceTag = "";
+    if (item.note === "C5") voiceTag = '<span class="key-voice-tag part-soprano" title="Soprano Reference (C5)">S</span>';
+    else if (item.note === "G4") voiceTag = '<span class="key-voice-tag part-alto" title="Alto Reference (G4)">A</span>';
+    else if (item.note === "E4") voiceTag = '<span class="key-voice-tag part-tenor" title="Tenor Reference (E4)">T</span>';
+    else if (item.note === "C3") voiceTag = '<span class="key-voice-tag part-bass" title="Bass Reference (C3)">B</span>';
+
+    html += `
+      <div class="piano-key-white" data-note="${item.note}" tabindex="0" role="button" aria-label="Key ${item.note}">
+        ${voiceTag}
+        <span class="key-note-name">${item.note}</span>
+        <span class="key-shortcut">${item.shortcut}</span>
+      </div>
+    `;
+  });
+
+  // Black keys
+  blackNotes.forEach((item) => {
+    html += `
+      <div class="piano-key-black" data-note="${item.note}" tabindex="0" role="button" aria-label="Key ${item.note}"
+        style="left: calc(var(--piano-pad, 4px) + (var(--piano-key-w, 44px) * ${item.seamAfter}) - (var(--piano-black-w, 28px) / 2));">
+        <span class="key-note-name">${item.note}</span>
+        <span class="key-shortcut">${item.shortcut}</span>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+
+  if (!showPianoLabels) {
+    container.classList.add("hide-labels");
+  } else {
+    container.classList.remove("hide-labels");
+  }
+
+  // Pointer event listeners for smooth touch & click
+  const allKeys = container.querySelectorAll("[data-note]");
+  allKeys.forEach((keyEl) => {
+    const note = keyEl.getAttribute("data-note");
+
+    const onStart = (e) => {
+      e.preventDefault();
+      playPianoNote(note);
+    };
+
+    const onEnd = (e) => {
+      e.preventDefault();
+      stopPianoNote(note);
+    };
+
+    keyEl.addEventListener("pointerdown", onStart);
+    keyEl.addEventListener("pointerup", onEnd);
+    keyEl.addEventListener("pointercancel", onEnd);
+    keyEl.addEventListener("pointerleave", onEnd);
+  });
+}
+
+function setPianoOctave(octave) {
+  pianoCurrentOctave = parseInt(octave, 10);
+  const badge = document.getElementById("pianoHeaderBadge");
+  if (badge) {
+    badge.innerText = `Octave ${pianoCurrentOctave} (C${pianoCurrentOctave}–C${pianoCurrentOctave + 1})`;
+  }
+
+  const pills = document.querySelectorAll(".piano-octave-pill");
+  pills.forEach((pill) => {
+    const octVal = parseInt(pill.getAttribute("data-octave"), 10);
+    if (octVal === pianoCurrentOctave) {
+      pill.classList.add("active");
+    } else {
+      pill.classList.remove("active");
+    }
+  });
+
+  renderPianoKeyboard();
+}
+
+function togglePianoLabels() {
+  showPianoLabels = !showPianoLabels;
+  const btn = document.getElementById("pianoToggleLabelsBtn");
+  const container = document.getElementById("pianoKeyboard");
+  if (btn) {
+    btn.classList.toggle("active", showPianoLabels);
+  }
+  if (container) {
+    container.classList.toggle("hide-labels", !showPianoLabels);
+  }
+}
+
+function togglePianoSustain() {
+  pianoSustain = !pianoSustain;
+  const btn = document.getElementById("pianoToggleSustainBtn");
+  const status = document.getElementById("pianoSustainStatus");
+  if (btn) {
+    btn.classList.toggle("active", pianoSustain);
+  }
+  if (status) {
+    status.innerText = pianoSustain ? "On" : "Off";
+  }
+}
+
+function togglePianoCollapse() {
+  const drawer = document.getElementById("pianoDrawer");
+  if (!drawer) return;
+  drawer.classList.toggle("collapsed");
+}
+
+function showPianoDrawer() {
+  const drawer = document.getElementById("pianoDrawer");
+  const btn = document.getElementById("pianoToggleBtn");
+  if (!drawer) return;
+
+  drawer.style.display = "block";
+  localStorage.setItem("piano_drawer_visible", "true");
+
+  if (btn) {
+    btn.classList.add("active");
+    btn.setAttribute("aria-expanded", "true");
+  }
+
+  renderPianoKeyboard();
+  drawer.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function hidePianoDrawer() {
+  const drawer = document.getElementById("pianoDrawer");
+  const btn = document.getElementById("pianoToggleBtn");
+  if (!drawer) return;
+
+  drawer.style.display = "none";
+  localStorage.setItem("piano_drawer_visible", "false");
+
+  Object.keys(activePianoOscillators).forEach((note) => stopPianoNote(note, true));
+
+  if (btn) {
+    btn.classList.remove("active");
+    btn.setAttribute("aria-expanded", "false");
+  }
+}
+
+function togglePianoDrawer() {
+  const drawer = document.getElementById("pianoDrawer");
+  if (!drawer) return;
+  const isHidden = (drawer.style.display === "none" || getComputedStyle(drawer).display === "none");
+  if (isHidden) {
+    showPianoDrawer();
+  } else {
+    hidePianoDrawer();
+  }
+}
+
+function initPianoVisibility() {
+  const saved = localStorage.getItem("piano_drawer_visible");
+  const drawer = document.getElementById("pianoDrawer");
+  const btn = document.getElementById("pianoToggleBtn");
+  if (!drawer) return;
+
+  if (saved === "true") {
+    drawer.style.display = "block";
+    if (btn) {
+      btn.classList.add("active");
+      btn.setAttribute("aria-expanded", "true");
+    }
+    renderPianoKeyboard();
+  } else {
+    drawer.style.display = "none";
+    if (btn) {
+      btn.classList.remove("active");
+      btn.setAttribute("aria-expanded", "false");
+    }
+  }
+}
+
+// Keyboard shortcuts for Virtual Piano (when drawer is visible)
+window.addEventListener("keydown", function (e) {
+  if (e.repeat) return;
+  const drawer = document.getElementById("pianoDrawer");
+  if (!drawer || drawer.style.display === "none" || drawer.classList.contains("collapsed")) return;
+
+  const targetTag = e.target.tagName ? e.target.tagName.toLowerCase() : "";
+  if (targetTag === "input" || targetTag === "textarea" || targetTag === "select") return;
+
+  const keyMap = {
+    "a": `C${pianoCurrentOctave}`,
+    "w": `C#${pianoCurrentOctave}`,
+    "s": `D${pianoCurrentOctave}`,
+    "e": `D#${pianoCurrentOctave}`,
+    "d": `E${pianoCurrentOctave}`,
+    "f": `F${pianoCurrentOctave}`,
+    "t": `F#${pianoCurrentOctave}`,
+    "g": `G${pianoCurrentOctave}`,
+    "y": `G#${pianoCurrentOctave}`,
+    "h": `A${pianoCurrentOctave}`,
+    "u": `A#${pianoCurrentOctave}`,
+    "j": `B${pianoCurrentOctave}`,
+    "k": `C${pianoCurrentOctave + 1}`
+  };
+
+  const note = keyMap[e.key.toLowerCase()];
+  if (note) {
+    playPianoNote(note);
+  }
+});
+
+window.addEventListener("keyup", function (e) {
+  const drawer = document.getElementById("pianoDrawer");
+  if (!drawer || drawer.style.display === "none" || drawer.classList.contains("collapsed")) return;
+
+  const targetTag = e.target.tagName ? e.target.tagName.toLowerCase() : "";
+  if (targetTag === "input" || targetTag === "textarea" || targetTag === "select") return;
+
+  const keyMap = {
+    "a": `C${pianoCurrentOctave}`,
+    "w": `C#${pianoCurrentOctave}`,
+    "s": `D${pianoCurrentOctave}`,
+    "e": `D#${pianoCurrentOctave}`,
+    "d": `E${pianoCurrentOctave}`,
+    "f": `F${pianoCurrentOctave}`,
+    "t": `F#${pianoCurrentOctave}`,
+    "g": `G${pianoCurrentOctave}`,
+    "y": `G#${pianoCurrentOctave}`,
+    "h": `A${pianoCurrentOctave}`,
+    "u": `A#${pianoCurrentOctave}`,
+    "j": `B${pianoCurrentOctave}`,
+    "k": `C${pianoCurrentOctave + 1}`
+  };
+
+  const note = keyMap[e.key.toLowerCase()];
+  if (note) {
+    stopPianoNote(note);
+  }
+});
+
 // Initial load
 window.addEventListener("DOMContentLoaded", function () {
   const footerYear = document.getElementById("footerYear");
@@ -6343,6 +6782,7 @@ window.addEventListener("DOMContentLoaded", function () {
   updateMetronomeBeatDots();
   updateMetronomeUI();
   initMetronomeVisibility();
+  initPianoVisibility();
   initTutorialLang();
   syncOfflinePracticeQueue();
   initPWAInstallBanner();
@@ -6371,3 +6811,11 @@ window.closeDuplicateConfirmModal = closeDuplicateConfirmModal;
 window.closeDuplicateModalOnBackdrop = closeDuplicateModalOnBackdrop;
 window.findSimilarSinger = findSimilarSinger;
 window.calculateNameSimilarity = calculateNameSimilarity;
+window.togglePianoDrawer = togglePianoDrawer;
+window.showPianoDrawer = showPianoDrawer;
+window.hidePianoDrawer = hidePianoDrawer;
+window.togglePianoCollapse = togglePianoCollapse;
+window.playPianoVoicePart = playPianoVoicePart;
+window.setPianoOctave = setPianoOctave;
+window.togglePianoLabels = togglePianoLabels;
+window.togglePianoSustain = togglePianoSustain;
