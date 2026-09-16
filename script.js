@@ -218,11 +218,14 @@ const DEFAULT_USER_SETTINGS = {
   timerMinutes: 15,
   showPastRepertoire: false,
   songs: [
+    // ==========================================
+    // 🌟 ACTIVE REPERTOIRE (Oct 24–25 Prep)
+    // ==========================================
     {
       id: "song_active_1",
       title: "The Lord Is My Light (#89)",
       part: "Adult Choir",
-      event: "Active Repertoire",
+      event: "Oct 24–25 Stake Conference",
       isArchived: false,
       sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/the-lord-is-my-light?crumbs=hymns&order=number&lang=eng",
       videoUrl: "",
@@ -232,38 +235,38 @@ const DEFAULT_USER_SETTINGS = {
       id: "song_active_2",
       title: "I Need Thee Every Hour (#98)",
       part: "All Parts",
-      event: "Active Repertoire",
+      event: "Oct 24–25 Stake Conference",
       isArchived: false,
       sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/i-need-thee-every-hour?crumbs=hymns&order=number&lang=eng",
       videoUrl: "",
       note: "ℹ️ Opens in external tab. Your timer will keep running while you practice!"
     },
     {
-      id: "song_1",
+      id: "song_oct_1",
       title: "Know This, That Every Soul Is Free (#240)",
       part: "Adult Choir #1",
       event: "Oct 24–25 Stake Conference",
-      isArchived: true,
+      isArchived: false,
       sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/know-this-that-every-soul-is-free?crumbs=hymns&order=number&lang=eng",
       videoUrl: "",
       note: "ℹ️ Opens in external tab. Your timer will keep running while you practice!"
     },
     {
-      id: "song_2",
+      id: "song_oct_2",
       title: "Rise, Ye Saints, and Temples Enter (#287)",
       part: "Adult Choir #2",
       event: "Oct 24–25 Stake Conference",
-      isArchived: true,
+      isArchived: false,
       sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/rise-ye-saints-and-temples-enter?crumbs=hymns&order=number&lang=eng",
       videoUrl: "",
       note: "ℹ️ Opens in external tab. Your timer will keep running while you practice!"
     },
     {
-      id: "song_3",
+      id: "song_oct_3",
       title: "Choose You This Day",
       part: "Adult Choir #3",
       event: "Oct 24–25 Stake Conference",
-      isArchived: true,
+      isArchived: false,
       sheetUrl: "https://drive.google.com/embeddedfolderview?id=1bBnCakJGBj-zfka8wVbz42_ykvipMnwU#grid",
       localSheetUrl: "kantime-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day.pdf",
       videoUrl: "https://www.youtube.com/embed/q54H2OqWBcY?enablejsapi=1",
@@ -278,24 +281,154 @@ const DEFAULT_USER_SETTINGS = {
       note: ""
     },
     {
-      id: "song_4",
-      title: "Holy Places (Primary)",
+      id: "song_oct_4",
+      title: "Holy Places",
       part: "Primary",
       event: "Oct 24–25 Stake Conference",
-      isArchived: true,
+      isArchived: false,
       sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/holy-places?crumbs=hymns-for-home-and-church&order=number&lang=eng",
       videoUrl: "https://www.youtube.com/watch?v=cKb_U6AkoHU",
       note: "ℹ️ Opens in external tab. Your timer will keep running while you practice!"
     },
     {
-      id: "song_5",
-      title: "I Will Walk with Jesus (Primary)",
+      id: "song_oct_5",
+      title: "I Will Walk with Jesus",
       part: "Primary",
       event: "Oct 24–25 Stake Conference",
-      isArchived: true,
+      isArchived: false,
       sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/i-will-walk-with-jesus?crumbs=hymns-for-home-and-church&order=number&lang=eng",
       videoUrl: "https://www.youtube.com/watch?v=oB77rD2RlPU",
       note: "ℹ️ Opens in external tab. Your timer will keep running while you practice!"
+    },
+
+    // ==========================================
+    // 🏛️ ARCHIVED REPERTOIRE (March 27–28, 2026)
+    // ==========================================
+    // Saturday Session (5:30pm - 7:30pm)
+    {
+      id: "song_mar_sat_1",
+      title: "Ako ay Anak ng Diyos (#189)",
+      part: "Congregational",
+      event: "March 27–28 Stake Conference",
+      session: "Saturday Session",
+      isArchived: true,
+      sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/i-am-a-child-of-god?crumbs=hymns&lang=tgl",
+      videoUrl: "",
+      note: "Opening Hymn (Saturday Session)"
+    },
+    {
+      id: "song_mar_sat_2",
+      title: "Thou Gracious God, Whose Mercy Lends (#1042)",
+      part: "Stake Choir",
+      event: "March 27–28 Stake Conference",
+      session: "Saturday Session",
+      isArchived: true,
+      sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/thou-gracious-god-whose-mercy-lends?crumbs=hymns-for-home-and-church&lang=eng",
+      videoUrl: "",
+      note: "Special Musical Number (from Hymns for Home and Church)"
+    },
+    {
+      id: "song_mar_sat_3",
+      title: "Tinawag Upang sa Diyos Maglingkod (#151)",
+      part: "Congregational",
+      event: "March 27–28 Stake Conference",
+      session: "Saturday Session",
+      isArchived: true,
+      sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/called-to-serve?crumbs=hymns&lang=tgl",
+      videoUrl: "",
+      note: "Congregational Hymn (Saturday Session)"
+    },
+    {
+      id: "song_mar_sat_4",
+      title: "Saligang Kay Tibay (#47)",
+      part: "Congregational",
+      event: "March 27–28 Stake Conference",
+      session: "Saturday Session",
+      isArchived: true,
+      sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/how-firm-a-foundation?crumbs=hymns&lang=tgl",
+      videoUrl: "",
+      note: "Closing Hymn (Saturday Session)"
+    },
+
+    // Sunday Leadership Meeting (8:00am - 9:00am)
+    {
+      id: "song_mar_ldr_1",
+      title: "Lakas Mo ay Idagdag (#154)",
+      part: "Congregational",
+      event: "March 27–28 Stake Conference",
+      session: "Sunday Leadership Meeting",
+      isArchived: true,
+      sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/put-your-shoulder-to-the-wheel?crumbs=hymns&lang=tgl",
+      videoUrl: "",
+      note: "Opening Hymn (Sunday Leadership)"
+    },
+    {
+      id: "song_mar_ldr_2",
+      title: "Magpatuloy Tayo (#148)",
+      part: "Congregational",
+      event: "March 27–28 Stake Conference",
+      session: "Sunday Leadership Meeting",
+      isArchived: true,
+      sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/let-us-all-press-on?crumbs=hymns&lang=tgl",
+      videoUrl: "",
+      note: "Congregational Hymn (Sunday Leadership)"
+    },
+    {
+      id: "song_mar_ldr_3",
+      title: "Mahalin ang Bawat Isa (#196)",
+      part: "Congregational",
+      event: "March 27–28 Stake Conference",
+      session: "Sunday Leadership Meeting",
+      isArchived: true,
+      sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/love-one-another?crumbs=hymns&lang=tgl",
+      videoUrl: "",
+      note: "Closing Hymn (Sunday Leadership)"
+    },
+
+    // Sunday General Session (10:00am - 12:00pm)
+    {
+      id: "song_mar_sun_1",
+      title: "Pag-ibig sa Tahanan (#183)",
+      part: "Congregational",
+      event: "March 27–28 Stake Conference",
+      session: "Sunday General Session",
+      isArchived: true,
+      sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/love-at-home?crumbs=hymns&lang=tgl",
+      videoUrl: "",
+      note: "Opening Hymn (Sunday General Session)"
+    },
+    {
+      id: "song_mar_sun_2",
+      title: "Because (#1039)",
+      part: "Stake Choir",
+      event: "March 27–28 Stake Conference",
+      session: "Sunday General Session",
+      isArchived: true,
+      sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/because?crumbs=hymns-for-home-and-church&lang=eng",
+      videoUrl: "",
+      note: "Special Musical Number (from Hymns for Home and Church)"
+    },
+    {
+      id: "song_mar_sun_3",
+      title: "Salamat O Diyos, sa Aming Propeta (#15)",
+      part: "Congregational",
+      event: "March 27–28 Stake Conference",
+      session: "Sunday General Session",
+      isArchived: true,
+      sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/we-thank-thee-o-god-for-a-prophet?crumbs=hymns&lang=tgl",
+      videoUrl: "",
+      note: "Congregational Hymn (Sunday General Session)"
+    },
+    {
+      id: "song_mar_sun_4",
+      title: "Patnubayan Ka Nawa ng Diyos (#90)",
+      part: "Congregational",
+      event: "March 27–28 Stake Conference",
+      session: "Sunday General Session",
+      isArchived: true,
+      sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/god-be-with-you-till-we-meet-again?crumbs=hymns&lang=tgl",
+      videoUrl: "",
+      note: "Closing Hymn (Sunday General Session)"
     }
   ]
 };
@@ -4385,12 +4518,12 @@ function registerServiceWorker() {
       console.log("[SW] Registered — scope:", reg.scope);
 
       // ── 1. Trigger an update check immediately on every page load ──────
-      reg.update().catch(() => {});
+      reg.update().catch(() => { });
 
       // ── 2. Trigger update checks whenever the tab regains focus ────────
       const onFocusOrVisible = () => {
         if (document.visibilityState === "visible") {
-          reg.update().catch(() => {});
+          reg.update().catch(() => { });
         }
       };
       document.addEventListener("visibilitychange", onFocusOrVisible);
