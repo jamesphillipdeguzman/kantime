@@ -3,7 +3,7 @@
 // ==========================================================================
 
 // --- APPLICATION VERSION ---
-const APP_VERSION = "2.5.5";
+const APP_VERSION = "2.5.6";
 
 // --- APPS SCRIPT WEB APP URL ---
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6r8JCXFOeuDqk8mlrTFAY5G5jOUOcoljMIC-ow1tlStLj3EVBpEWE_q9iT_sRngEa/exec";
@@ -2482,12 +2482,12 @@ function openSectionDetailsModal(sectionData, displayRank) {
   const timeVal = document.getElementById("sectionDetailsTimeValue");
   const timeSub = document.getElementById("sectionDetailsTimeSub");
   if (timeVal) timeVal.textContent = `${mins}m`;
-  if (timeSub) timeSub.textContent = `${hours} hours practiced`;
+  if (timeSub) timeSub.textContent = `(${hours}h)`;
 
   const rankVal = document.getElementById("sectionDetailsRankValue");
   const rankSub = document.getElementById("sectionDetailsRankSub");
   if (rankVal) rankVal.textContent = `#${displayRank}`;
-  if (rankSub) rankSub.textContent = rankCategory;
+  if (rankSub) rankSub.textContent = `of ${sectionData.totalSections || 5}`;
 
   let contributors = sectionData.singers || [];
   // Dynamic fallback: if sectionData.singers is empty or undefined, query cachedLeaderboardSingers
@@ -2502,7 +2502,7 @@ function openSectionDetailsModal(sectionData, displayRank) {
   const contribVal = document.getElementById("sectionDetailsContributorsValue");
   const contribSub = document.getElementById("sectionDetailsContributorsSub");
   if (contribVal) contribVal.textContent = `${contributors.length}`;
-  if (contribSub) contribSub.textContent = `${contributors.length === 1 ? "Singer" : "Singers"} practicing`;
+  if (contribSub) contribSub.textContent = `active`;
 
   const countEl = document.getElementById("sectionContributorsCount");
   if (countEl) {

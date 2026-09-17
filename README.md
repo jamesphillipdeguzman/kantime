@@ -89,8 +89,8 @@ It provides choir members with:
 - **Mobile-Optimized PDF Export**: Fixed-width off-screen DOM clone via `html2pdf.js` eliminating clipping, duplicate content, or page loops on mobile devices.
 
 ### 🏆 Live Individual & Section Leaderboards
-- **Top 10 Dedicated Singers**: Displays top members based on cumulative practice minutes.
-- **Section Standings**: Real-time progress bars tracking total rehearsal hours across Soprano, Alto, Tenor, Bass, and Primary sections.
+- **Top 10 Dedicated Singers**: Displays top members based on cumulative practice minutes with direct click-through to individual **Singer Rehearsal Profiles**.
+- **Section Standings & Interactive Section Breakdown**: Real-time progress tracking across voice parts (Soprano, Alto, Tenor, Bass, Primary) with an interactive **Section Breakdown** modal featuring a compact summary header, 3-column stats strip, and a dominant member roster (~75% viewport height) with singer profile drill-down.
 
 ---
 
@@ -98,6 +98,7 @@ It provides choir members with:
 
 | Version | Date | Key Highlights |
 |:---|:---:|:---|
+| **v2.5.6** | 2026-09-17 | Added interactive **Section Breakdown** modal for Section Standings with compact summary header, 3-column stats strip, and dominant section roster (~75% modal height); added direct singer profile drill-down; synchronized active contributor counts with case-insensitive voice part normalization; fixed scroll clipping and bumped cache version. |
 | **v2.5.5** | 2026-09-16 | Added interactive **In-Browser Web Audio Piano** quick tool with pitch note labels; removed redundant `"Repertoire Management"` badge in Settings; bumped cache version for clean asset hydration. |
 | **v2.5.4** | 2026-09-16 | Added **Fuzzy Name Deduplication** during profile registration/setup (Levenshtein distance, first/last name matching, offline roster caching, and interactive confirmation modal with "Yes, That's Me!" profile linking); provided backend Google Apps Script deduplication safety guard. |
 | **v2.5.0** | 2026-09-10 | Added **Vocal Warm-Ups & Singing Tips** modal with 6 drill categories, Middle C Web Audio pitch helper, and **Export All Drills to PDF**; standardized timer action button to **"Start Practice"**; added in-app **Version Number Badges** (Header, Footer, Settings); tucked **Metronome behind an on-demand toggle** (hidden by default); updated full project documentation. |

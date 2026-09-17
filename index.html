@@ -14,8 +14,8 @@
     content="Access hymn repertoire, practice tracks, and track your daily 15-minute practice sessions for Oct 24–25!">
 
   <!-- Open Graph Image with explicit dimensions & cache buster -->
-  <meta property="og:image" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.5">
-  <meta property="og:image:secure_url" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.5">
+  <meta property="og:image" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.6">
+  <meta property="og:image:secure_url" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.6">
   <meta property="og:image:type" content="image/jpeg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -25,7 +25,7 @@
   <meta name="twitter:title" content="🎶 KanTime | Stake Choir Practice Hub">
   <meta name="twitter:description"
     content="Access hymn repertoire, practice tracks, and track your daily 15-minute practice sessions for Oct 24–25!">
-  <meta name="twitter:image" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.5">
+  <meta name="twitter:image" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.6">
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="🎶 KanTime | Stake Choir Practice Hub">
@@ -43,7 +43,7 @@
   <meta name="apple-mobile-web-app-title" content="KanTime">
   <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192.png">
   <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
-  <link rel="stylesheet" href="css/style.css?v=2.5.5">
+  <link rel="stylesheet" href="css/style.css?v=2.5.6">
 </head>
 
 <body>
@@ -56,7 +56,7 @@
           title="Tap to refresh app and check for new songs" aria-label="Refresh app and check for updates"
           onerror="this.style.display='none'">
         <div class="header-text">
-          <h1>KanTime <span class="app-version-badge" title="KanTime v2.5.5">v2.5.5</span></h1>
+          <h1>KanTime <span class="app-version-badge" title="KanTime v2.5.6">v2.5.6</span></h1>
           <p id="headerSubtitle">Stake Choir Prep • Oct 24–25</p>
         </div>
       </div>
@@ -448,7 +448,7 @@
         </p>
       </div>
       <p class="footer-credit">&copy; <span id="footerYear"></span> James Phillip De Guzman • <span
-          class="footer-version-tag">KanTime v2.5.5</span></p>
+          class="footer-version-tag">KanTime v2.5.6</span></p>
     </footer>
 
     <!-- Fixed Persistent Voice Pitch Checker Overlay (Corner Card) -->
@@ -532,7 +532,7 @@
     <div id="toast">Saved!</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="script.js?v=2.5.5"></script>
+    <script src="script.js?v=2.5.6"></script>
 
     <!-- In-App Resource Viewer Modal -->
     <div id="resourceModal" class="modal-backdrop" onclick="closeModalOnBackdrop(event)">
@@ -604,7 +604,7 @@
         <div class="modal-header">
           <div class="settings-modal-title-wrap">
             <h3 id="settingsModalTitle">⚙️ Practice Settings & Guide</h3>
-            <span class="settings-header-version">v2.5.5</span>
+            <span class="settings-header-version">v2.5.6</span>
           </div>
           <button class="modal-close-btn" type="button" onclick="closeSettingsModal()"
             aria-label="Close settings">&times;</button>
@@ -1278,37 +1278,38 @@
           <button class="modal-close-btn" type="button" onclick="closeSectionDetailsModal()" aria-label="Close modal">&times;</button>
         </div>
         <div class="modal-body section-details-modal-body">
+          <!-- Compact Top Hero Summary -->
           <div class="section-details-hero">
             <div class="section-details-avatar-container" id="sectionDetailsAvatarContainer">
               <!-- Voice badge icon or symbol -->
             </div>
-            <h4 class="section-details-name" id="sectionDetailsName">Section Name</h4>
-            <div class="section-details-badges">
-              <span class="part-badge section-details-voice" id="sectionDetailsVoicePart" data-voice="Tenor">Tenor</span>
+            <div class="section-details-hero-info">
+              <div class="section-details-title-row">
+                <h4 class="section-details-name" id="sectionDetailsName">Section Name</h4>
+                <span class="part-badge section-details-voice" id="sectionDetailsVoicePart" data-voice="Tenor">Tenor</span>
+              </div>
               <span class="section-details-rank-pill" id="sectionDetailsRankPill">#1 • 0m (0.0h)</span>
             </div>
           </div>
 
-          <div class="section-details-stats-cards">
-            <div class="section-stat-tile">
-              <span class="section-stat-label">Total Practice</span>
-              <span class="section-stat-value" id="sectionDetailsTimeValue">0m</span>
-              <span class="section-stat-subtitle" id="sectionDetailsTimeSub">0.0 hours</span>
+          <!-- Compact 3-Column Stats Strip -->
+          <div class="section-details-stats-strip">
+            <div class="section-stat-col">
+              <span class="section-stat-label">Total</span>
+              <span class="section-stat-val-inline"><strong id="sectionDetailsTimeValue">0m</strong> <span class="stat-sub-inline" id="sectionDetailsTimeSub">(0.0h)</span></span>
             </div>
-            <div class="section-stat-tile">
-              <span class="section-stat-label">Rehearsal Rank</span>
-              <span class="section-stat-value" id="sectionDetailsRankValue">#1</span>
-              <span class="section-stat-subtitle" id="sectionDetailsRankSub">of 5 Sections</span>
+            <div class="section-stat-col">
+              <span class="section-stat-label">Rank</span>
+              <span class="section-stat-val-inline"><strong id="sectionDetailsRankValue">#1</strong> <span class="stat-sub-inline" id="sectionDetailsRankSub">of 5</span></span>
             </div>
-            <div class="section-stat-tile section-stat-tile-full">
-              <span class="section-stat-label">Active Contributors</span>
-              <span class="section-stat-value" id="sectionDetailsContributorsValue">0</span>
-              <span class="section-stat-subtitle" id="sectionDetailsContributorsSub">Singers practicing</span>
+            <div class="section-stat-col">
+              <span class="section-stat-label">Singers</span>
+              <span class="section-stat-val-inline"><strong id="sectionDetailsContributorsValue">0</strong> <span class="stat-sub-inline" id="sectionDetailsContributorsSub">active</span></span>
             </div>
           </div>
 
-          <!-- Section Contributors Mini-Roster -->
-          <div class="section-contributors-box" id="sectionContributorsBox">
+          <!-- Dominant Section Roster Container (~70–75% height) -->
+          <div class="section-contributors-box section-roster-container" id="sectionContributorsBox">
             <div class="section-contributors-header">
               <span>Section Roster &amp; Leaders</span>
               <span class="section-contributors-count" id="sectionContributorsCount">0 singers</span>
