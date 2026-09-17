@@ -1268,6 +1268,64 @@
       </div>
     </div>
 
+    <!-- Section Standings: Full Details Pop-Up Modal -->
+    <div id="sectionDetailsModal" class="modal-backdrop section-details-backdrop" onclick="closeSectionDetailsModalOnBackdrop(event)" role="dialog" aria-modal="true" aria-labelledby="sectionDetailsModalTitle" aria-hidden="true" style="display: none;">
+      <div class="modal-box section-details-modal-box">
+        <div class="modal-header section-details-header">
+          <div class="section-details-header-title">
+            <h3 id="sectionDetailsModalTitle">Section Breakdown 📊</h3>
+          </div>
+          <button class="modal-close-btn" type="button" onclick="closeSectionDetailsModal()" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body section-details-modal-body">
+          <div class="section-details-hero">
+            <div class="section-details-avatar-container" id="sectionDetailsAvatarContainer">
+              <!-- Voice badge icon or symbol -->
+            </div>
+            <h4 class="section-details-name" id="sectionDetailsName">Section Name</h4>
+            <div class="section-details-badges">
+              <span class="part-badge section-details-voice" id="sectionDetailsVoicePart" data-voice="Tenor">Tenor</span>
+              <span class="section-details-rank-pill" id="sectionDetailsRankPill">#1 • 0m (0.0h)</span>
+            </div>
+          </div>
+
+          <div class="section-details-stats-cards">
+            <div class="section-stat-tile">
+              <span class="section-stat-label">Total Practice</span>
+              <span class="section-stat-value" id="sectionDetailsTimeValue">0m</span>
+              <span class="section-stat-subtitle" id="sectionDetailsTimeSub">0.0 hours</span>
+            </div>
+            <div class="section-stat-tile">
+              <span class="section-stat-label">Rehearsal Rank</span>
+              <span class="section-stat-value" id="sectionDetailsRankValue">#1</span>
+              <span class="section-stat-subtitle" id="sectionDetailsRankSub">of 5 Sections</span>
+            </div>
+            <div class="section-stat-tile section-stat-tile-full">
+              <span class="section-stat-label">Active Contributors</span>
+              <span class="section-stat-value" id="sectionDetailsContributorsValue">0</span>
+              <span class="section-stat-subtitle" id="sectionDetailsContributorsSub">Singers practicing</span>
+            </div>
+          </div>
+
+          <!-- Section Contributors Mini-Roster -->
+          <div class="section-contributors-box" id="sectionContributorsBox">
+            <div class="section-contributors-header">
+              <span>Section Roster &amp; Leaders</span>
+              <span class="section-contributors-count" id="sectionContributorsCount">0 singers</span>
+            </div>
+            <div class="section-contributors-list" id="sectionContributorsList">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer section-details-footer">
+          <button type="button" class="btn btn-primary btn-full-width" onclick="closeSectionDetailsModal()">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
 </body>
 
 </html>

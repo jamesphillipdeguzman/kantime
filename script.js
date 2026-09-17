@@ -2397,6 +2397,165 @@ function closeSingerDetailsModalOnBackdrop(e) {
   }
 }
 
+// --- SECTION DETAILS MODAL CONTROLLER ---
+let cachedSectionStandings = [];
+
+function showSectionDetails(identifier, optionalRank) {
+  let sectionData = null;
+  let rank = optionalRank;
+
+  if (typeof identifier === "string") {
+    let decoded = "";
+    try {
+      decoded = decodeURIComponent(identifier).trim().toLowerCase();
+    } catch (e) {
+      decoded = identifier.trim().toLowerCase();
+    }
+
+    if (cachedSectionStandings && cachedSectionStandings.length > 0) {
+      const found = cachedSectionStandings.find(s => (s.section || "").trim().toLowerCase() === decoded);
+      if (found) {
+        sectionData = found;
+        rank = rank || found.rank;
+      }
+    }
+  } else if (typeof identifier === "object" && identifier !== null) {
+    sectionData = identifier;
+  }
+
+  if (!sectionData) {
+    const secName = typeof identifier === "string" ? decodeURIComponent(identifier).trim() : "Section";
+    sectionData = {
+      section: secName,
+      rank: rank || 1,
+      totalSections: 5,
+      totalMins: 0,
+      hours: "0.0",
+      singers: []
+    };
+  }
+
+  openSectionDetailsModal(sectionData, rank || sectionData.rank || 1);
+}
+
+function openSectionDetailsModal(sectionData, displayRank) {
+  const modal = document.getElementById("sectionDetailsModal");
+  if (!modal) return;
+
+  const sec = sectionData.section || "Choir Section";
+  const isPrimary = (sec || "").trim().toLowerCase() === "primary";
+  const displayTitle = isPrimary ? "Primary Choir" : `${sec} Section`;
+  const rankCategory = `of ${sectionData.totalSections || 5} Sections`;
+
+  const avatarContainer = document.getElementById("sectionDetailsAvatarContainer");
+  if (avatarContainer) {
+    const iconMap = {
+      Soprano: "🌸",
+      Alto: "💜",
+      Tenor: "🌟",
+      Bass: "⚓",
+      Primary: "🧒"
+    };
+    const icon = iconMap[sec] || "🎶";
+    avatarContainer.innerHTML = `<div class="section-avatar-icon" data-voice="${escapeLeaderboardHtml(sec)}" title="${escapeLeaderboardHtml(displayTitle)}">${icon}</div>`;
+  }
+
+  const nameEl = document.getElementById("sectionDetailsName");
+  if (nameEl) {
+    nameEl.textContent = displayTitle;
+  }
+
+  const voiceEl = document.getElementById("sectionDetailsVoicePart");
+  if (voiceEl) {
+    voiceEl.textContent = sec;
+    voiceEl.setAttribute("data-voice", sec);
+  }
+
+  const mins = Number(sectionData.totalMins) || 0;
+  const hours = sectionData.hours || (mins / 60).toFixed(1);
+
+  const rankPill = document.getElementById("sectionDetailsRankPill");
+  if (rankPill) {
+    rankPill.textContent = `#${displayRank} • ${mins}m (${hours}h)`;
+  }
+
+  const timeVal = document.getElementById("sectionDetailsTimeValue");
+  const timeSub = document.getElementById("sectionDetailsTimeSub");
+  if (timeVal) timeVal.textContent = `${mins}m`;
+  if (timeSub) timeSub.textContent = `${hours} hours practiced`;
+
+  const rankVal = document.getElementById("sectionDetailsRankValue");
+  const rankSub = document.getElementById("sectionDetailsRankSub");
+  if (rankVal) rankVal.textContent = `#${displayRank}`;
+  if (rankSub) rankSub.textContent = rankCategory;
+
+  const contributors = sectionData.singers || [];
+  const contribVal = document.getElementById("sectionDetailsContributorsValue");
+  const contribSub = document.getElementById("sectionDetailsContributorsSub");
+  if (contribVal) contribVal.textContent = `${contributors.length}`;
+  if (contribSub) contribSub.textContent = `${contributors.length === 1 ? "Singer" : "Singers"} practicing`;
+
+  const countEl = document.getElementById("sectionContributorsCount");
+  if (countEl) {
+    countEl.textContent = `${contributors.length} ${contributors.length === 1 ? "singer" : "singers"}`;
+  }
+
+  const listEl = document.getElementById("sectionContributorsList");
+  if (listEl) {
+    if (contributors.length === 0) {
+      listEl.innerHTML = `<div class="section-contributors-empty">No active singers logged in this section yet.</div>`;
+    } else {
+      let listHtml = "";
+      contributors.forEach((s, idx) => {
+        const safeName = escapeLeaderboardHtml(s.name);
+        const safeEncodedName = encodeURIComponent(s.name);
+        const sMins = s.totalMins || 0;
+        const sHours = (sMins / 60).toFixed(1);
+        const medal = idx === 0 ? "🥇 " : idx === 1 ? "🥈 " : idx === 2 ? "🥉 " : "";
+        const avatarSrc = s.avatar ? getAvatarImgSrc(s.avatar) : "";
+        const avatarEl = avatarSrc
+          ? `<img src="${avatarSrc}" alt="${safeName}" class="section-contributor-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"><span class="section-contributor-fallback" style="display:none;">🎵</span>`
+          : `<span class="section-contributor-fallback">🎵</span>`;
+
+        listHtml += `
+          <div class="section-contributor-row"
+               onclick="closeSectionDetailsModal(); showSingerDetails('${safeEncodedName}');"
+               role="button" tabindex="0"
+               title="View ${safeName}'s Profile"
+               onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeSectionDetailsModal(); showSingerDetails('${safeEncodedName}');}">
+            <div class="section-contributor-left">
+              <span class="section-contributor-rank">${medal}#${idx + 1}</span>
+              ${avatarEl}
+              <span class="section-contributor-name">${safeName}</span>
+            </div>
+            <span class="section-contributor-time">${sMins}m <span class="mins-sub">(${sHours}h)</span></span>
+          </div>
+        `;
+      });
+      listEl.innerHTML = listHtml;
+    }
+  }
+
+  modal.classList.add("active", "show");
+  modal.style.display = "flex";
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function closeSectionDetailsModal() {
+  const modal = document.getElementById("sectionDetailsModal");
+  if (modal) {
+    modal.classList.remove("active", "show");
+    modal.style.display = "none";
+    modal.setAttribute("aria-hidden", "true");
+  }
+}
+
+function closeSectionDetailsModalOnBackdrop(e) {
+  if (e.target && (e.target.id === "sectionDetailsModal" || e.target.classList.contains("modal-backdrop"))) {
+    closeSectionDetailsModal();
+  }
+}
+
 function renderLeaderboardSingers() {
   const topSingersEl = document.getElementById("topSingersList");
   const titleEl = document.getElementById("leaderboardCardTitle");
@@ -2513,6 +2672,7 @@ function loadLeaderboard() {
 
       const singerTotals = {};
       const sectionTotals = { "Soprano": 0, "Alto": 0, "Tenor": 0, "Bass": 0, "Primary": 0 };
+      const sectionSingers = { "Soprano": [], "Alto": [], "Tenor": [], "Bass": [], "Primary": [] };
 
       data.forEach(entry => {
         const trimmedName = (entry.name || "Unknown").trim();
@@ -2543,15 +2703,40 @@ function loadLeaderboard() {
       updateKnownSingersFromRoster(cachedLeaderboardSingers);
       renderLeaderboardSingers();
 
+      cachedLeaderboardSingers.forEach(s => {
+        if (sectionSingers[s.section]) {
+          sectionSingers[s.section].push(s);
+        }
+      });
+
       const sortedSections = Object.entries(sectionTotals).sort((a, b) => b[1] - a[1]);
+      cachedSectionStandings = sortedSections.map(([sec, mins], idx) => {
+        return {
+          section: sec,
+          rank: idx + 1,
+          totalSections: sortedSections.length,
+          totalMins: mins,
+          hours: (mins / 60).toFixed(1),
+          singers: sectionSingers[sec] || []
+        };
+      });
+
       let sectionHtml = "";
       sortedSections.forEach(([sec, mins], idx) => {
         const isTop3 = idx < 3 ? "rank-top3" : "";
         const medal = idx === 0 ? "🥇 " : idx === 1 ? "🥈 " : idx === 2 ? "🥉 " : "";
         const hours = (mins / 60).toFixed(1);
         const safeSec = escapeLeaderboardHtml(sec);
+        const safeEncodedSec = encodeURIComponent(sec);
         sectionHtml += `
-            <div class="board-row section-standings-row">
+            <div class="board-row section-standings-row clickable-section"
+                 onclick="showSectionDetails('${safeEncodedSec}', ${idx + 1})"
+                 data-section-name="${safeSec}"
+                 data-section-rank="${idx + 1}"
+                 role="button" tabindex="0"
+                 title="Click to view full breakdown for ${safeSec}"
+                 aria-label="View rehearsal breakdown for ${safeSec}"
+                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showSectionDetails('${safeEncodedSec}', ${idx + 1});}">
               <span class="rank ${isTop3}">${medal}#${idx + 1}</span>
               <div class="section-name-wrap">
                 <span class="section-name">${safeSec}</span>
@@ -2560,7 +2745,21 @@ function loadLeaderboard() {
             </div>
           `;
       });
-      if (sectionEl) sectionEl.innerHTML = sectionHtml;
+      if (sectionEl) {
+        sectionEl.innerHTML = sectionHtml;
+        if (!sectionEl.dataset.detailsBound) {
+          sectionEl.dataset.detailsBound = "true";
+          sectionEl.addEventListener("click", function (e) {
+            const row = e.target.closest(".board-row.clickable-section");
+            if (!row) return;
+            const name = row.getAttribute("data-section-name");
+            const r = row.getAttribute("data-section-rank");
+            if (name) {
+              showSectionDetails(name, r ? Number(r) : 1);
+            }
+          });
+        }
+      }
 
     })
     .catch(() => {
@@ -6901,7 +7100,7 @@ function isTypingInInput(e) {
   const tag = (target.tagName || "").toLowerCase();
   if (tag === "input" || tag === "textarea" || tag === "select") return true;
   if (target.isContentEditable) return true;
-  if (target.closest && target.closest(".modal-backdrop.active, #settingsModal, #duplicateConfirmModal, #singerDetailsModal, #vocalTipsModal")) return true;
+  if (target.closest && target.closest(".modal-backdrop.active, #settingsModal, #duplicateConfirmModal, #singerDetailsModal, #sectionDetailsModal, #vocalTipsModal")) return true;
   return false;
 }
 
@@ -7013,6 +7212,10 @@ document.addEventListener("keydown", function (e) {
     if (singerModal && singerModal.classList.contains("active")) {
       closeSingerDetailsModal();
     }
+    const sectionModal = document.getElementById("sectionDetailsModal");
+    if (sectionModal && sectionModal.classList.contains("active")) {
+      closeSectionDetailsModal();
+    }
     const dupModal = document.getElementById("duplicateConfirmModal");
     if (dupModal && dupModal.classList.contains("active")) {
       closeDuplicateConfirmModal();
@@ -7038,6 +7241,10 @@ window.openSingerDetailsModalByIndex = openSingerDetailsModalByIndex;
 window.openSingerDetailsModal = openSingerDetailsModal;
 window.closeSingerDetailsModal = closeSingerDetailsModal;
 window.closeSingerDetailsModalOnBackdrop = closeSingerDetailsModalOnBackdrop;
+window.showSectionDetails = showSectionDetails;
+window.openSectionDetailsModal = openSectionDetailsModal;
+window.closeSectionDetailsModal = closeSectionDetailsModal;
+window.closeSectionDetailsModalOnBackdrop = closeSectionDetailsModalOnBackdrop;
 window.togglePianoDrawer = togglePianoDrawer;
 window.showPianoDrawer = showPianoDrawer;
 window.hidePianoDrawer = hidePianoDrawer;
