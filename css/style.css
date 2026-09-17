@@ -1360,7 +1360,7 @@ input[type="text"].input-invalid {
   font-size: 0.82rem;
   padding: 7px 12px;
   min-height: 36px;
-  background: #ffffff;
+  background: var(--card-bg, #ffffff);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   text-decoration: none;
@@ -1376,7 +1376,7 @@ input[type="text"].input-invalid {
 .btn-link:hover {
   border-color: var(--primary);
   color: var(--primary);
-  background: #ffffff;
+  background: var(--card-bg, #ffffff);
   transform: translateY(-1px);
   box-shadow: 0 2px 6px rgba(29, 78, 216, 0.12);
 }
@@ -5146,6 +5146,88 @@ input[type="text"].input-invalid {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Archived Song Resource Links (.btn-link) */
+#archivedRepertoireCard .btn-link,
+#archivedRepertoireContent .btn-link,
+.archived-song-links .btn-link,
+.archived-song-links button.btn-link {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  min-height: auto !important;
+  padding: 4px 8px !important;
+  border-radius: var(--radius-sm, 6px);
+  color: var(--primary, #1d4ed8) !important;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+
+#archivedRepertoireCard .btn-link:hover,
+#archivedRepertoireContent .btn-link:hover,
+.archived-song-links .btn-link:hover,
+.archived-song-links button.btn-link:hover {
+  background: rgba(29, 78, 216, 0.08) !important;
+  background-color: rgba(29, 78, 216, 0.08) !important;
+  color: var(--primary-hover, #1e40af) !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+[data-theme="light"] #archivedRepertoireCard .btn-link,
+[data-theme="light"] #archivedRepertoireContent .btn-link,
+[data-theme="light"] .archived-song-links .btn-link,
+[data-theme="light"] .archived-song-links button.btn-link {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #1d4ed8 !important;
+}
+
+[data-theme="light"] #archivedRepertoireCard .btn-link:hover,
+[data-theme="light"] #archivedRepertoireContent .btn-link:hover,
+[data-theme="light"] .archived-song-links .btn-link:hover,
+[data-theme="light"] .archived-song-links button.btn-link:hover {
+  background: rgba(29, 78, 216, 0.08) !important;
+  background-color: rgba(29, 78, 216, 0.08) !important;
+  color: #1e40af !important;
+}
+
+/* Dark Mode: Archived Song Resource Links */
+[data-theme="dark"] #archivedRepertoireCard .btn-link,
+[data-theme="dark"] #archivedRepertoireContent .btn-link,
+[data-theme="dark"] .archived-song-links .btn-link,
+[data-theme="dark"] .archived-song-links button.btn-link,
+.dark #archivedRepertoireCard .btn-link,
+.dark #archivedRepertoireContent .btn-link,
+.dark .archived-song-links .btn-link,
+.dark .archived-song-links button.btn-link {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #60a5fa !important;
+}
+
+[data-theme="dark"] #archivedRepertoireCard .btn-link:hover,
+[data-theme="dark"] #archivedRepertoireContent .btn-link:hover,
+[data-theme="dark"] .archived-song-links .btn-link:hover,
+[data-theme="dark"] .archived-song-links button.btn-link:hover,
+.dark #archivedRepertoireCard .btn-link:hover,
+.dark #archivedRepertoireContent .btn-link:hover,
+.dark .archived-song-links .btn-link:hover,
+.dark .archived-song-links button.btn-link:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #93c5fd !important;
 }
 
 .btn-rehearse-archived {
@@ -5166,6 +5248,20 @@ input[type="text"].input-invalid {
 .btn-rehearse-archived:hover {
   background: var(--primary);
   color: #ffffff;
+}
+
+[data-theme="dark"] .btn-rehearse-archived,
+.dark .btn-rehearse-archived {
+  background: rgba(59, 130, 246, 0.18);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+[data-theme="dark"] .btn-rehearse-archived:hover,
+.dark .btn-rehearse-archived:hover {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #3b82f6;
 }
 
 /* Settings Repertoire Grouping */
