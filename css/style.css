@@ -330,14 +330,43 @@
   color: #fca5a5;
 }
 
-[data-theme="dark"] .settings-tab-btn {
-  color: var(--text-muted);
+/* ── Dark Mode: Settings Tab Buttons ── */
+[data-theme="dark"] .settings-tab-btn,
+.dark .settings-tab-btn,
+[data-theme="dark"] .tab-btn,
+.dark .tab-btn {
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-[data-theme="dark"] .settings-tab-btn.active {
-  color: var(--primary);
-  border-bottom-color: var(--primary);
-  background: transparent;
+[data-theme="dark"] .settings-tab-btn:hover:not(.active),
+.dark .settings-tab-btn:hover:not(.active),
+[data-theme="dark"] .tab-btn:hover:not(.active),
+.dark .tab-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.12);
+  color: #f1f5f9;
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+[data-theme="dark"] .settings-tab-btn.active,
+.dark .settings-tab-btn.active,
+[data-theme="dark"] .tab-btn.active,
+.dark .tab-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  border: 1px solid #3b82f6;
+  font-weight: 650;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+  opacity: 1;
+}
+
+[data-theme="dark"] .settings-tab-btn.active *,
+.dark .settings-tab-btn.active *,
+[data-theme="dark"] .tab-btn.active *,
+.dark .tab-btn.active * {
+  color: #ffffff;
+  opacity: 1;
 }
 
 [data-theme="dark"] .tutorial-step-card {
@@ -2401,6 +2430,45 @@ input[type="text"].input-invalid {
 }
 
 .settings-tab-btn.active * {
+  color: #ffffff;
+  opacity: 1;
+}
+
+/* ── Dark Mode: Settings Tab Button Overrides ── */
+[data-theme="dark"] .settings-tab-btn,
+.dark .settings-tab-btn,
+[data-theme="dark"] .tab-btn,
+.dark .tab-btn {
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .settings-tab-btn:hover:not(.active),
+.dark .settings-tab-btn:hover:not(.active),
+[data-theme="dark"] .tab-btn:hover:not(.active),
+.dark .tab-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.12);
+  color: #f1f5f9;
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+[data-theme="dark"] .settings-tab-btn.active,
+.dark .settings-tab-btn.active,
+[data-theme="dark"] .tab-btn.active,
+.dark .tab-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  border: 1px solid #3b82f6;
+  font-weight: 650;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+  opacity: 1;
+}
+
+[data-theme="dark"] .settings-tab-btn.active *,
+.dark .settings-tab-btn.active *,
+[data-theme="dark"] .tab-btn.active *,
+.dark .tab-btn.active * {
   color: #ffffff;
   opacity: 1;
 }
