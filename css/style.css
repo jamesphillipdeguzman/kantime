@@ -6719,6 +6719,9 @@ input[type="text"].input-invalid {
 .section-details-modal-box {
   max-width: 420px;
   width: 92%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
   border-radius: 20px;
   text-align: center;
   padding: 0;
@@ -6739,6 +6742,7 @@ input[type="text"].input-invalid {
   align-items: center;
   justify-content: space-between;
   background: var(--card-bg-subtle, #f8fafc);
+  flex-shrink: 0;
 }
 
 [data-theme="dark"] .section-details-header,
@@ -6761,8 +6765,10 @@ input[type="text"].input-invalid {
 
 #sectionDetailsModal .section-details-modal-body,
 .section-details-modal-body {
-  padding: 20px 18px 14px;
+  padding: 18px 18px 14px;
   background: var(--bg-modal, var(--card-bg, #ffffff));
+  overflow-y: auto;
+  flex: 1;
 }
 
 [data-theme="dark"] #sectionDetailsModal .section-details-modal-body,
@@ -6989,9 +6995,12 @@ input[type="text"].input-invalid {
 }
 
 .section-contributors-list {
-  max-height: 160px;
+  max-height: 220px;
   overflow-y: auto;
-  padding: 4px 6px;
+  padding: 6px 8px 16px 8px;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 }
 
 .section-contributors-empty {
@@ -7010,6 +7019,12 @@ input[type="text"].input-invalid {
   margin: 2px 0;
   cursor: pointer;
   transition: background-color 0.12s ease;
+  min-height: 38px;
+  box-sizing: border-box;
+}
+
+.section-contributor-row:last-child {
+  margin-bottom: 8px;
 }
 
 .section-contributor-row:hover {

@@ -2489,7 +2489,16 @@ function openSectionDetailsModal(sectionData, displayRank) {
   if (rankVal) rankVal.textContent = `#${displayRank}`;
   if (rankSub) rankSub.textContent = rankCategory;
 
-  const contributors = sectionData.singers || [];
+  let contributors = sectionData.singers || [];
+  // Dynamic fallback: if sectionData.singers is empty or undefined, query cachedLeaderboardSingers
+  if ((!contributors || contributors.length === 0) && typeof cachedLeaderboardSingers !== "undefined" && cachedLeaderboardSingers.length > 0) {
+    const targetSec = (sec || "").trim().toLowerCase();
+    contributors = cachedLeaderboardSingers.filter(s => {
+      const sSec = (s.section || "").trim().toLowerCase();
+      return sSec === targetSec && (s.totalMins > 0 || (s.name && s.name.trim().length > 0));
+    });
+  }
+
   const contribVal = document.getElementById("sectionDetailsContributorsValue");
   const contribSub = document.getElementById("sectionDetailsContributorsSub");
   if (contribVal) contribVal.textContent = `${contributors.length}`;
@@ -2506,6 +2515,7 @@ function openSectionDetailsModal(sectionData, displayRank) {
       listEl.innerHTML = `<div class="section-contributors-empty">No active singers logged in this section yet.</div>`;
     } else {
       let listHtml = "";
+      // Render all matching singers sequentially without any slicing or numeric cap
       contributors.forEach((s, idx) => {
         const safeName = escapeLeaderboardHtml(s.name);
         const safeEncodedName = encodeURIComponent(s.name);
@@ -2522,6 +2532,7 @@ function openSectionDetailsModal(sectionData, displayRank) {
                onclick="closeSectionDetailsModal(); showSingerDetails('${safeEncodedName}');"
                role="button" tabindex="0"
                title="View ${safeName}'s Profile"
+               aria-label="#${idx + 1} ${safeName}, ${sMins} minutes"
                onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeSectionDetailsModal(); showSingerDetails('${safeEncodedName}');}">
             <div class="section-contributor-left">
               <span class="section-contributor-rank">${medal}#${idx + 1}</span>
@@ -2676,14 +2687,15 @@ function loadLeaderboard() {
 
       data.forEach(entry => {
         const trimmedName = (entry.name || "Unknown").trim();
-        const sec = entry.section || "Choir";
+        const rawSec = (entry.section || "Choir").trim();
+        const matchedKey = Object.keys(sectionTotals).find(k => k.toLowerCase() === rawSec.toLowerCase()) || rawSec;
         const mins = Number(entry.minutes) || 0;
         const av = (entry.avatar || "").trim();
 
         if (!singerTotals[trimmedName]) {
           singerTotals[trimmedName] = {
             name: trimmedName,
-            section: sec,
+            section: matchedKey,
             avatar: av,
             totalMins: 0
           };
@@ -2691,11 +2703,14 @@ function loadLeaderboard() {
           if (av) {
             singerTotals[trimmedName].avatar = av;
           }
+          if (matchedKey && sectionTotals[matchedKey] !== undefined) {
+            singerTotals[trimmedName].section = matchedKey;
+          }
         }
         singerTotals[trimmedName].totalMins += mins;
 
-        if (sectionTotals[sec] !== undefined) {
-          sectionTotals[sec] += mins;
+        if (sectionTotals[matchedKey] !== undefined) {
+          sectionTotals[matchedKey] += mins;
         }
       });
 
@@ -2704,8 +2719,10 @@ function loadLeaderboard() {
       renderLeaderboardSingers();
 
       cachedLeaderboardSingers.forEach(s => {
-        if (sectionSingers[s.section]) {
-          sectionSingers[s.section].push(s);
+        const sSec = (s.section || "").trim();
+        const key = Object.keys(sectionSingers).find(k => k.toLowerCase() === sSec.toLowerCase()) || sSec;
+        if (sectionSingers[key]) {
+          sectionSingers[key].push(s);
         }
       });
 
