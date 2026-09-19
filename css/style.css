@@ -5888,17 +5888,23 @@ input[type="text"].input-invalid {
   cursor: pointer;
   user-select: none;
   touch-action: manipulation;
+  flex-wrap: nowrap;
+  gap: 12px;
+  width: 100%;
 }
 
 .piano-header-left {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .piano-header-icon {
   font-size: 1.35rem;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .piano-title {
@@ -5906,33 +5912,30 @@ input[type="text"].input-invalid {
   font-weight: 750;
   color: var(--text);
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .piano-subtitle {
   font-size: 0.74rem;
   color: var(--text-muted);
   margin: 2px 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .piano-header-right {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.piano-badge {
-  font-size: 0.75rem;
-  font-weight: 750;
-  background: var(--primary-light);
-  color: var(--primary);
-  border: 1px solid var(--primary-border);
-  border-radius: var(--radius-full);
-  padding: 3px 9px;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
 }
 
 .piano-collapse-btn,
+.piano-maximize-btn,
 .piano-close-btn {
   background: var(--card-bg-subtle);
   border: 1px solid var(--border);
@@ -5945,7 +5948,46 @@ input[type="text"].input-invalid {
   justify-content: center;
   font-size: 0.75rem;
   cursor: pointer;
-  transition: transform 0.2s ease, background 0.15s ease, color 0.15s ease;
+  transition: transform 0.2s ease, background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.piano-maximize-btn:hover {
+  background: var(--primary-light);
+  border-color: var(--primary-border);
+  color: var(--primary);
+  transform: scale(1.08);
+}
+
+.piano-fullscreen-exit-btn {
+  display: none;
+  align-items: center;
+  gap: 5px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #f87171;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+  white-space: nowrap;
+  touch-action: manipulation;
+}
+
+.piano-fullscreen-exit-btn:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: #ef4444;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
+}
+
+.piano-fullscreen-exit-btn:active {
+  transform: scale(0.96);
 }
 
 .piano-close-btn {
@@ -6312,12 +6354,6 @@ input[type="text"].input-invalid {
   background: var(--card-bg);
 }
 
-[data-theme="dark"] .piano-badge {
-  background: rgba(37, 99, 235, 0.2);
-  color: #93c5fd;
-  border-color: rgba(59, 130, 246, 0.35);
-}
-
 [data-theme="dark"] .piano-collapse-btn,
 [data-theme="dark"] .piano-close-btn {
   background: var(--card-bg-subtle);
@@ -6423,6 +6459,480 @@ input[type="text"].input-invalid {
 
   .piano-key-black {
     height: 94px;
+  }
+}
+
+/* ==========================================================================
+   Piano Maximized / Fullscreen Mode (Desktop & Mobile)
+   ========================================================================== */
+body.piano-fullscreen-active {
+  overflow: hidden !important;
+  touch-action: manipulation;
+}
+
+#pianoDrawer.is-maximized {
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  z-index: 99999 !important;
+  transform: none !important;
+  background: rgba(15, 23, 42, 0.96) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  padding: 1.25rem 2rem !important;
+  box-sizing: border-box !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  animation: pianoFadeIn 0.2s ease-out !important;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.85) !important;
+}
+
+@keyframes pianoFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+#pianoDrawer.is-maximized .piano-header {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: nowrap !important;
+  width: 100% !important;
+  max-width: 1440px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+  padding-bottom: 12px !important;
+  margin-bottom: 12px !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+}
+
+#pianoDrawer.is-maximized .piano-header-left {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+#pianoDrawer.is-maximized .piano-header-left > div {
+  min-width: 0 !important;
+}
+
+#pianoDrawer.is-maximized .piano-title {
+  color: #f8fafc !important;
+  font-size: 1.15rem !important;
+  font-weight: 750 !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+#pianoDrawer.is-maximized .piano-subtitle {
+  color: #94a3b8 !important;
+  font-size: 0.76rem !important;
+  margin: 2px 0 0 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+#pianoDrawer.is-maximized .piano-header-right {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex: 0 0 auto !important;
+  flex-wrap: nowrap !important;
+  justify-content: flex-end !important;
+}
+
+#pianoDrawer.is-maximized .piano-collapse-btn {
+  display: none !important;
+}
+
+#pianoDrawer.is-maximized .piano-maximize-btn {
+  display: none !important;
+}
+
+#pianoDrawer.is-maximized .piano-fullscreen-exit-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+}
+
+#pianoDrawer.is-maximized .piano-close-btn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: #cbd5e1 !important;
+  display: inline-flex !important;
+}
+
+#pianoDrawer.is-maximized .piano-body {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  border-top: none !important;
+  flex: 1 1 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  max-width: 1440px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  box-sizing: border-box !important;
+}
+
+#pianoDrawer.is-maximized .piano-voice-parts-row {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: nowrap !important;
+  gap: 10px !important;
+  padding: 8px 14px !important;
+  background: rgba(30, 41, 59, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: var(--radius-md) !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+#pianoDrawer.is-maximized .piano-voice-label {
+  color: #94a3b8 !important;
+  white-space: nowrap !important;
+}
+
+#pianoDrawer.is-maximized .piano-toolbar {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: nowrap !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+#pianoDrawer.is-maximized .piano-status-strip {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: nowrap !important;
+  padding: 6px 14px !important;
+  background: rgba(30, 41, 59, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: var(--radius-md) !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+#pianoDrawer.is-maximized .piano-active-note-display {
+  color: #60a5fa !important;
+  font-weight: 800 !important;
+}
+
+#pianoDrawer.is-maximized .piano-frequency-display {
+  color: #94a3b8 !important;
+}
+
+#pianoDrawer.is-maximized .piano-keyboard-wrapper {
+  flex: 1 1 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  padding: 8px 0 12px 0 !important;
+  min-height: 0 !important;
+  box-sizing: border-box !important;
+}
+
+#pianoDrawer.is-maximized .piano-keyboard {
+  width: 100% !important;
+  max-width: 1440px !important;
+  margin: 0 auto !important;
+}
+
+#pianoDrawer.is-maximized .piano-hint-text {
+  text-align: center !important;
+  color: #94a3b8 !important;
+  font-size: 0.76rem !important;
+  flex-shrink: 0 !important;
+  margin-top: 4px !important;
+}
+
+/* Octave Shift Controls */
+.piano-octave-shift-group {
+  display: none;
+  align-items: center;
+  gap: 6px;
+}
+
+.piano-shift-btn {
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background: var(--card-bg-subtle);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.piano-shift-btn:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--primary-border);
+}
+
+.piano-shift-btn:active {
+  transform: scale(0.95);
+}
+
+.piano-shift-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--primary);
+  min-width: 44px;
+  text-align: center;
+}
+
+/* Device Orientation Banner */
+.piano-orientation-banner {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+  font-size: 0.76rem;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.piano-orientation-banner .banner-icon {
+  font-size: 1rem;
+}
+
+/* Touch action & polyphony support on keyboard */
+.piano-keyboard,
+.piano-key-white,
+.piano-key-black {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ==========================================================================
+   Desktop Multi-Octave Expanded Layout (>=1024px)
+   ========================================================================== */
+@media (min-width: 1024px) {
+  #pianoDrawer.is-maximized .piano-keyboard-wrapper {
+    overflow: hidden;
+    padding: 10px 0;
+  }
+
+  #pianoDrawer.is-maximized .piano-keyboard {
+    width: 100%;
+    max-width: 1680px;
+    height: min(340px, 48vh);
+    min-height: 220px;
+    display: flex;
+    position: relative;
+    padding: 6px 6px 0 6px;
+    border-radius: 12px;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    border: 2px solid #334155;
+    background: #090d16;
+  }
+
+  #pianoDrawer.is-maximized .piano-key-white {
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+    height: 100%;
+    border-radius: 0 0 6px 6px;
+    padding-bottom: 12px;
+  }
+
+  #pianoDrawer.is-maximized .piano-key-black {
+    height: 62%;
+    width: clamp(18px, 2.2vw, 32px);
+    border-radius: 0 0 5px 5px;
+    padding-bottom: 8px;
+  }
+
+  #pianoDrawer.is-maximized .key-note-name {
+    font-size: clamp(0.56rem, 0.85vw, 0.76rem);
+  }
+
+  #pianoDrawer.is-maximized .key-shortcut {
+    font-size: clamp(0.48rem, 0.70vw, 0.62rem);
+  }
+}
+
+/* ==========================================================================
+   Mobile Landscape Optimization
+   ========================================================================== */
+@media (max-width: 1023px) and (orientation: landscape),
+       (orientation: landscape) and (max-height: 560px) {
+  #pianoDrawer.is-maximized {
+    padding: 0.5rem 0.85rem !important;
+  }
+
+  #pianoDrawer.is-maximized .piano-header {
+    padding-bottom: 4px;
+    margin-bottom: 4px;
+  }
+
+  #pianoDrawer.is-maximized .piano-subtitle {
+    display: none !important;
+  }
+
+  #pianoDrawer.is-maximized .piano-title {
+    font-size: 0.92rem;
+  }
+
+  #pianoDrawer.is-maximized .piano-body {
+    gap: 6px;
+  }
+
+  #pianoDrawer.is-maximized .piano-voice-parts-row {
+    padding: 4px 8px;
+    margin: 0;
+  }
+
+  #pianoDrawer.is-maximized .piano-part-btn {
+    padding: 2px 7px;
+    font-size: 0.68rem;
+  }
+
+  #pianoDrawer.is-maximized .piano-toolbar {
+    display: none !important; /* In landscape full real estate is given to keys */
+  }
+
+  #pianoDrawer.is-maximized .piano-status-strip {
+    padding: 3px 8px;
+    min-height: 26px;
+  }
+
+  #pianoDrawer.is-maximized .piano-active-note-display {
+    font-size: 0.74rem;
+  }
+
+  #pianoDrawer.is-maximized .piano-frequency-display {
+    font-size: 0.70rem;
+  }
+
+  #pianoDrawer.is-maximized .piano-hint-text {
+    display: none !important;
+  }
+
+  #pianoDrawer.is-maximized .piano-orientation-banner {
+    display: none !important;
+  }
+
+  #pianoDrawer.is-maximized .piano-keyboard-wrapper {
+    flex: 1;
+    padding: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: manipulation;
+  }
+
+  #pianoDrawer.is-maximized .piano-keyboard {
+    height: calc(100vh - 120px) !important;
+    height: calc(100dvh - 120px) !important;
+    min-height: 180px;
+    max-height: 380px;
+    touch-action: none;
+    --piano-key-w: clamp(34px, 4.8vw, 48px);
+    --piano-black-w: clamp(20px, 3.2vw, 30px);
+  }
+
+  #pianoDrawer.is-maximized .piano-key-white {
+    width: var(--piano-key-w);
+    touch-action: none;
+  }
+
+  #pianoDrawer.is-maximized .piano-key-black {
+    width: var(--piano-black-w);
+    height: 62%;
+    touch-action: none;
+  }
+}
+
+/* ==========================================================================
+   Mobile Portrait Optimization
+   ========================================================================== */
+@media (max-width: 1023px) and (orientation: portrait) {
+  #pianoDrawer.is-maximized .piano-orientation-banner {
+    display: flex;
+  }
+
+  #pianoDrawer.is-maximized .piano-octave-selector {
+    display: none;
+  }
+
+  #pianoDrawer.is-maximized .piano-octave-shift-group {
+    display: inline-flex;
+  }
+
+  #pianoDrawer.is-maximized .piano-keyboard-wrapper {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    justify-content: flex-start;
+    padding: 8px 0;
+    scrollbar-width: thin;
+  }
+
+  #pianoDrawer.is-maximized .piano-keyboard {
+    height: min(280px, 40vh);
+    min-height: 190px;
+    --piano-key-w: 42px;
+    --piano-black-w: 26px;
+    touch-action: pan-x;
+  }
+
+  #pianoDrawer.is-maximized .piano-key-white,
+  #pianoDrawer.is-maximized .piano-key-black {
+    touch-action: none;
   }
 }
 

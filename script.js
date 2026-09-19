@@ -6711,6 +6711,7 @@ let pianoAudioCtx = null;
 let activePianoOscillators = {};
 let pianoCurrentOctave = 4;
 let showPianoLabels = true;
+let isPianoMaximized = false;
 
 const PIANO_VOICE_PART_PITCHES = {
   Soprano: { note: "C5", octave: 4, freq: 523.25, label: "C5" },
@@ -6889,7 +6890,8 @@ function playPianoVoicePart(part) {
   const target = PIANO_VOICE_PART_PITCHES[part];
   if (!target) return;
 
-  if (target.octave !== pianoCurrentOctave) {
+  // In normal single-octave mode, shift octave if needed so the key is in view
+  if (!isPianoMaximized && target.octave !== pianoCurrentOctave) {
     setPianoOctave(target.octave);
   }
 
@@ -6907,29 +6909,170 @@ function playPianoVoicePart(part) {
   playPianoNote(target.note, true);
 }
 
+function updatePianoMaximizeUI() {
+  const drawer = document.getElementById("pianoDrawer");
+  const maxBtn = document.getElementById("pianoMaximizeBtn");
+  const shiftLabel = document.getElementById("pianoShiftLabel");
+
+  if (shiftLabel) {
+    shiftLabel.innerText = `Oct ${pianoCurrentOctave}`;
+  }
+
+  if (!drawer) return;
+
+  if (isPianoMaximized) {
+    drawer.classList.add("is-maximized");
+    document.body.classList.add("piano-fullscreen-active");
+    drawer.style.display = "flex";
+    if (maxBtn) {
+      maxBtn.setAttribute("title", "Exit Fullscreen Piano (F or Esc)");
+      maxBtn.setAttribute("aria-label", "Exit Fullscreen Piano");
+    }
+  } else {
+    drawer.classList.remove("is-maximized");
+    document.body.classList.remove("piano-fullscreen-active");
+    drawer.style.display = "block";
+    if (maxBtn) {
+      maxBtn.setAttribute("title", "Maximize Fullscreen Piano (F)");
+      maxBtn.setAttribute("aria-label", "Maximize Fullscreen Piano");
+    }
+  }
+}
+
+let pianoDrawerOriginalParent = null;
+let pianoDrawerOriginalNextSibling = null;
+
+function enterPianoMaximized() {
+  unlockPianoAudioContext();
+  const drawer = document.getElementById("pianoDrawer");
+  if (!drawer) return;
+
+  if (!isPianoMaximized) {
+    // Record original parent and sibling to restore accurately on exit
+    pianoDrawerOriginalParent = drawer.parentNode;
+    pianoDrawerOriginalNextSibling = drawer.nextSibling;
+    document.body.appendChild(drawer);
+  }
+
+  // Ensure visible and not collapsed
+  drawer.style.display = "flex";
+  drawer.classList.remove("collapsed");
+  const toggleBtn = document.getElementById("pianoToggleBtn");
+  if (toggleBtn) {
+    toggleBtn.classList.add("active");
+    toggleBtn.setAttribute("aria-expanded", "true");
+  }
+
+  isPianoMaximized = true;
+  updatePianoMaximizeUI();
+  renderPianoKeyboard();
+}
+
+function exitPianoMaximized() {
+  if (!isPianoMaximized) return;
+  const drawer = document.getElementById("pianoDrawer");
+  isPianoMaximized = false;
+
+  // Restore drawer back to its original container in the DOM
+  if (drawer && pianoDrawerOriginalParent) {
+    if (pianoDrawerOriginalNextSibling) {
+      pianoDrawerOriginalParent.insertBefore(drawer, pianoDrawerOriginalNextSibling);
+    } else {
+      pianoDrawerOriginalParent.appendChild(drawer);
+    }
+  }
+
+  updatePianoMaximizeUI();
+  renderPianoKeyboard();
+}
+
+function togglePianoMaximize() {
+  if (isPianoMaximized) {
+    exitPianoMaximized();
+  } else {
+    enterPianoMaximized();
+  }
+}
+
+function shiftPianoOctave(delta) {
+  let nextOct = pianoCurrentOctave + delta;
+  if (nextOct < 2) nextOct = 2;
+  if (nextOct > 6) nextOct = 6;
+  setPianoOctave(nextOct);
+}
+
 function renderPianoKeyboard() {
   const container = document.getElementById("pianoKeyboard");
   if (!container) return;
 
-  const oct = pianoCurrentOctave;
-  const whiteNotes = [
-    { note: `C${oct}`, base: "C", shortcut: "A" },
-    { note: `D${oct}`, base: "D", shortcut: "S" },
-    { note: `E${oct}`, base: "E", shortcut: "D" },
-    { note: `F${oct}`, base: "F", shortcut: "F" },
-    { note: `G${oct}`, base: "G", shortcut: "G" },
-    { note: `A${oct}`, base: "A", shortcut: "H" },
-    { note: `B${oct}`, base: "B", shortcut: "J" },
-    { note: `C${oct + 1}`, base: "C", shortcut: "K" }
-  ];
+  const isWideScreen = window.innerWidth >= 1024;
+  const isLandscapeMobile = !isWideScreen && window.innerWidth > window.innerHeight && window.innerHeight < 600;
+  const isPortraitMobile = !isWideScreen && !isLandscapeMobile;
 
-  const blackNotes = [
-    { note: `C#${oct}`, base: "C#", shortcut: "W", seamAfter: 1 },
-    { note: `D#${oct}`, base: "D#", shortcut: "E", seamAfter: 2 },
-    { note: `F#${oct}`, base: "F#", shortcut: "T", seamAfter: 4 },
-    { note: `G#${oct}`, base: "G#", shortcut: "Y", seamAfter: 5 },
-    { note: `A#${oct}`, base: "A#", shortcut: "U", seamAfter: 6 }
-  ];
+  let octavesToRender = [];
+  let isMultiOctaveDesktop = false;
+
+  if (isPianoMaximized && isWideScreen) {
+    // Desktop Fullscreen: Octaves 2, 3, 4, 5 (C2 through B5) + C6
+    isMultiOctaveDesktop = true;
+    octavesToRender = [2, 3, 4, 5];
+  } else if (isPianoMaximized && isLandscapeMobile) {
+    // Mobile Landscape Fullscreen: Octaves 3, 4, 5 + C6
+    octavesToRender = [3, 4, 5];
+  } else if (isPianoMaximized && isPortraitMobile) {
+    // Mobile Portrait Fullscreen: 2 octaves for clean swipeable view (e.g. Oct 3 and 4 or current)
+    const startOct = Math.min(Math.max(pianoCurrentOctave, 2), 5);
+    octavesToRender = [startOct, startOct + 1];
+  } else {
+    // Standard Normal Drawer: Single octave (e.g. Oct 4: C4–C5)
+    octavesToRender = [pianoCurrentOctave];
+  }
+
+  const whiteNotes = [];
+  const blackNotes = [];
+  let whiteIndex = 0;
+
+  const standardHomeShortcutsWhite = {
+    "C": "A", "D": "S", "E": "D", "F": "V", "G": "G", "A": "H", "B": "J"
+  };
+  const standardHomeShortcutsBlack = {
+    "C#": "W", "D#": "E", "F#": "T", "G#": "Y", "A#": "U"
+  };
+
+  octavesToRender.forEach((oct) => {
+    const isHomeOctave = (oct === pianoCurrentOctave);
+    const whiteBases = ["C", "D", "E", "F", "G", "A", "B"];
+
+    whiteBases.forEach((base) => {
+      const note = `${base}${oct}`;
+      const shortcut = isHomeOctave ? (standardHomeShortcutsWhite[base] || "") : "";
+      whiteNotes.push({ note, base, octave: oct, shortcut, whiteIndex });
+      whiteIndex++;
+    });
+
+    const blackDefs = [
+      { base: "C#", seamAfterWhiteOffset: 1 },
+      { base: "D#", seamAfterWhiteOffset: 2 },
+      { base: "F#", seamAfterWhiteOffset: 4 },
+      { base: "G#", seamAfterWhiteOffset: 5 },
+      { base: "A#", seamAfterWhiteOffset: 6 }
+    ];
+
+    const octaveStartWhiteIndex = whiteIndex - 7;
+    blackDefs.forEach((b) => {
+      const note = `${b.base}${oct}`;
+      const shortcut = isHomeOctave ? (standardHomeShortcutsBlack[b.base] || "") : "";
+      const seamAfter = octaveStartWhiteIndex + b.seamAfterWhiteOffset;
+      blackNotes.push({ note, base: b.base, octave: oct, shortcut, seamAfter });
+    });
+  });
+
+  // Add the final closing C key (e.g. C5 if oct 4, or C6 if oct 5)
+  const lastOct = octavesToRender[octavesToRender.length - 1];
+  const finalC = `C${lastOct + 1}`;
+  const finalCShortcut = (lastOct === pianoCurrentOctave) ? "K" : "";
+  whiteNotes.push({ note: finalC, base: "C", octave: lastOct + 1, shortcut: finalCShortcut, whiteIndex });
+  const totalWhiteKeys = whiteNotes.length;
 
   let html = "";
 
@@ -6945,18 +7088,26 @@ function renderPianoKeyboard() {
       <div class="piano-key-white" data-note="${item.note}" tabindex="0" role="button" aria-label="Key ${item.note}">
         ${voiceTag}
         <span class="key-note-name">${item.note}</span>
-        <span class="key-shortcut">${item.shortcut}</span>
+        ${item.shortcut ? `<span class="key-shortcut">${item.shortcut}</span>` : ""}
       </div>
     `;
   });
 
   // Black keys
   blackNotes.forEach((item) => {
+    let leftStyle = "";
+    if (isMultiOctaveDesktop) {
+      // Proportional dynamic percentage offset so keys span comfortably across horizontal screen space
+      leftStyle = `left: calc((100% / ${totalWhiteKeys}) * ${item.seamAfter} - (clamp(18px, 2.2vw, 32px) / 2));`;
+    } else {
+      leftStyle = `left: calc(var(--piano-pad, 4px) + (var(--piano-key-w, 44px) * ${item.seamAfter}) - (var(--piano-black-w, 28px) / 2));`;
+    }
+
     html += `
       <div class="piano-key-black" data-note="${item.note}" tabindex="0" role="button" aria-label="Key ${item.note}"
-        style="left: calc(var(--piano-pad, 4px) + (var(--piano-key-w, 44px) * ${item.seamAfter}) - (var(--piano-black-w, 28px) / 2));">
+        style="${leftStyle}">
         <span class="key-note-name">${item.note}</span>
-        <span class="key-shortcut">${item.shortcut}</span>
+        ${item.shortcut ? `<span class="key-shortcut">${item.shortcut}</span>` : ""}
       </div>
     `;
   });
@@ -6969,33 +7120,49 @@ function renderPianoKeyboard() {
     container.classList.remove("hide-labels");
   }
 
-  // Pointer event listeners for smooth touch & click
+  // Pointer event listeners with touch-zoom and double-tap zoom prevention
   const allKeys = container.querySelectorAll("[data-note]");
   allKeys.forEach((keyEl) => {
     const note = keyEl.getAttribute("data-note");
 
     const onStart = (e) => {
-      e.preventDefault();
+      if (e.cancelable) e.preventDefault();
       unlockPianoAudioContext();
       playPianoNote(note);
     };
 
     const onEnd = (e) => {
-      e.preventDefault();
+      if (e.cancelable) e.preventDefault();
       stopPianoNote(note);
     };
 
     keyEl.addEventListener("pointerdown", onStart);
     keyEl.addEventListener("pointerup", onEnd);
     keyEl.addEventListener("pointercancel", onEnd);
+    keyEl.addEventListener("pointerleave", (e) => {
+      if (e.buttons === 1) onEnd(e);
+    });
   });
+
+  // In mobile portrait maximized mode, auto-scroll wrapper to center on Middle C (Oct 4)
+  if (isPianoMaximized && isPortraitMobile) {
+    setTimeout(() => {
+      const wrapper = container.parentElement;
+      const c4Key = container.querySelector('[data-note="C4"]');
+      if (wrapper && c4Key) {
+        const offset = c4Key.offsetLeft - (wrapper.clientWidth / 2) + (c4Key.clientWidth / 2);
+        wrapper.scrollTo({ left: Math.max(0, offset), behavior: "smooth" });
+      }
+    }, 80);
+  }
 }
 
 function setPianoOctave(octave) {
   pianoCurrentOctave = parseInt(octave, 10);
-  const badge = document.getElementById("pianoHeaderBadge");
-  if (badge) {
-    badge.innerText = `Octave ${pianoCurrentOctave} (C${pianoCurrentOctave}–C${pianoCurrentOctave + 1})`;
+
+  const shiftLabel = document.getElementById("pianoShiftLabel");
+  if (shiftLabel) {
+    shiftLabel.innerText = `Oct ${pianoCurrentOctave}`;
   }
 
   const pills = document.querySelectorAll(".piano-octave-pill");
@@ -7028,6 +7195,7 @@ function dampAllPianoNotes() {
 }
 
 function togglePianoCollapse() {
+  if (isPianoMaximized) return; // Collapse disabled in maximized fullscreen mode
   const drawer = document.getElementById("pianoDrawer");
   if (!drawer) return;
   drawer.classList.toggle("collapsed");
@@ -7047,11 +7215,15 @@ function showPianoDrawer() {
     btn.setAttribute("aria-expanded", "true");
   }
 
+  updatePianoMaximizeUI();
   renderPianoKeyboard();
   drawer.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 function hidePianoDrawer() {
+  if (isPianoMaximized) {
+    exitPianoMaximized();
+  }
   const drawer = document.getElementById("pianoDrawer");
   const btn = document.getElementById("pianoToggleBtn");
   if (!drawer) return;
@@ -7127,7 +7299,7 @@ function getPianoNoteFromKeyboardEvent(e) {
   const oct = pianoCurrentOctave;
 
   const keyMap = {
-    // White keys: A (C), S (D), D (E), F (F), G (G), H (A), J (B), K (C+1)
+    // White keys: A (C), S (D), D (E), F/V (F), G (G), H (A), J (B), K (C+1)
     "a": `C${oct}`,
     "KeyA": `C${oct}`,
     "s": `D${oct}`,
@@ -7136,6 +7308,8 @@ function getPianoNoteFromKeyboardEvent(e) {
     "KeyD": `E${oct}`,
     "f": `F${oct}`,
     "KeyF": `F${oct}`,
+    "v": `F${oct}`,
+    "KeyV": `F${oct}`,
     "g": `G${oct}`,
     "KeyG": `G${oct}`,
     "h": `A${oct}`,
@@ -7164,8 +7338,25 @@ function getPianoNoteFromKeyboardEvent(e) {
 // Keyboard shortcuts for Virtual Piano (active when drawer is visible)
 window.addEventListener("keydown", function (e) {
   if (e.repeat) return;
-  if (!isPianoDrawerOpen()) return;
   if (isTypingInInput(e)) return;
+
+  // Escape key exits maximized mode if active
+  if (e.key === "Escape") {
+    if (isPianoMaximized) {
+      e.preventDefault();
+      exitPianoMaximized();
+      return;
+    }
+  }
+
+  if (!isPianoDrawerOpen()) return;
+
+  // 'F' or 'f' key toggles Fullscreen / Maximized Mode
+  if (e.key === "f" || e.key === "F") {
+    e.preventDefault();
+    togglePianoMaximize();
+    return;
+  }
 
   const note = getPianoNoteFromKeyboardEvent(e);
   if (note) {
@@ -7195,6 +7386,27 @@ window.addEventListener("blur", function () {
   });
   dampAllPianoNotes();
 });
+
+// Dynamic layout adjustments when maximized across screen size and orientation changes
+let pianoResizeTimeout = null;
+window.addEventListener("resize", function () {
+  if (!isPianoMaximized) return;
+  clearTimeout(pianoResizeTimeout);
+  pianoResizeTimeout = setTimeout(() => {
+    updatePianoMaximizeUI();
+    renderPianoKeyboard();
+  }, 100);
+});
+
+if (window.screen && window.screen.orientation) {
+  window.screen.orientation.addEventListener("change", function () {
+    if (!isPianoMaximized) return;
+    setTimeout(() => {
+      updatePianoMaximizeUI();
+      renderPianoKeyboard();
+    }, 150);
+  });
+}
 
 // Initial load
 window.addEventListener("DOMContentLoaded", function () {
@@ -7266,6 +7478,10 @@ window.togglePianoDrawer = togglePianoDrawer;
 window.showPianoDrawer = showPianoDrawer;
 window.hidePianoDrawer = hidePianoDrawer;
 window.togglePianoCollapse = togglePianoCollapse;
+window.togglePianoMaximize = togglePianoMaximize;
+window.enterPianoMaximized = enterPianoMaximized;
+window.exitPianoMaximized = exitPianoMaximized;
+window.shiftPianoOctave = shiftPianoOctave;
 window.playPianoVoicePart = playPianoVoicePart;
 window.setPianoOctave = setPianoOctave;
 window.togglePianoLabels = togglePianoLabels;

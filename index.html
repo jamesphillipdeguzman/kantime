@@ -43,7 +43,7 @@
   <meta name="apple-mobile-web-app-title" content="KanTime">
   <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192.png">
   <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
-  <link rel="stylesheet" href="css/style.css?v=2.5.6">
+  <link rel="stylesheet" href="css/style.css?v=2.5.9">
 </head>
 
 <body>
@@ -126,7 +126,8 @@
     <div class="card fade-in" id="profileCard">
       <h2 id="profileCardTitle">👤 Choir Member Setup</h2>
       <label for="memberName">Full Name (Required)</label>
-      <input type="text" id="memberName" placeholder="e.g. Juan dela Cruz" onblur="if(typeof toTitleCase==='function')this.value=toTitleCase(this.value)">
+      <input type="text" id="memberName" placeholder="e.g. Juan dela Cruz"
+        onblur="if(typeof toTitleCase==='function')this.value=toTitleCase(this.value)">
       <div class="input-validation-msg" id="memberNameValidationMsg" style="display: none;">⚠️ Please enter a valid full
         name (at least 5 characters).</div>
 
@@ -231,7 +232,7 @@
             aria-expanded="true" style="cursor: pointer; flex: 1;">
             <span class="metronome-header-icon">⏱️</span>
             <div>
-              <h3 class="metronome-title">In-Browser Metronome</h3>
+              <h3 class="metronome-title">KanTime Metronome</h3>
               <p class="metronome-subtitle">Web Audio precision pulse for choral rehearsal</p>
             </div>
           </div>
@@ -303,54 +304,95 @@
       <div class="card piano-card fade-in" id="pianoDrawer" style="display: none;">
         <div class="piano-header">
           <div class="piano-header-left" onclick="togglePianoCollapse()" role="button" tabindex="0"
-            aria-expanded="true" style="cursor: pointer; flex: 1;">
+            aria-expanded="true">
             <span class="piano-header-icon">🎹</span>
             <div>
-              <h3 class="piano-title">In-Browser Piano &amp; Pitch Helper</h3>
+              <h3 class="piano-title">KanTime Piano &amp; Pitch Helper</h3>
               <p class="piano-subtitle">Web Audio precision pitch finder for choir rehearsal</p>
             </div>
           </div>
           <div class="piano-header-right">
-            <span class="piano-badge" id="pianoHeaderBadge">Octave 4 (C4–B4)</span>
-            <button type="button" class="piano-collapse-btn" id="pianoCollapseBtn"
-              onclick="togglePianoCollapse()" aria-label="Toggle Piano Controls"
-              title="Collapse/Expand Piano">▼</button>
+            <button type="button" class="piano-collapse-btn" id="pianoCollapseBtn" onclick="togglePianoCollapse()"
+              aria-label="Toggle Piano Controls" title="Collapse/Expand Piano">▼</button>
+            <button type="button" class="piano-maximize-btn" id="pianoMaximizeBtn" onclick="togglePianoMaximize()"
+              aria-label="Maximize Fullscreen Piano" title="Maximize Fullscreen Mode (F)">
+              <svg class="piano-icon-max" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+              </svg>
+              <svg class="piano-icon-min" style="display: none;" viewBox="0 0 24 24" width="14" height="14" fill="none"
+                stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7" />
+              </svg>
+            </button>
+            <button type="button" class="piano-fullscreen-exit-btn" id="pianoFullscreenExitBtn"
+              onclick="exitPianoMaximized()" aria-label="Exit Fullscreen" title="Exit Fullscreen (Esc or F)">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+              <span>Exit Fullscreen</span>
+            </button>
             <button type="button" class="piano-close-btn" id="pianoCloseBtn" onclick="hidePianoDrawer()"
               aria-label="Hide Piano" title="Hide Piano">&times;</button>
           </div>
         </div>
 
         <div class="piano-body" id="pianoBody">
+          <!-- Device Orientation Banner for Mobile Portrait -->
+          <div class="piano-orientation-banner" id="pianoOrientationBanner" role="status">
+            <span class="banner-icon">📱</span>
+            <span>Rotate device to landscape for full keyboard width</span>
+          </div>
+
           <!-- Voice Part Quick Pitch Row -->
           <div class="piano-voice-parts-row">
             <span class="piano-voice-label">Choir Starting Pitches:</span>
             <div class="piano-voice-buttons">
-              <button type="button" class="piano-part-btn part-soprano" onclick="playPianoVoicePart('Soprano')" title="Soprano Reference Pitch: C5">
+              <button type="button" class="piano-part-btn part-soprano" onclick="playPianoVoicePart('Soprano')"
+                title="Soprano Reference Pitch: C5">
                 <span class="part-badge">S</span> Soprano (C5)
               </button>
-              <button type="button" class="piano-part-btn part-alto" onclick="playPianoVoicePart('Alto')" title="Alto Reference Pitch: G4">
+              <button type="button" class="piano-part-btn part-alto" onclick="playPianoVoicePart('Alto')"
+                title="Alto Reference Pitch: G4">
                 <span class="part-badge">A</span> Alto (G4)
               </button>
-              <button type="button" class="piano-part-btn part-tenor" onclick="playPianoVoicePart('Tenor')" title="Tenor Reference Pitch: E4">
+              <button type="button" class="piano-part-btn part-tenor" onclick="playPianoVoicePart('Tenor')"
+                title="Tenor Reference Pitch: E4">
                 <span class="part-badge">T</span> Tenor (E4)
               </button>
-              <button type="button" class="piano-part-btn part-bass" onclick="playPianoVoicePart('Bass')" title="Bass Reference Pitch: C3">
+              <button type="button" class="piano-part-btn part-bass" onclick="playPianoVoicePart('Bass')"
+                title="Bass Reference Pitch: C3">
                 <span class="part-badge">B</span> Bass (C3)
               </button>
             </div>
           </div>
 
-          <!-- Controls: Octave Selector, Note Labels, Sustain -->
+          <!-- Controls: Octave Selector, Note Labels, Mobile Shifts -->
           <div class="piano-toolbar">
             <div class="piano-octave-selector" role="radiogroup" aria-label="Keyboard Octave">
               <span class="piano-toolbar-label">Octave:</span>
-              <button type="button" class="piano-octave-pill" data-octave="3" onclick="setPianoOctave(3)">Oct 3 (C3–B3)</button>
-              <button type="button" class="piano-octave-pill active" data-octave="4" onclick="setPianoOctave(4)">Oct 4 (Middle C)</button>
-              <button type="button" class="piano-octave-pill" data-octave="5" onclick="setPianoOctave(5)">Oct 5 (C5–B5)</button>
+              <button type="button" class="piano-octave-pill" data-octave="3" onclick="setPianoOctave(3)">Oct 3
+                (C3–B3)</button>
+              <button type="button" class="piano-octave-pill active" data-octave="4" onclick="setPianoOctave(4)">Oct 4
+                (Middle C)</button>
+              <button type="button" class="piano-octave-pill" data-octave="5" onclick="setPianoOctave(5)">Oct 5
+                (C5–B5)</button>
+            </div>
+
+            <!-- Mobile / Quick Octave Shift Buttons -->
+            <div class="piano-octave-shift-group" id="pianoOctaveShiftGroup" aria-label="Octave Shift">
+              <button type="button" class="piano-shift-btn" id="pianoShiftDownBtn" onclick="shiftPianoOctave(-1)"
+                title="Shift 1 Octave Lower" aria-label="Octave Down">◀ Oct</button>
+              <span class="piano-shift-label" id="pianoShiftLabel">Oct 4</span>
+              <button type="button" class="piano-shift-btn" id="pianoShiftUpBtn" onclick="shiftPianoOctave(1)"
+                title="Shift 1 Octave Higher" aria-label="Octave Up">Oct ▶</button>
             </div>
 
             <div class="piano-options-group">
-              <button type="button" class="piano-opt-btn active" id="pianoToggleLabelsBtn" onclick="togglePianoLabels()" title="Toggle note names on keys">
+              <button type="button" class="piano-opt-btn active" id="pianoToggleLabelsBtn" onclick="togglePianoLabels()"
+                title="Toggle note names on keys">
                 🏷️ Labels
               </button>
             </div>
@@ -369,8 +411,9 @@
             </div>
           </div>
 
-          <div class="piano-hint-text">
-            <span>💡 Tip: Click or tap any key to sound the note. Keyboard shortcuts: <kbd>A</kbd>–<kbd>K</kbd> play white keys, <kbd>W,E,T,Y,U</kbd> play black keys.</span>
+          <div class="piano-hint-text" id="pianoHintText">
+            <span>💡 Tip: Click or tap any key to sound the note. Keyboard shortcuts: <kbd>A</kbd>–<kbd>K</kbd> play
+              white keys, <kbd>W,E,T,Y,U</kbd> play black keys. Press <kbd>F</kbd> for Fullscreen.</span>
           </div>
         </div>
       </div>
@@ -386,16 +429,18 @@
       <!-- Archived / Past Conferences Section (Collapsible, shown when enabled in Settings) -->
       <div class="card archived-repertoire-card" id="archivedRepertoireCard" style="display: none;">
         <div class="archived-header-row" onclick="toggleArchivedRepertoireCollapse()" role="button" tabindex="0"
-          onkeydown="if(event.key==='Enter'||event.key===' ')toggleArchivedRepertoireCollapse()"
-          aria-expanded="false" aria-controls="archivedRepertoireContent">
+          onkeydown="if(event.key==='Enter'||event.key===' ')toggleArchivedRepertoireCollapse()" aria-expanded="false"
+          aria-controls="archivedRepertoireContent">
           <div class="archived-title-wrap">
             <h2>📁 Archived / Past Conferences</h2>
             <span class="archived-count-pill" id="archivedCountPill">0 pieces</span>
           </div>
-          <button type="button" class="btn-icon-collapse" id="archivedCollapseBtn" aria-label="Toggle archived repertoire">▼</button>
+          <button type="button" class="btn-icon-collapse" id="archivedCollapseBtn"
+            aria-label="Toggle archived repertoire">▼</button>
         </div>
         <div class="archived-repertoire-content" id="archivedRepertoireContent" style="display: none;">
-          <p class="archived-subtitle">Repertoire from past events &amp; conferences. Tap any piece to load it into the rehearsal workspace.</p>
+          <p class="archived-subtitle">Repertoire from past events &amp; conferences. Tap any piece to load it into the
+            rehearsal workspace.</p>
           <div class="archived-items-grid" id="archivedItemsGrid">
             <!-- Dynamically populated from archived songs -->
           </div>
@@ -626,7 +671,8 @@
           <div id="tabPanelProfile" class="settings-tab-panel tab-content active" role="tabpanel">
             <div class="settings-section">
               <label for="settingMemberName">Full Name</label>
-              <input type="text" id="settingMemberName" placeholder="e.g. Juan dela Cruz" onblur="if(typeof toTitleCase==='function')this.value=toTitleCase(this.value)">
+              <input type="text" id="settingMemberName" placeholder="e.g. Juan dela Cruz"
+                onblur="if(typeof toTitleCase==='function')this.value=toTitleCase(this.value)">
               <div class="input-validation-msg" id="settingMemberNameValidationMsg" style="display: none;">⚠️ Please
                 enter a valid full name (at least 5 characters).</div>
             </div>
@@ -720,13 +766,17 @@
               <div class="settings-section-title-wrap">
                 <h4 class="settings-section-title">Event Repertoire &amp; Archives</h4>
               </div>
-              <p class="settings-section-desc settings-hint">Group pieces by performance event and manage post-conference archiving.</p>
+              <p class="settings-section-desc settings-hint">Group pieces by performance event and manage
+                post-conference archiving.</p>
 
               <label class="setting-checkbox-row" for="settingShowPastRepertoire" style="margin-top: 10px;">
-                <input type="checkbox" id="settingShowPastRepertoire" onchange="handleSettingPastRepertoireToggle(this.checked)">
+                <input type="checkbox" id="settingShowPastRepertoire"
+                  onchange="handleSettingPastRepertoireToggle(this.checked)">
                 <span>Show Past Repertoire (Oct 24–25 Stake Conference)</span>
               </label>
-              <p class="settings-hint">When disabled (default for post-conference mode), archived pieces are hidden from the active practice hub. When enabled, they appear in a collapsible "Archived / Past Conferences" section on your practice dashboard.</p>
+              <p class="settings-hint">When disabled (default for post-conference mode), archived pieces are hidden from
+                the active practice hub. When enabled, they appear in a collapsible "Archived / Past Conferences"
+                section on your practice dashboard.</p>
             </div>
 
             <div class="repertoire-header-row" style="margin-top: 16px;">
@@ -743,7 +793,8 @@
               <input type="text" id="songFormTitle" placeholder="e.g. Choose You This Day">
 
               <label for="songFormEvent">Event / Conference Group</label>
-              <input type="text" id="songFormEvent" list="eventSuggestions" placeholder="e.g. Oct 24–25 Stake Conference">
+              <input type="text" id="songFormEvent" list="eventSuggestions"
+                placeholder="e.g. Oct 24–25 Stake Conference">
               <datalist id="eventSuggestions">
                 <option value="Oct 24–25 Stake Conference"></option>
                 <option value="Active Repertoire"></option>
@@ -1185,17 +1236,21 @@
     </div>
 
     <!-- Duplicate Singer Confirmation Modal -->
-    <div id="duplicateConfirmModal" class="modal-backdrop duplicate-modal-backdrop" onclick="closeDuplicateModalOnBackdrop(event)" role="dialog" aria-modal="true" aria-labelledby="duplicateModalTitle">
+    <div id="duplicateConfirmModal" class="modal-backdrop duplicate-modal-backdrop"
+      onclick="closeDuplicateModalOnBackdrop(event)" role="dialog" aria-modal="true"
+      aria-labelledby="duplicateModalTitle">
       <div class="modal-box duplicate-modal-box">
         <div class="modal-header">
           <div class="duplicate-header-title">
             <h3 id="duplicateModalTitle">Existing Singer Found! 🎵</h3>
           </div>
-          <button class="modal-close-btn" type="button" onclick="closeDuplicateConfirmModal()" aria-label="Close modal">&times;</button>
+          <button class="modal-close-btn" type="button" onclick="closeDuplicateConfirmModal()"
+            aria-label="Close modal">&times;</button>
         </div>
         <div class="modal-body duplicate-modal-body">
           <p class="duplicate-modal-intro">
-            Did you mean <strong id="duplicateMatchedNameLead">[Matched Name]</strong>? A profile with a similar name already exists in the choir roster.
+            Did you mean <strong id="duplicateMatchedNameLead">[Matched Name]</strong>? A profile with a similar name
+            already exists in the choir roster.
           </p>
 
           <div class="duplicate-match-card">
@@ -1212,14 +1267,17 @@
           </div>
 
           <p class="duplicate-modal-subtext">
-            If this is you, tap <strong>&ldquo;Yes, That&rsquo;s Me!&rdquo;</strong> to link this device and keep your practice stats unified. If you are a different singer, tap <strong>&ldquo;No, Create New Profile&rdquo;</strong>.
+            If this is you, tap <strong>&ldquo;Yes, That&rsquo;s Me!&rdquo;</strong> to link this device and keep your
+            practice stats unified. If you are a different singer, tap <strong>&ldquo;No, Create New
+              Profile&rdquo;</strong>.
           </p>
         </div>
         <div class="modal-footer duplicate-modal-footer">
           <button type="button" class="btn btn-outline" id="btnConfirmNewSinger" onclick="handleDuplicateAction('new')">
             No, Create New Profile
           </button>
-          <button type="button" class="btn btn-primary" id="btnConfirmExistingSinger" onclick="handleDuplicateAction('accept')">
+          <button type="button" class="btn btn-primary" id="btnConfirmExistingSinger"
+            onclick="handleDuplicateAction('accept')">
             Yes, That&rsquo;s Me!
           </button>
         </div>
@@ -1227,13 +1285,16 @@
     </div>
 
     <!-- Top 10 Dedicated Singers: Full Details Pop-Up Modal -->
-    <div id="singerDetailsModal" class="modal-backdrop singer-details-backdrop" onclick="closeSingerDetailsModalOnBackdrop(event)" role="dialog" aria-modal="true" aria-labelledby="singerDetailsModalTitle" aria-hidden="true">
+    <div id="singerDetailsModal" class="modal-backdrop singer-details-backdrop"
+      onclick="closeSingerDetailsModalOnBackdrop(event)" role="dialog" aria-modal="true"
+      aria-labelledby="singerDetailsModalTitle" aria-hidden="true">
       <div class="modal-box singer-details-modal-box">
         <div class="modal-header singer-details-header">
           <div class="singer-details-header-title">
             <h3 id="singerDetailsModalTitle">Singer Rehearsal Profile 🎵</h3>
           </div>
-          <button class="modal-close-btn" type="button" onclick="closeSingerDetailsModal()" aria-label="Close modal">&times;</button>
+          <button class="modal-close-btn" type="button" onclick="closeSingerDetailsModal()"
+            aria-label="Close modal">&times;</button>
         </div>
         <div class="modal-body singer-details-modal-body">
           <div class="singer-details-hero">
@@ -1242,7 +1303,8 @@
             </div>
             <h4 class="singer-details-fullname" id="singerDetailsFullName">Singer Name</h4>
             <div class="singer-details-badges">
-              <span class="part-badge singer-details-voice" id="singerDetailsVoicePart" data-voice="Soprano">Soprano</span>
+              <span class="part-badge singer-details-voice" id="singerDetailsVoicePart"
+                data-voice="Soprano">Soprano</span>
               <span class="singer-details-rank-pill" id="singerDetailsRankPill">#1 • 0m (0.0h)</span>
             </div>
           </div>
@@ -1269,13 +1331,16 @@
     </div>
 
     <!-- Section Standings: Full Details Pop-Up Modal -->
-    <div id="sectionDetailsModal" class="modal-backdrop section-details-backdrop" onclick="closeSectionDetailsModalOnBackdrop(event)" role="dialog" aria-modal="true" aria-labelledby="sectionDetailsModalTitle" aria-hidden="true" style="display: none;">
+    <div id="sectionDetailsModal" class="modal-backdrop section-details-backdrop"
+      onclick="closeSectionDetailsModalOnBackdrop(event)" role="dialog" aria-modal="true"
+      aria-labelledby="sectionDetailsModalTitle" aria-hidden="true" style="display: none;">
       <div class="modal-box section-details-modal-box">
         <div class="modal-header section-details-header">
           <div class="section-details-header-title">
             <h3 id="sectionDetailsModalTitle">Section Breakdown 📊</h3>
           </div>
-          <button class="modal-close-btn" type="button" onclick="closeSectionDetailsModal()" aria-label="Close modal">&times;</button>
+          <button class="modal-close-btn" type="button" onclick="closeSectionDetailsModal()"
+            aria-label="Close modal">&times;</button>
         </div>
         <div class="modal-body section-details-modal-body">
           <!-- Compact Top Hero Summary -->
@@ -1286,7 +1351,8 @@
             <div class="section-details-hero-info">
               <div class="section-details-title-row">
                 <h4 class="section-details-name" id="sectionDetailsName">Section Name</h4>
-                <span class="part-badge section-details-voice" id="sectionDetailsVoicePart" data-voice="Tenor">Tenor</span>
+                <span class="part-badge section-details-voice" id="sectionDetailsVoicePart"
+                  data-voice="Tenor">Tenor</span>
               </div>
               <span class="section-details-rank-pill" id="sectionDetailsRankPill">#1 • 0m (0.0h)</span>
             </div>
@@ -1296,15 +1362,18 @@
           <div class="section-details-stats-strip">
             <div class="section-stat-col">
               <span class="section-stat-label">Total</span>
-              <span class="section-stat-val-inline"><strong id="sectionDetailsTimeValue">0m</strong> <span class="stat-sub-inline" id="sectionDetailsTimeSub">(0.0h)</span></span>
+              <span class="section-stat-val-inline"><strong id="sectionDetailsTimeValue">0m</strong> <span
+                  class="stat-sub-inline" id="sectionDetailsTimeSub">(0.0h)</span></span>
             </div>
             <div class="section-stat-col">
               <span class="section-stat-label">Rank</span>
-              <span class="section-stat-val-inline"><strong id="sectionDetailsRankValue">#1</strong> <span class="stat-sub-inline" id="sectionDetailsRankSub">of 5</span></span>
+              <span class="section-stat-val-inline"><strong id="sectionDetailsRankValue">#1</strong> <span
+                  class="stat-sub-inline" id="sectionDetailsRankSub">of 5</span></span>
             </div>
             <div class="section-stat-col">
               <span class="section-stat-label">Singers</span>
-              <span class="section-stat-val-inline"><strong id="sectionDetailsContributorsValue">0</strong> <span class="stat-sub-inline" id="sectionDetailsContributorsSub">active</span></span>
+              <span class="section-stat-val-inline"><strong id="sectionDetailsContributorsValue">0</strong> <span
+                  class="stat-sub-inline" id="sectionDetailsContributorsSub">active</span></span>
             </div>
           </div>
 
