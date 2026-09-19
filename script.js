@@ -3,7 +3,7 @@
 // ==========================================================================
 
 // --- APPLICATION VERSION ---
-const APP_VERSION = "2.5.6";
+const APP_VERSION = "2.5.7";
 
 // --- APPS SCRIPT WEB APP URL ---
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6r8JCXFOeuDqk8mlrTFAY5G5jOUOcoljMIC-ow1tlStLj3EVBpEWE_q9iT_sRngEa/exec";
@@ -6743,7 +6743,7 @@ function getPianoFrequency(noteName) {
 function unlockPianoAudioContext() {
   const audioCtx = getPianoAudioContext();
   if (audioCtx && audioCtx.state !== "running") {
-    audioCtx.resume().catch(() => {});
+    audioCtx.resume().catch(() => { });
   }
 }
 
@@ -6759,7 +6759,7 @@ function getPianoAudioContext() {
     }
   }
   if (pianoAudioCtx && pianoAudioCtx.state === "suspended") {
-    pianoAudioCtx.resume().catch(() => {});
+    pianoAudioCtx.resume().catch(() => { });
   }
   return pianoAudioCtx;
 }
@@ -6796,7 +6796,7 @@ function playPianoNote(noteName, isTemporary = false) {
   if (!audioCtx) return;
 
   if (audioCtx.state !== "running") {
-    audioCtx.resume().catch(() => {});
+    audioCtx.resume().catch(() => { });
   }
 
   const freq = getPianoFrequency(noteName);
