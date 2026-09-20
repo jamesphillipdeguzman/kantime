@@ -7351,8 +7351,8 @@ window.addEventListener("keydown", function (e) {
 
   if (!isPianoDrawerOpen()) return;
 
-  // 'F' or 'f' key toggles Fullscreen / Maximized Mode
-  if (e.key === "f" || e.key === "F") {
+  // 'X' or 'x' key toggles Fullscreen / Maximized Mode
+  if (e.key === "x" || e.key === "X") {
     e.preventDefault();
     togglePianoMaximize();
     return;
