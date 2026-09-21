@@ -2,7 +2,7 @@
 
 Implement two new choir rehearsal features in `kantimes.netlify.app` across `index.html`, `css/style.css`, and `script.js`:
 1. **Repertoire Archiving via Settings (⚙️)**: Group songs by event, add a toggle for past repertoire (Oct 24–25 Stake Conference), hide archived songs from the main practice dashboard by default (post-conference mode), and present them in a collapsible "Archived / Past Conferences" section when enabled.
-2. **In-Browser Audio Scratchpad (Record & Self-Check)**: Ephemeral, 100% client-side 30-second voice recording tool using the browser's `MediaRecorder` API under the practice audio player with countdown timer, pulsing recording dot, immediate playback, discard trash button, and graceful mic permission handling.
+2. **In-Browser Audio Scratchpad (Record & Self-Check)**: Ephemeral, 100% client-side voice recording tool (up to 5 minutes) using the browser's `MediaRecorder` API under the practice audio player with countdown timer, pulsing recording dot, immediate playback, direct download/export option to save audio to device, discard trash button, and graceful mic permission handling.
 
 ---
 
@@ -10,7 +10,7 @@ Implement two new choir rehearsal features in `kantimes.netlify.app` across `ind
 
 > [!NOTE]
 > - **Default State for Post-Conference Mode**: The toggle `Show Past Repertoire (Oct 24–25 Stake Conference)` will be **disabled by default**, in accordance with post-conference mode. The 5 original Stake Conference songs will be tagged under `Oct 24–25 Stake Conference` and marked as archived. Two standard active hymn pieces ("The Lord Is My Light (#89)" and "I Need Thee Every Hour (#98)") will be provided as active repertoire so the practice hub has active music right away.
-> - **Ephemeral Voice Recordings**: Voice recordings are created strictly via in-memory local blob URLs (`audio/webm` or `audio/mp4` for iOS Safari) and are never sent to any server.
+> - **Ephemeral Voice Recordings & Direct Export**: Voice recordings are created locally via in-memory blobs (`audio/webm` or `audio/mp4` for iOS Safari) with a 5-minute maximum limit. Users can directly export/download recordings to their local device or discard them. Recordings are never sent to any external server.
 
 ---
 
@@ -58,11 +58,14 @@ Implement two new choir rehearsal features in `kantimes.netlify.app` across `ind
     - Check browser support (`navigator.mediaDevices.getUserMedia`).
     - Handle permission rejection gracefully with the exact toast prompt: *"Microphone access required to record practice snippets."*
     - Detect iOS Safari vs Chrome MIME types (`audio/webm`, `audio/mp4`, `audio/aac`).
-    - 30-second countdown with auto-stop on expiration.
+    - 5-minute countdown with auto-stop on expiration.
   - Implement `stopSelfCheckRecording()` and `finishSelfCheckRecording()`:
     - Generate local blob URL.
     - Release microphone stream tracks.
-    - Update player UI to allow immediate listening.
+    - Update player UI to allow immediate listening, downloading/exporting, re-recording, or discarding.
+  - Implement `downloadSelfCheckRecording()`:
+    - Automatically generate formatted filename based on target song title and date/time.
+    - Direct export/download of recorded audio directly to user's device.
   - Implement `discardSelfCheckRecording()`:
     - Revoke blob URL, clean up chunks, reset UI back to record button.
 

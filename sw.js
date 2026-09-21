@@ -1,8 +1,8 @@
 // ==========================================================================
-// KanTime PWA Service Worker (v2.5.7 — Network-First HTML + Auto-Update)
+// KanTime PWA Service Worker (v2.5.8 — Network-First HTML + Auto-Update)
 // ==========================================================================
 
-const APP_VERSION = "2.5.7";
+const APP_VERSION = "2.5.8";
 const CACHE_NAME = `kantime-cache-v${APP_VERSION}`;
 
 const PRECACHE_ASSETS = [
@@ -11,6 +11,7 @@ const PRECACHE_ASSETS = [
   "./css/style.css",
   "./script.js",
   "./manifest.json",
+  "./lame.min.js",
   "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js",
   // Images & Avatars
   "./images/favicon.ico",

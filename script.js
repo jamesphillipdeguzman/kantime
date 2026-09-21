@@ -3,7 +3,7 @@
 // ==========================================================================
 
 // --- APPLICATION VERSION ---
-const APP_VERSION = "2.5.7";
+const APP_VERSION = "2.5.8";
 
 // --- APPS SCRIPT WEB APP URL ---
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6r8JCXFOeuDqk8mlrTFAY5G5jOUOcoljMIC-ow1tlStLj3EVBpEWE_q9iT_sRngEa/exec";
@@ -661,12 +661,17 @@ function isPracticeSessionActive() {
 }
 
 // --- IN-BROWSER AUDIO SCRATCHPAD (SELF-CHECK MIC) ---
+const MAX_SELF_CHECK_SECONDS = 300; // 5 minutes recording limit
 let selfCheckMediaRecorder = null;
 let selfCheckAudioStream = null;
 let selfCheckAudioChunks = [];
+let selfCheckBlob = null;
 let selfCheckBlobUrl = null;
+let selfCheckMp3Blob = null;
+let selfCheckMp3Url = null;
+let selfCheckIsEncoding = false;
 let selfCheckCountdownTimer = null;
-let selfCheckSecondsLeft = 30;
+let selfCheckSecondsLeft = MAX_SELF_CHECK_SECONDS;
 let selfCheckState = "idle"; // "idle" | "recording" | "recorded"
 let selfCheckSupportedMime = "";
 
@@ -683,6 +688,184 @@ function getSupportedAudioMimeType() {
     if (MediaRecorder.isTypeSupported(t)) return t;
   }
   return "";
+}
+
+function getSelfCheckMp3Filename() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const hours = String(now.getHours()).padStart(2, "0");
+  const mins = String(now.getMinutes()).padStart(2, "0");
+  const secs = String(now.getSeconds()).padStart(2, "0");
+  const dateStr = `${year}${month}${day}`;
+  const timeStr = `${hours}${mins}${secs}`;
+
+  return `kantime-practice-recording-${dateStr}-${timeStr}.mp3`;
+}
+
+function convertFloat32ToInt16(float32Array) {
+  const len = float32Array.length;
+  const int16 = new Int16Array(len);
+  for (let i = 0; i < len; i++) {
+    const s = Math.max(-1, Math.min(1, float32Array[i]));
+    int16[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+  }
+  return int16;
+}
+
+async function convertAudioBlobToMp3(blob) {
+  if (typeof lamejs === "undefined" || !lamejs.Mp3Encoder) {
+    throw new Error("lamejs MP3 encoder is not loaded");
+  }
+
+  const arrayBuffer = await blob.arrayBuffer();
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) {
+    throw new Error("Web Audio API not supported in this browser");
+  }
+
+  const audioCtx = new AudioCtx();
+  let decodedBuffer;
+  try {
+    decodedBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+  } finally {
+    if (audioCtx.state !== "closed" && typeof audioCtx.close === "function") {
+      audioCtx.close().catch(() => { });
+    }
+  }
+
+  const channels = Math.min(2, Math.max(1, decodedBuffer.numberOfChannels));
+  const targetSampleRate = 44100;
+  let finalBuffer = decodedBuffer;
+
+  // Standardize sample rate to 44.1kHz using OfflineAudioContext if needed
+  if (decodedBuffer.sampleRate !== targetSampleRate && typeof OfflineAudioContext !== "undefined") {
+    try {
+      const offlineCtx = new OfflineAudioContext(
+        channels,
+        Math.ceil(decodedBuffer.duration * targetSampleRate),
+        targetSampleRate
+      );
+      const source = offlineCtx.createBufferSource();
+      source.buffer = decodedBuffer;
+      source.connect(offlineCtx.destination);
+      source.start(0);
+      finalBuffer = await offlineCtx.startRendering();
+    } catch (resampleErr) {
+      console.warn("OfflineAudioContext resampling bypassed, using original sample rate:", resampleErr);
+      finalBuffer = decodedBuffer;
+    }
+  }
+
+  const sampleRate = finalBuffer.sampleRate;
+  const kbps = 128; // Standard 128 kbps voice quality MP3
+  const mp3encoder = new lamejs.Mp3Encoder(channels > 1 ? 2 : 1, sampleRate, kbps);
+  const mp3Data = [];
+  const sampleBlockSize = 1152;
+
+  if (channels > 1) {
+    const leftFloat = finalBuffer.getChannelData(0);
+    const rightFloat = finalBuffer.getChannelData(1);
+    const left = convertFloat32ToInt16(leftFloat);
+    const right = convertFloat32ToInt16(rightFloat);
+
+    for (let i = 0; i < left.length; i += sampleBlockSize) {
+      const leftChunk = left.subarray(i, i + sampleBlockSize);
+      const rightChunk = right.subarray(i, i + sampleBlockSize);
+      const mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk);
+      if (mp3buf && mp3buf.length > 0) {
+        mp3Data.push(mp3buf);
+      }
+    }
+  } else {
+    const monoFloat = finalBuffer.getChannelData(0);
+    const mono = convertFloat32ToInt16(monoFloat);
+
+    for (let i = 0; i < mono.length; i += sampleBlockSize) {
+      const monoChunk = mono.subarray(i, i + sampleBlockSize);
+      const mp3buf = mp3encoder.encodeBuffer(monoChunk);
+      if (mp3buf && mp3buf.length > 0) {
+        mp3Data.push(mp3buf);
+      }
+    }
+  }
+
+  const mp3buf = mp3encoder.flush();
+  if (mp3buf && mp3buf.length > 0) {
+    mp3Data.push(mp3buf);
+  }
+
+  return new Blob(mp3Data, { type: "audio/mp3" });
+}
+
+async function convertAudioBlobToWav(blob) {
+  const arrayBuffer = await blob.arrayBuffer();
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) throw new Error("AudioContext not supported");
+
+  const audioCtx = new AudioCtx();
+  let audioBuffer;
+  try {
+    audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+  } finally {
+    if (audioCtx.state !== "closed" && typeof audioCtx.close === "function") {
+      audioCtx.close().catch(() => { });
+    }
+  }
+
+  const numChannels = audioBuffer.numberOfChannels;
+  const sampleRate = audioBuffer.sampleRate;
+  const format = 1; // PCM
+  const bitDepth = 16;
+
+  let interleaved;
+  if (numChannels === 2) {
+    const left = audioBuffer.getChannelData(0);
+    const right = audioBuffer.getChannelData(1);
+    interleaved = new Float32Array(left.length + right.length);
+    let inputIdx = 0;
+    for (let i = 0; i < interleaved.length; i += 2) {
+      interleaved[i] = left[inputIdx];
+      interleaved[i + 1] = right[inputIdx];
+      inputIdx++;
+    }
+  } else {
+    interleaved = audioBuffer.getChannelData(0);
+  }
+
+  const bytesPerSample = bitDepth / 8;
+  const blockAlign = numChannels * bytesPerSample;
+  const buffer = new ArrayBuffer(44 + interleaved.length * bytesPerSample);
+  const view = new DataView(buffer);
+
+  function writeString(offset, string) {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  }
+
+  writeString(0, "RIFF");
+  view.setUint32(4, 36 + interleaved.length * bytesPerSample, true);
+  writeString(8, "WAVE");
+  writeString(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, format, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * blockAlign, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitDepth, true);
+  writeString(36, "data");
+  view.setUint32(40, interleaved.length * bytesPerSample, true);
+
+  let offset = 44;
+  for (let i = 0; i < interleaved.length; i++, offset += 2) {
+    const s = Math.max(-1, Math.min(1, interleaved[i]));
+    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+  }
+
+  return new Blob([view], { type: "audio/wav" });
 }
 
 function renderSelfCheckMicHtml() {
@@ -711,18 +894,29 @@ function renderSelfCheckMicHtml() {
         </button>
       </div>
       <p class="self-check-prompt" style="font-size:0.72rem; color:var(--text-muted); margin-top:4px;">
-        Sing your voice part. Auto-stops at 30 seconds.
+        Sing your voice part. Auto-stops at 5 minutes.
       </p>
     `;
-  } else if (selfCheckState === "recorded" && selfCheckBlobUrl) {
+  } else if (selfCheckState === "recorded" && (selfCheckBlobUrl || selfCheckMp3Url)) {
+    const filename = getSelfCheckMp3Filename();
+    const playbackUrl = selfCheckMp3Url || selfCheckBlobUrl;
+    const downloadLabel = selfCheckIsEncoding ? "⏳ Encoding MP3..." : "⬇️ Download MP3";
+
     bodyContent = `
       <div class="self-check-playback-box">
         <div class="self-check-playback-row">
-          <audio id="selfCheckAudioPlayback" class="self-check-audio-el" controls src="${selfCheckBlobUrl}">
+          <audio id="selfCheckAudioPlayback" class="self-check-audio-el" controls controlsList="nodownload" src="${playbackUrl}">
             Your browser does not support audio playback.
           </audio>
         </div>
         <div class="self-check-playback-actions">
+          <button type="button" class="btn-mic-download ${selfCheckIsEncoding ? 'btn-mic-encoding' : ''}" 
+             onclick="downloadSelfCheckRecording(event)" 
+             title="Save recording directly to device as .mp3 file" 
+             aria-label="Download recorded MP3 file"
+             ${selfCheckIsEncoding ? 'disabled' : ''}>
+            ${downloadLabel}
+          </button>
           <button type="button" class="btn-mic-rerecord" onclick="startSelfCheckRecording()" title="Record a new take">
             🔄 Re-record
           </button>
@@ -735,12 +929,12 @@ function renderSelfCheckMicHtml() {
   } else {
     bodyContent = `
       <div class="self-check-controls-row">
-        <button type="button" class="btn-record-mic" onclick="startSelfCheckRecording()" title="Record up to 30-second practice snippet">
-          🔴 Record Snippet (Max 30s)
+        <button type="button" class="btn-record-mic" onclick="startSelfCheckRecording()" title="Record up to 5-minute practice snippet">
+          🔴 Record Snippet (Max 5m)
         </button>
       </div>
       <p class="self-check-prompt">
-        Tap to record up to a 30-second snippet of your voice to check your tone, blend, and pitch.
+        Tap to record up to a 5-minute snippet of your voice to check your tone, blend, and pitch.
       </p>
     `;
   }
@@ -782,6 +976,17 @@ async function startSelfCheckRecording() {
     return;
   }
 
+  if (selfCheckBlobUrl) {
+    URL.revokeObjectURL(selfCheckBlobUrl);
+    selfCheckBlobUrl = null;
+  }
+  if (selfCheckMp3Url) {
+    URL.revokeObjectURL(selfCheckMp3Url);
+    selfCheckMp3Url = null;
+  }
+  selfCheckBlob = null;
+  selfCheckMp3Blob = null;
+  selfCheckIsEncoding = false;
   selfCheckAudioChunks = [];
   selfCheckSupportedMime = getSupportedAudioMimeType();
 
@@ -812,7 +1017,7 @@ async function startSelfCheckRecording() {
     finishSelfCheckRecording();
   };
 
-  selfCheckSecondsLeft = 30;
+  selfCheckSecondsLeft = MAX_SELF_CHECK_SECONDS;
   selfCheckState = "recording";
   updateSelfCheckMicUI();
 
@@ -853,19 +1058,118 @@ function stopSelfCheckRecording() {
   }
 }
 
-function finishSelfCheckRecording() {
+async function finishSelfCheckRecording() {
+  if (selfCheckCountdownTimer) {
+    clearInterval(selfCheckCountdownTimer);
+    selfCheckCountdownTimer = null;
+  }
+
+  if (selfCheckAudioChunks.length === 0) {
+    showToast("No audio recorded.");
+    discardSelfCheckRecording();
+    return;
+  }
+
   if (selfCheckBlobUrl) {
     URL.revokeObjectURL(selfCheckBlobUrl);
     selfCheckBlobUrl = null;
   }
+  if (selfCheckMp3Url) {
+    URL.revokeObjectURL(selfCheckMp3Url);
+    selfCheckMp3Url = null;
+  }
+  selfCheckMp3Blob = null;
 
   const mime = selfCheckSupportedMime || (selfCheckAudioChunks[0] ? selfCheckAudioChunks[0].type : "audio/webm");
-  const blob = new Blob(selfCheckAudioChunks, { type: mime || "audio/webm" });
-  selfCheckBlobUrl = URL.createObjectURL(blob);
+  const rawBlob = new Blob(selfCheckAudioChunks, { type: mime || "audio/webm" });
+  selfCheckBlob = rawBlob;
+  selfCheckBlobUrl = URL.createObjectURL(rawBlob);
 
   selfCheckState = "recorded";
+  selfCheckIsEncoding = true;
   updateSelfCheckMicUI();
-  showToast("Snippet recorded! Listen back below 🎧");
+  showToast("Snippet recorded! Converting to MP3... ⏳");
+
+  try {
+    const mp3Blob = await convertAudioBlobToMp3(rawBlob);
+    selfCheckMp3Blob = mp3Blob;
+    selfCheckMp3Url = URL.createObjectURL(mp3Blob);
+
+    const audioEl = document.getElementById("selfCheckAudioPlayback");
+    if (audioEl) {
+      audioEl.src = selfCheckMp3Url;
+    }
+    showToast("MP3 ready! Listen or download below 🎵");
+  } catch (err) {
+    console.warn("MP3 conversion failed, attempting WAV fallback:", err);
+    try {
+      const wavBlob = await convertAudioBlobToWav(rawBlob);
+      selfCheckMp3Blob = wavBlob;
+      selfCheckMp3Url = URL.createObjectURL(wavBlob);
+      showToast("Audio converted! Ready to play & save 🎧");
+    } catch (wavErr) {
+      console.warn("WAV fallback failed, keeping raw audio:", wavErr);
+      selfCheckMp3Blob = rawBlob;
+      selfCheckMp3Url = selfCheckBlobUrl;
+      showToast("Recording ready for playback & download 🎧");
+    }
+  } finally {
+    selfCheckIsEncoding = false;
+    updateSelfCheckMicUI();
+  }
+}
+
+async function downloadSelfCheckRecording(e) {
+  if (e && typeof e.preventDefault === "function") {
+    e.preventDefault();
+  }
+
+  if (selfCheckIsEncoding) {
+    showToast("Encoding MP3 in progress, please wait a moment... ⏳");
+    return;
+  }
+
+  const blobToDownload = selfCheckMp3Blob || selfCheckBlob;
+  if (!blobToDownload) {
+    showToast("No recording available to download.");
+    return;
+  }
+
+  const filename = getSelfCheckMp3Filename();
+
+  // Desktop Chrome/Edge native "Save As" file picker if available
+  if (typeof window.showSaveFilePicker === "function") {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: filename,
+        types: [{
+          description: "MP3 Audio File (*.mp3)",
+          accept: { "audio/mpeg": [".mp3"], "audio/mp3": [".mp3"] }
+        }]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blobToDownload);
+      await writable.close();
+      showToast("Saved MP3 successfully! 💾");
+      return;
+    } catch (pickerErr) {
+      if (pickerErr.name === "AbortError") {
+        return;
+      }
+      console.warn("showSaveFilePicker error, falling back to standard download:", pickerErr);
+    }
+  }
+
+  // Standard anchor download fallback
+  const downloadUrl = selfCheckMp3Url || (selfCheckMp3Blob ? URL.createObjectURL(selfCheckMp3Blob) : selfCheckBlobUrl);
+  const a = document.createElement("a");
+  a.href = downloadUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  showToast("Audio recording downloaded (.mp3)! 💾");
 }
 
 function discardSelfCheckRecording() {
@@ -874,9 +1178,16 @@ function discardSelfCheckRecording() {
     URL.revokeObjectURL(selfCheckBlobUrl);
     selfCheckBlobUrl = null;
   }
+  if (selfCheckMp3Url) {
+    URL.revokeObjectURL(selfCheckMp3Url);
+    selfCheckMp3Url = null;
+  }
+  selfCheckBlob = null;
+  selfCheckMp3Blob = null;
+  selfCheckIsEncoding = false;
   selfCheckAudioChunks = [];
   selfCheckState = "idle";
-  selfCheckSecondsLeft = 30;
+  selfCheckSecondsLeft = MAX_SELF_CHECK_SECONDS;
   updateSelfCheckMicUI();
   showToast("Recording discarded.");
 }
@@ -7460,6 +7771,7 @@ window.toggleSongArchiveState = toggleSongArchiveState;
 window.startSelfCheckRecording = startSelfCheckRecording;
 window.stopSelfCheckRecording = stopSelfCheckRecording;
 window.discardSelfCheckRecording = discardSelfCheckRecording;
+window.downloadSelfCheckRecording = downloadSelfCheckRecording;
 window.handleDuplicateAction = handleDuplicateAction;
 window.closeDuplicateConfirmModal = closeDuplicateConfirmModal;
 window.closeDuplicateModalOnBackdrop = closeDuplicateModalOnBackdrop;
