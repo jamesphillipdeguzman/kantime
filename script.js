@@ -6925,7 +6925,7 @@ function updatePianoMaximizeUI() {
     document.body.classList.add("piano-fullscreen-active");
     drawer.style.display = "flex";
     if (maxBtn) {
-      maxBtn.setAttribute("title", "Exit Fullscreen Piano (F or Esc)");
+      maxBtn.setAttribute("title", "Exit Fullscreen Piano (X or Esc)");
       maxBtn.setAttribute("aria-label", "Exit Fullscreen Piano");
     }
   } else {
@@ -6933,7 +6933,7 @@ function updatePianoMaximizeUI() {
     document.body.classList.remove("piano-fullscreen-active");
     drawer.style.display = "block";
     if (maxBtn) {
-      maxBtn.setAttribute("title", "Maximize Fullscreen Piano (F)");
+      maxBtn.setAttribute("title", "Maximize Fullscreen Piano (X)");
       maxBtn.setAttribute("aria-label", "Maximize Fullscreen Piano");
     }
   }
