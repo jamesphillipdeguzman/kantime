@@ -228,7 +228,7 @@ const DEFAULT_USER_SETTINGS = {
       event: "Oct 24–25 Stake Conference",
       isArchived: false,
       sheetUrl: "https://www.churchofjesuschrist.org/media/music/songs/know-this-that-every-soul-is-free?crumbs=hymns&order=number&lang=eng",
-      videoUrl: "",
+      videoUrl: "https://youtu.be/r8ZBr9DrNtM",
       note: "ℹ️ Opens in external tab. Your timer will keep running while you practice!"
     },
     {
