@@ -465,8 +465,8 @@ function getUserSettings(forceSync = false) {
     const parsed = JSON.parse(stored);
     let songs = Array.isArray(parsed.songs) && parsed.songs.length > 0 ? parsed.songs : DEFAULT_USER_SETTINGS.songs;
 
-    const storedAppVersion = parsed.appVersion || "2.5.8";
-    const storedRepVersion = parsed.repertoireVersion || "2.5.8";
+    const storedAppVersion = parsed.appVersion || "2.6.0";
+    const storedRepVersion = parsed.repertoireVersion || "2.6.0";
     const needsMigration = forceSync || compareSemver(REPERTOIRE_VERSION, storedRepVersion) > 0 || compareSemver(APP_VERSION, storedAppVersion) > 0;
 
     // Backward compatibility: If stored songs only contained old Stake Conference pieces,
@@ -5296,7 +5296,7 @@ async function performDynamicCacheInvalidation(newVersion) {
       const reg = await navigator.serviceWorker.getRegistration();
       if (reg) {
         if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" });
-        await reg.update().catch(() => {});
+        await reg.update().catch(() => { });
       }
     }
 
