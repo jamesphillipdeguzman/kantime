@@ -28,7 +28,7 @@ Implement two UI and feature enhancements in `index.html`, `css/style.css`, and 
 
 ## Proposed Changes
 
-### 1. Structure & Markup Updates ([index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/index.html))
+### 1. Structure & Markup Updates ([index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/index.html))
 
 - **Task 1 (Settings Modal)**:
   - In `#tabPanelPreferences` under `.settings-section`:
@@ -55,7 +55,7 @@ Implement two UI and feature enhancements in `index.html`, `css/style.css`, and 
 
 ---
 
-### 2. Styling & Theme Integration ([css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/css/style.css))
+### 2. Styling & Theme Integration ([css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/css/style.css))
 
 - **Piano Drawer Card Styles (`#pianoDrawer`, `.piano-card`)**:
   - Consistent layout with `.metronome-card`, smooth transitions, border radius, and shadow.
@@ -70,7 +70,7 @@ Implement two UI and feature enhancements in `index.html`, `css/style.css`, and 
 
 ---
 
-### 3. Audio & Interaction Logic ([script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js))
+### 3. Audio & Interaction Logic ([script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/script.js))
 
 - **Piano Audio Engine (`Web Audio API`)**:
   - Shared audio context with graceful unlock on first user interaction.

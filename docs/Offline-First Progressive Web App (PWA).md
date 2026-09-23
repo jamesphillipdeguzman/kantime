@@ -1,11 +1,11 @@
 # Walkthrough: Offline-First Progressive Web App (PWA) Conversion
 
-KanTime has been converted into a full offline-first Progressive Web App (PWA) across [manifest.json](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/manifest.json), [sw.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/sw.js), [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/index.html), [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js), and [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/css/style.css).
+KanTime has been converted into a full offline-first Progressive Web App (PWA) across [manifest.json](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/manifest.json), [sw.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/sw.js), [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/index.html), [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/script.js), and [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/css/style.css).
 
 ## Summary of Changes
 
 ### 1. Web App Manifest & Service Worker
-- **[manifest.json](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/manifest.json)**:
+- **[manifest.json](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/manifest.json)**:
   - Configured with:
     - `name`: `"KanTime - Stake Choir Hub"`
     - `short_name`: `"KanTime"`
@@ -14,14 +14,14 @@ KanTime has been converted into a full offline-first Progressive Web App (PWA) a
     - `theme_color`: `"#1e40af"`
     - `background_color`: `"#ffffff"`
     - Icons linking to `images/kantime-logo.png` (192x192 maskable) and `images/iloilo-stake-choir-logo.jpg` (512x512).
-- **[sw.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/sw.js) (Service Worker)**:
+- **[sw.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/sw.js) (Service Worker)**:
   - Cache-First strategy for instant loading.
   - Pre-caches core app assets (`index.html`, `css/style.css`, `script.js`, `manifest.json`, `html2pdf.bundle.min.js`).
   - Pre-caches all choir avatar portraits and logos in `images/`.
-  - Pre-caches local rehearsal audio tracks and sheet music PDF in `kantime-resources/Choose You This Day/`.
+  - Pre-caches local rehearsal audio tracks and sheet music PDF in `kantimes-resources/Choose You This Day/`.
   - Implements HTTP `Range` header support (`206 Partial Content`) to ensure smooth offline seeking and playback for `<audio>` tags across iOS Safari and Chromium.
 - **Service Worker Registration**:
-  - Registered in [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js) on window load.
+  - Registered in [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/script.js) on window load.
 
 ### 2. Offline Audio & Sheet Music Fallback
 - **Bundled Offline Audio Player**:

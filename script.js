@@ -1,9 +1,26 @@
 // ==========================================================================
-// KanTime | Stake Choir Practice Hub - Main Application Script
+// KanTimes | Stake Choir Practice Hub - Main Application Script
 // ==========================================================================
 
-// --- APPLICATION VERSION ---
-const APP_VERSION = "2.5.8";
+// --- APPLICATION & REPERTOIRE VERSION ---
+const APP_VERSION = "2.6.0";
+const REPERTOIRE_VERSION = "2.6.0";
+
+// Helper: Semantic version comparison (returns >0 if v1 > v2, <0 if v1 < v2, 0 if equal)
+function compareSemver(v1, v2) {
+  if (!v1 && !v2) return 0;
+  if (!v1) return -1;
+  if (!v2) return 1;
+  const p1 = String(v1).replace(/^v/, "").split(".").map(Number);
+  const p2 = String(v2).replace(/^v/, "").split(".").map(Number);
+  for (let i = 0; i < Math.max(p1.length, p2.length); i++) {
+    const num1 = p1[i] || 0;
+    const num2 = p2[i] || 0;
+    if (num1 > num2) return 1;
+    if (num1 < num2) return -1;
+  }
+  return 0;
+}
 
 // --- APPS SCRIPT WEB APP URL ---
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby6r8JCXFOeuDqk8mlrTFAY5G5jOUOcoljMIC-ow1tlStLj3EVBpEWE_q9iT_sRngEa/exec";
@@ -248,15 +265,15 @@ const DEFAULT_USER_SETTINGS = {
       event: "Oct 24–25 Stake Conference",
       isArchived: false,
       sheetUrl: "https://drive.google.com/embeddedfolderview?id=1bBnCakJGBj-zfka8wVbz42_ykvipMnwU#grid",
-      localSheetUrl: "kantime-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day.pdf",
+      localSheetUrl: "kantimes-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day.pdf",
       videoUrl: "https://www.youtube.com/embed/q54H2OqWBcY?enablejsapi=1",
       audioTracks: [
-        { name: "Full Choir", src: "kantime-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day.mp3" },
-        { name: "Soprano", src: "kantime-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20-%20SOPRANO.mp3" },
-        { name: "Alto", src: "kantime-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20-%20ALTO.mp3" },
-        { name: "Tenor", src: "kantime-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20-%20TENOR.mp3" },
-        { name: "Bass", src: "kantime-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20-%20BASS.mp3" },
-        { name: "Piano", src: "kantime-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20(piano).mp3" }
+        { name: "Full Choir", src: "kantimes-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day.mp3" },
+        { name: "Soprano", src: "kantimes-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20-%20SOPRANO.mp3" },
+        { name: "Alto", src: "kantimes-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20-%20ALTO.mp3" },
+        { name: "Tenor", src: "kantimes-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20-%20TENOR.mp3" },
+        { name: "Bass", src: "kantimes-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20-%20BASS.mp3" },
+        { name: "Piano", src: "kantimes-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20(piano).mp3" }
       ],
       note: ""
     },
@@ -435,14 +452,22 @@ function formatYouTubeEmbedUrl(url) {
   return trimmed;
 }
 
-function getUserSettings() {
-  const stored = localStorage.getItem("kantime_user_settings");
+function getUserSettings(forceSync = false) {
+  const stored = localStorage.getItem("kantimes_user_settings") || localStorage.getItem("kantime_user_settings");
   if (!stored) {
-    return JSON.parse(JSON.stringify(DEFAULT_USER_SETTINGS));
+    const fresh = JSON.parse(JSON.stringify(DEFAULT_USER_SETTINGS));
+    fresh.appVersion = APP_VERSION;
+    fresh.repertoireVersion = REPERTOIRE_VERSION;
+    saveUserSettings(fresh);
+    return fresh;
   }
   try {
     const parsed = JSON.parse(stored);
     let songs = Array.isArray(parsed.songs) && parsed.songs.length > 0 ? parsed.songs : DEFAULT_USER_SETTINGS.songs;
+
+    const storedAppVersion = parsed.appVersion || "2.5.8";
+    const storedRepVersion = parsed.repertoireVersion || "2.5.8";
+    const needsMigration = forceSync || compareSemver(REPERTOIRE_VERSION, storedRepVersion) > 0 || compareSemver(APP_VERSION, storedAppVersion) > 0;
 
     // Backward compatibility: If stored songs only contained old Stake Conference pieces,
     // merge the new active default repertoire pieces so the active dashboard is populated immediately.
@@ -452,12 +477,38 @@ function getUserSettings() {
       songs = [...activeDefaults, ...songs];
     }
 
+    // Dynamic Synchronization of Default Repertoire Fields (YouTube Links, Sheet Links, Audio Tracks)
     songs = songs.map(s => {
       const def = DEFAULT_USER_SETTINGS.songs.find(d => d.id === s.id || d.title === s.title);
       if (def) {
-        if (!s.audioTracks && def.audioTracks) s.audioTracks = def.audioTracks;
-        if (!s.localSheetUrl && def.localSheetUrl) s.localSheetUrl = def.localSheetUrl;
+        // Automatically sync YouTube links (videoUrl) whenever missing or upon version update / forceSync
+        if (def.videoUrl) {
+          if (!s.videoUrl || needsMigration) {
+            s.videoUrl = def.videoUrl;
+          }
+        }
+        // Automatically sync sheet links whenever missing or upon version update / forceSync
+        if (def.sheetUrl) {
+          if (!s.sheetUrl || needsMigration) {
+            s.sheetUrl = def.sheetUrl;
+          }
+        }
+        // Sync audioTracks and localSheetUrl
+        if (def.audioTracks) {
+          if (!s.audioTracks || needsMigration) {
+            s.audioTracks = def.audioTracks;
+          }
+        }
+        if (def.localSheetUrl) {
+          if (!s.localSheetUrl || needsMigration) {
+            s.localSheetUrl = def.localSheetUrl;
+          }
+        }
+        if (def.note && (!s.note || needsMigration)) {
+          s.note = def.note;
+        }
         if (!s.event && def.event) s.event = def.event;
+        if (!s.session && def.session) s.session = def.session;
         if (s.isArchived === undefined && def.isArchived !== undefined) s.isArchived = def.isArchived;
       }
       if (!s.event) {
@@ -469,12 +520,40 @@ function getUserSettings() {
       return s;
     });
 
-    return {
+    // Automatically insert any newly added default pieces that aren't yet in stored songs
+    const existingIds = new Set(songs.map(s => s.id));
+    const existingTitles = new Set(songs.map(s => s.title));
+
+    DEFAULT_USER_SETTINGS.songs.forEach(defSong => {
+      if (!existingIds.has(defSong.id) && !existingTitles.has(defSong.title)) {
+        if (defSong.isArchived) {
+          songs.push(JSON.parse(JSON.stringify(defSong)));
+        } else {
+          const lastActiveIdx = songs.map(s => !s.isArchived).lastIndexOf(true);
+          if (lastActiveIdx !== -1) {
+            songs.splice(lastActiveIdx + 1, 0, JSON.parse(JSON.stringify(defSong)));
+          } else {
+            songs.unshift(JSON.parse(JSON.stringify(defSong)));
+          }
+        }
+      }
+    });
+
+    const result = {
       targetDate: parsed.targetDate !== undefined ? parsed.targetDate : DEFAULT_USER_SETTINGS.targetDate,
       timerMinutes: Number(parsed.timerMinutes) || DEFAULT_USER_SETTINGS.timerMinutes,
       showPastRepertoire: parsed.showPastRepertoire !== undefined ? Boolean(parsed.showPastRepertoire) : DEFAULT_USER_SETTINGS.showPastRepertoire,
-      songs: songs
+      songs: songs,
+      appVersion: APP_VERSION,
+      repertoireVersion: REPERTOIRE_VERSION
     };
+
+    // If migrations occurred or versions updated, write back to localStorage immediately
+    if (needsMigration || !parsed.appVersion || !parsed.repertoireVersion) {
+      saveUserSettings(result);
+    }
+
+    return result;
   } catch (e) {
     console.error("Failed to parse kantime_user_settings:", e);
     return JSON.parse(JSON.stringify(DEFAULT_USER_SETTINGS));
@@ -482,6 +561,7 @@ function getUserSettings() {
 }
 
 function saveUserSettings(settings) {
+  localStorage.setItem("kantimes_user_settings", JSON.stringify(settings));
   localStorage.setItem("kantime_user_settings", JSON.stringify(settings));
 }
 
@@ -701,7 +781,7 @@ function getSelfCheckMp3Filename() {
   const dateStr = `${year}${month}${day}`;
   const timeStr = `${hours}${mins}${secs}`;
 
-  return `kantime-practice-recording-${dateStr}-${timeStr}.mp3`;
+  return `kantimes-practice-recording-${dateStr}-${timeStr}.mp3`;
 }
 
 function convertFloat32ToInt16(float32Array) {
@@ -5103,9 +5183,9 @@ window.addEventListener("offline", updateOnlineStatus);
 // Force App Update — triggered by tapping the KanTime logo
 // --------------------------------------------------------------------------
 /**
- * Purges all Service Worker caches, triggers a SW update check,
- * then hard-reloads with a timestamp cache-buster so choir members
- * always see the latest songs, videos and CSS immediately.
+ * Purges all Service Worker caches, forces a dynamic repertoire resync,
+ * triggers a SW update check, then hard-reloads with a version cache-buster
+ * so choir members always see the latest songs, videos, and CSS immediately.
  */
 async function forceAppUpdate() {
   const logo = document.getElementById("appLogoRefresh");
@@ -5115,32 +5195,36 @@ async function forceAppUpdate() {
   showToast("Checking for updates... 🔄");
 
   try {
-    // 2. Purge every Service Worker cache bucket
+    // 2. Force repertoire sync from defaults so all YouTube links & new songs populate
+    getUserSettings(true);
+
+    // 3. Purge every Service Worker cache bucket
     if ("caches" in window) {
       const cacheNames = await caches.keys();
       await Promise.all(cacheNames.map((name) => caches.delete(name)));
     }
 
-    // 3. Tell the Service Worker to fetch a fresh copy of itself
+    // 4. Tell the Service Worker to fetch a fresh copy of itself
     if ("serviceWorker" in navigator) {
       const reg = await navigator.serviceWorker.getRegistration();
       if (reg) await reg.update();
     }
 
-    // 4. Brief pause so the toast is readable, then notify & hard-reload
+    // 5. Brief pause so the toast is readable, then notify & hard-reload
     await new Promise((resolve) => setTimeout(resolve, 800));
     showToast("Updated! Reloading latest songs... ✨");
 
-    // 5. Hard reload with timestamp query-string to bypass disk cache
+    // 6. Hard reload with version and timestamp query-string to bypass disk cache
     await new Promise((resolve) => setTimeout(resolve, 900));
     window.location.replace(
       window.location.origin +
       window.location.pathname +
-      "?t=" + Date.now()
+      "?v=" + APP_VERSION +
+      "&t=" + Date.now()
     );
 
   } catch (err) {
-    console.warn("[KanTime] forceAppUpdate error:", err);
+    console.warn("[KanTimes] forceAppUpdate error:", err);
     showToast("Refresh failed — retrying... 🔄");
     if (logo) logo.classList.remove("spinning");
     // Fallback: basic reload
@@ -5148,6 +5232,101 @@ async function forceAppUpdate() {
   }
 }
 
+// --------------------------------------------------------------------------
+// Dynamic App Launch Version Check & Cache Invalidation
+// Ensures mobile web app shortcuts / PWAs automatically fetch updates
+// without requiring manual uninstallation and re-installation.
+// --------------------------------------------------------------------------
+let isCheckingAppVersion = false;
+async function checkAppVersionOnLaunch() {
+  if (isCheckingAppVersion) return;
+  isCheckingAppVersion = true;
+
+  try {
+    // Only check when network is available
+    if (navigator.onLine === false) {
+      isCheckingAppVersion = false;
+      return;
+    }
+
+    // Fetch version.json bypassing disk cache with timestamp query
+    const res = await fetch("./version.json?t=" + Date.now(), {
+      cache: "no-store",
+      headers: { "Cache-Control": "no-cache, no-store, must-revalidate" }
+    });
+
+    if (!res.ok) {
+      isCheckingAppVersion = false;
+      return;
+    }
+
+    const data = await res.json();
+    const remoteVersion = data && data.version;
+    const remoteRepVersion = data && data.repertoireVersion;
+
+    if (!remoteVersion) {
+      isCheckingAppVersion = false;
+      return;
+    }
+
+    const hasNewAppVersion = compareSemver(remoteVersion, APP_VERSION) > 0;
+    const hasNewRepertoire = remoteRepVersion && compareSemver(remoteRepVersion, REPERTOIRE_VERSION) > 0;
+
+    if (hasNewAppVersion || hasNewRepertoire) {
+      console.log(`[KanTimes] New deployment detected: v${remoteVersion} (running v${APP_VERSION}). Triggering dynamic cache invalidation...`);
+      await performDynamicCacheInvalidation(remoteVersion);
+    }
+  } catch (err) {
+    console.warn("[KanTimes] checkAppVersionOnLaunch error:", err);
+  } finally {
+    isCheckingAppVersion = false;
+  }
+}
+
+async function performDynamicCacheInvalidation(newVersion) {
+  try {
+    // 1. Purge all Service Worker caches
+    if ("caches" in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+    }
+
+    // 2. Notify SW to skip waiting and check update
+    if ("serviceWorker" in navigator) {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg) {
+        if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" });
+        await reg.update().catch(() => {});
+      }
+    }
+
+    // 3. Force-sync stored user repertoire so new YouTube links are populated
+    getUserSettings(true);
+
+    // 4. If timer is currently running or paused with progress, don't disrupt the user!
+    const isRunning = Boolean(timerInterval || targetEndTime);
+    const pausedVal = localStorage.getItem("kantimes_paused_remaining") || localStorage.getItem("kantime_paused_remaining");
+    const hasPausedProgress = Boolean(pausedVal && Number(pausedVal) > 0 && Number(pausedVal) < timerDuration);
+
+    if (isRunning || hasPausedProgress) {
+      showToast("✨ A new update with fresh songs is ready! Tap the KanTimes logo when you finish practicing.");
+      return;
+    }
+
+    // 5. If idle, show toast and refresh with cache-busting version params
+    showToast(`✨ KanTimes updated to v${newVersion}! Refreshing latest repertoire...`);
+    setTimeout(() => {
+      const cleanUrl =
+        window.location.origin +
+        window.location.pathname +
+        "?v=" + newVersion +
+        "&t=" + Date.now();
+      window.location.replace(cleanUrl);
+    }, 1200);
+  } catch (e) {
+    console.warn("[KanTimes] performDynamicCacheInvalidation error:", e);
+  }
+}
 
 // --------------------------------------------------------------------------
 function registerServiceWorker() {
@@ -5158,7 +5337,6 @@ function registerServiceWorker() {
 
   // Show a dismissible toast and then reload once the new SW takes control
   function showUpdateToast() {
-    // Reuse the existing #toast element if available, else create a temp one
     const existing = document.getElementById("toast");
     const el = existing || document.createElement("div");
     if (!existing) {
@@ -5173,11 +5351,15 @@ function registerServiceWorker() {
     el.textContent = "🔄 App updated to latest repertoire! Refreshing...";
     el.style.display = "block";
     el.classList.add("toast-visible");
-    // Let the user read it for 1.5 s, then reload
-    setTimeout(() => window.location.reload(), 1500);
+
+    // Don't auto-reload if singer is mid-practice countdown
+    const isRunning = Boolean(timerInterval || targetEndTime);
+    if (!isRunning) {
+      setTimeout(() => window.location.reload(), 1500);
+    }
   }
 
-  const swUrl = window.location.protocol === "file:" ? "./sw.js" : "/sw.js";
+  const swUrl = window.location.protocol === "file:" ? "./sw.js" : "/sw.js?v=" + APP_VERSION;
   const swOptions = window.location.protocol === "file:" ? {} : { scope: "/" };
 
   navigator.serviceWorker.register(swUrl, swOptions)
@@ -5187,14 +5369,16 @@ function registerServiceWorker() {
       // ── 1. Trigger an update check immediately on every page load ──────
       reg.update().catch(() => { });
 
-      // ── 2. Trigger update checks whenever the tab regains focus ────────
+      // ── 2. Trigger update checks whenever the tab or shortcut regains focus / visibility ──
       const onFocusOrVisible = () => {
         if (document.visibilityState === "visible") {
           reg.update().catch(() => { });
+          checkAppVersionOnLaunch();
         }
       };
       document.addEventListener("visibilitychange", onFocusOrVisible);
       window.addEventListener("focus", onFocusOrVisible);
+      window.addEventListener("pageshow", onFocusOrVisible);
 
       // ── 3. Handle a SW that was already waiting when page loaded ───────
       if (reg.waiting) {
@@ -7719,14 +7903,34 @@ if (window.screen && window.screen.orientation) {
   });
 }
 
+function migrateLegacyStorage() {
+  try {
+    const legacyKeys = [
+      "user_settings", "target_song", "target_end", "paused_remaining",
+      "session_history", "known_singers", "halfway_triggered",
+      "last_activity", "lang"
+    ];
+    legacyKeys.forEach(k => {
+      const oldVal = localStorage.getItem("kantime_" + k);
+      if (oldVal !== null && localStorage.getItem("kantimes_" + k) === null) {
+        localStorage.setItem("kantimes_" + k, oldVal);
+      }
+    });
+  } catch (e) {
+    console.warn("Storage migration error:", e);
+  }
+}
+
 // Initial load
 window.addEventListener("DOMContentLoaded", function () {
   const footerYear = document.getElementById("footerYear");
   if (footerYear) {
     footerYear.innerText = new Date().getFullYear();
   }
+  migrateLegacyStorage();
   initThemeSystem();
   registerServiceWorker();
+  checkAppVersionOnLaunch();
   updateOnlineStatus();
   applyHeaderTargetDate();
   applyTimerDuration(getUserSettings().timerMinutes, false);

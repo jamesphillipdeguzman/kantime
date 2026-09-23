@@ -1,9 +1,9 @@
 // ==========================================================================
-// KanTime PWA Service Worker (v2.5.8 — Network-First HTML + Auto-Update)
+// KanTimes PWA Service Worker (v2.6.0 — Dynamic Cache Invalidation & Network-First Core)
 // ==========================================================================
 
-const APP_VERSION = "2.5.8";
-const CACHE_NAME = `kantime-cache-v${APP_VERSION}`;
+const APP_VERSION = "2.6.0";
+const CACHE_NAME = `kantimes-cache-v${APP_VERSION}`;
 
 const PRECACHE_ASSETS = [
   "./",
@@ -11,15 +11,18 @@ const PRECACHE_ASSETS = [
   "./css/style.css",
   "./script.js",
   "./manifest.json",
+  "./version.json",
   "./lame.min.js",
   "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js",
   // Images & Avatars
   "./images/favicon.ico",
+  "./images/kantimes-logo.png",
   "./images/kantime-logo.png",
   "./images/icon-192.png",
   "./images/icon-512.png",
   "./images/icon-maskable-192.png",
   "./images/icon-maskable-512.png",
+  "./images/kantimes-bg.png",
   "./images/kantime-bg.png",
   "./images/iloilo-stake-choir-logo.jpg",
   "./images/boy-choir.jpg",
@@ -30,32 +33,39 @@ const PRECACHE_ASSETS = [
   "./images/rs-choir.jpg",
   "./images/elder-choir.jpg",
   "./images/sister-choir.jpg",
-  // Local Repertoire Resources
-  "./kantime-resources/kantime-thumbnail.png",
-  "./kantime-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day.mp3",
-  "./kantime-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20(piano).mp3",
-  "./kantime-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20-%20SOPRANO.mp3",
-  "./kantime-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20-%20ALTO.mp3",
-  "./kantime-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20-%20TENOR.mp3",
-  "./kantime-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20-%20BASS.mp3",
-  "./kantime-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day.pdf"
+  // Local Repertoire Resources (kantimes-resources)
+  "./kantimes-resources/kantimes-thumbnail.png",
+  "./kantimes-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day.mp3",
+  "./kantimes-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20(piano).mp3",
+  "./kantimes-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20-%20SOPRANO.mp3",
+  "./kantimes-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20-%20ALTO.mp3",
+  "./kantimes-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20-%20TENOR.mp3",
+  "./kantimes-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20-%20BASS.mp3",
+  "./kantimes-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day.pdf"
 ];
 
 // --------------------------------------------------------------------------
-// INSTALL — Pre-cache all static assets & take over immediately
+// INSTALL — Pre-cache all static assets with network reload & take over immediately
 // --------------------------------------------------------------------------
 self.addEventListener("install", (event) => {
-  // Immediately activate this SW without waiting for old SW to stop
   self.skipWaiting();
 
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return Promise.allSettled(
-        PRECACHE_ASSETS.map((url) =>
-          cache.add(url).catch((err) => {
-            console.warn("[SW] Failed to precache:", url, err);
-          })
-        )
+        PRECACHE_ASSETS.map((url) => {
+          // Force network reload to ensure fresh files are written into cache, bypassing disk cache
+          const req = new Request(url, { cache: "reload" });
+          return fetch(req)
+            .then((response) => {
+              if (response && (response.ok || response.type === "opaque")) {
+                return cache.put(url, response);
+              }
+            })
+            .catch((err) => {
+              console.warn("[SW] Failed to precache:", url, err);
+            });
+        })
       );
     })
   );
@@ -70,7 +80,7 @@ self.addEventListener("activate", (event) => {
       .then((cacheNames) => {
         return Promise.all(
           cacheNames
-            .filter((name) => name.startsWith("kantime-") && name !== CACHE_NAME)
+            .filter((name) => (name.startsWith("kantime-") || name.startsWith("kantimes-")) && name !== CACHE_NAME)
             .map((name) => {
               console.log("[SW] Deleting stale cache:", name);
               return caches.delete(name);
@@ -82,11 +92,16 @@ self.addEventListener("activate", (event) => {
 });
 
 // --------------------------------------------------------------------------
-// MESSAGE — Handle SKIP_WAITING request from the page
+// MESSAGE — Handle SKIP_WAITING and dynamic cache clear requests from page
 // --------------------------------------------------------------------------
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
+  }
+  if (event.data && event.data.type === "CLEAR_ALL_CACHES") {
+    caches.keys().then((names) => {
+      return Promise.all(names.map((n) => caches.delete(n)));
+    });
   }
 });
 
@@ -120,9 +135,11 @@ async function handleRangeRequest(request, cachedResponse) {
 
 // --------------------------------------------------------------------------
 // FETCH — Tiered caching strategy
-//   • Google Apps Script API calls  → Always bypass (no caching)
-//   • HTML navigation requests       → Network-First (fallback to cache)
-//   • All other assets               → Cache-First (fallback to network)
+//   • Google Apps Script API calls       → Always bypass (no caching)
+//   • Version Check (/version.json)      → Always Network-Only (no-store)
+//   • HTML navigation requests           → Network-First (fallback to cached index.html)
+//   • Critical app code (JS/CSS/manifest)→ Network-First (fallback to cache)
+//   • Large media & external libs        → Cache-First (instant offline playback)
 // --------------------------------------------------------------------------
 self.addEventListener("fetch", (event) => {
   const request = event.request;
@@ -133,13 +150,21 @@ self.addEventListener("fetch", (event) => {
   // 1️⃣ Never intercept Google Apps Script / external API calls
   if (url.hostname.includes("script.google.com")) return;
 
-  // 2️⃣ Network-First strategy for HTML navigation requests
+  // 2️⃣ Version Check: Always fetch fresh from network for instant update detection
+  if (url.pathname.endsWith("/version.json")) {
+    event.respondWith(
+      fetch(new Request(request, { cache: "no-store" }))
+        .catch(() => caches.match("./version.json"))
+    );
+    return;
+  }
+
+  // 3️⃣ Network-First strategy for HTML navigation requests (app launches & shortcut taps)
   if (request.mode === "navigate" || request.destination === "document") {
     event.respondWith(
       fetch(request)
         .then((networkResponse) => {
-          // Only cache successful same-origin responses
-          if (networkResponse && networkResponse.status === 200 && networkResponse.type === "basic") {
+          if (networkResponse && networkResponse.status === 200 && (networkResponse.type === "basic" || networkResponse.type === "default")) {
             const clone = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
           }
@@ -153,7 +178,48 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 3️⃣ Cache-First strategy for all other assets (CSS, JS, images, audio)
+  // 4️⃣ Network-First strategy for core application logic & styles (script.js, style.css, manifest.json)
+  const isCoreAsset =
+    url.pathname.endsWith("/script.js") ||
+    url.pathname.endsWith("/css/style.css") ||
+    url.pathname.endsWith("/manifest.json");
+
+  if (isCoreAsset) {
+    event.respondWith(
+      fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseToCache);
+              // Also update canonical relative path in cache
+              const relativePath = url.pathname.endsWith("script.js")
+                ? "./script.js"
+                : url.pathname.endsWith("style.css")
+                  ? "./css/style.css"
+                  : "./manifest.json";
+              cache.put(relativePath, networkResponse.clone());
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          // Offline fallback: return cached copy with or without query strings
+          return caches.match(request).then((cached) => {
+            if (cached) return cached;
+            const relativePath = url.pathname.endsWith("script.js")
+              ? "./script.js"
+              : url.pathname.endsWith("style.css")
+                ? "./css/style.css"
+                : "./manifest.json";
+            return caches.match(relativePath);
+          });
+        })
+    );
+    return;
+  }
+
+  // 5️⃣ Cache-First strategy for heavy media & static libs (audio tracks, PDFs, images, lame.min.js)
   event.respondWith(
     caches.match(request, { ignoreSearch: true }).then((cachedResponse) => {
       if (cachedResponse) {
@@ -168,7 +234,7 @@ self.addEventListener("fetch", (event) => {
           if (
             networkResponse &&
             networkResponse.status === 200 &&
-            (networkResponse.type === "basic" || networkResponse.type === "cors")
+            (networkResponse.type === "basic" || networkResponse.type === "cors" || networkResponse.type === "opaque")
           ) {
             const responseToCache = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));

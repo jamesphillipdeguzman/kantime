@@ -4,34 +4,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>KanTime | Stake Choir Practice Hub</title>
+  <title>KanTimes | Stake Choir Practice Hub</title>
 
   <!-- Open Graph / Facebook Messenger Preview -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://kantimes.netlify.app/">
-  <meta property="og:title" content="🎶 KanTime | Stake Choir Practice Hub">
+  <meta property="og:title" content="🎶 KanTimes | Stake Choir Practice Hub">
   <meta property="og:description"
     content="Access hymn repertoire, practice tracks, and track your daily 15-minute practice sessions for Oct 24–25!">
 
   <!-- Open Graph Image with explicit dimensions & cache buster -->
-  <meta property="og:image" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.8">
-  <meta property="og:image:secure_url" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.8">
+  <meta property="og:image" content="https://kantimes.netlify.app/images/kantimes-bg.png?v=2.6.0">
+  <meta property="og:image:secure_url" content="https://kantimes.netlify.app/images/kantimes-bg.png?v=2.6.0">
   <meta property="og:image:type" content="image/jpeg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
 
   <!-- Twitter / Large Card Previews -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="🎶 KanTime | Stake Choir Practice Hub">
+  <meta name="twitter:title" content="🎶 KanTimes | Stake Choir Practice Hub">
   <meta name="twitter:description"
     content="Access hymn repertoire, practice tracks, and track your daily 15-minute practice sessions for Oct 24–25!">
-  <meta name="twitter:image" content="https://kantimes.netlify.app/images/kantime-bg.png?v=2.5.8">
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="🎶 KanTime | Stake Choir Practice Hub">
-  <meta name="twitter:description"
-    content="Access hymn repertoire, practice tracks, and track your daily 15-minute practice sessions for Oct 24–25!">
-  <meta name="twitter:image" content="https://kantimes.netlify.app/images/kantime-bg.png">
+  <meta name="twitter:image" content="https://kantimes.netlify.app/images/kantimes-bg.png?v=2.6.0">
 
   <meta name="theme-color" content="#1e3a8a">
   <link rel="manifest" href="/manifest.json">
@@ -40,10 +34,10 @@
   <link rel="apple-touch-icon" sizes="512x512" href="/images/icon-512.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="KanTime">
+  <meta name="apple-mobile-web-app-title" content="KanTimes">
   <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192.png">
   <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
-  <link rel="stylesheet" href="css/style.css?v=2.5.9">
+  <link rel="stylesheet" href="css/style.css?v=2.6.0">
 </head>
 
 <body>
@@ -51,12 +45,12 @@
   <header>
     <div class="header-inner">
       <div class="header-brand">
-        <img src="images/kantime-logo.png" alt="KanTime Logo" class="header-logo" id="appLogoRefresh" role="button"
+        <img src="images/kantimes-logo.png" alt="KanTimes Logo" class="header-logo" id="appLogoRefresh" role="button"
           tabindex="0" onclick="forceAppUpdate()" onkeydown="if(event.key==='Enter'||event.key===' ')forceAppUpdate()"
           title="Tap to refresh app and check for new songs" aria-label="Refresh app and check for updates"
           onerror="this.style.display='none'">
         <div class="header-text">
-          <h1>KanTime <span class="app-version-badge" title="KanTime v2.5.8">v2.5.8</span></h1>
+          <h1>KanTimes <span class="app-version-badge" title="KanTimes v2.6.0">v2.6.0</span></h1>
           <p id="headerSubtitle">Stake Choir Prep • Oct 24–25</p>
         </div>
       </div>
@@ -78,12 +72,12 @@
 
   <!-- PWA Install Pill Banner (Android / Chrome – shown when beforeinstallprompt fires) -->
   <div id="pwaInstallBanner" class="pwa-install-banner" style="display: none;" role="complementary"
-    aria-label="Add KanTime to Home Screen">
+    aria-label="Add KanTimes to Home Screen">
     <div class="pwa-install-inner">
       <span class="pwa-install-icon">📲</span>
-      <span class="pwa-install-text">Add <strong>KanTime</strong> to Home Screen</span>
+      <span class="pwa-install-text">Add <strong>KanTimes</strong> to Home Screen</span>
       <button type="button" class="pwa-install-btn" id="pwaInstallBtn" onclick="installPWA()"
-        aria-label="Install KanTime app">Install</button>
+        aria-label="Install KanTimes app">Install</button>
       <button type="button" class="pwa-install-dismiss" id="pwaInstallDismiss" onclick="dismissInstallBanner()"
         aria-label="Dismiss install prompt">✕</button>
     </div>
@@ -232,7 +226,7 @@
             aria-expanded="true" style="cursor: pointer; flex: 1;">
             <span class="metronome-header-icon">⏱️</span>
             <div>
-              <h3 class="metronome-title">KanTime Metronome</h3>
+              <h3 class="metronome-title">KanTimes Metronome</h3>
               <p class="metronome-subtitle">Web Audio precision pulse for choral rehearsal</p>
             </div>
           </div>
@@ -307,7 +301,7 @@
             aria-expanded="true">
             <span class="piano-header-icon">🎹</span>
             <div>
-              <h3 class="piano-title">KanTime Piano &amp; Pitch Helper</h3>
+              <h3 class="piano-title">KanTimes Piano &amp; Pitch Helper</h3>
               <p class="piano-subtitle">Web Audio precision pitch finder for choir rehearsal</p>
             </div>
           </div>
@@ -578,7 +572,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="lame.min.js"></script>
-    <script src="script.js?v=2.5.8"></script>
+    <script src="script.js?v=2.6.0"></script>
 
     <!-- In-App Resource Viewer Modal -->
     <div id="resourceModal" class="modal-backdrop" onclick="closeModalOnBackdrop(event)">

@@ -16,7 +16,7 @@ Implement two new choir rehearsal features in `kantimes.netlify.app` across `ind
 
 ## Proposed Changes
 
-### 1. Structure & Markup Updates ([index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/index.html))
+### 1. Structure & Markup Updates ([index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/index.html))
 
 - **Settings Modal (`#tabPanelPreferences`)**:
   - Rename / augment section to **"Event Repertoire & Archives"**.
@@ -26,7 +26,7 @@ Implement two new choir rehearsal features in `kantimes.netlify.app` across `ind
   - Add a collapsible card `#archivedRepertoireCard` ("📁 Archived / Past Conferences") directly following `#activeResourcesCard`.
   - The card displays an expandable header with piece count badge, and an internal grid of archived repertoire cards with quick "Rehearse This Piece" buttons.
 
-### 2. Styling & Animations ([css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/css/style.css))
+### 2. Styling & Animations ([css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/css/style.css))
 
 - **Repertoire Archiving Styles**:
   - Styles for `#archivedRepertoireCard`, collapsible header, count pills, and archived song cards.
@@ -39,7 +39,7 @@ Implement two new choir rehearsal features in `kantimes.netlify.app` across `ind
   - Playback controls and action buttons (play/pause, discard trash button, re-record).
   - Dark mode variables and support for all new components.
 
-### 3. Application Logic ([script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js))
+### 3. Application Logic ([script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/script.js))
 
 - **Data Models & Migration**:
   - Update `DEFAULT_USER_SETTINGS` to include `showPastRepertoire: false`.

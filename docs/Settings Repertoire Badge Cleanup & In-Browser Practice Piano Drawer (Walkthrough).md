@@ -1,7 +1,7 @@
 # Walkthrough - Piano Audio Playback Diagnosis & Fix
 
 ## Summary of Changes
-Investigated and resolved the piano audio playback issue in [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js) and [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/css/style.css) where keys produced no sound when pressed (both with sustain enabled and disabled).
+Investigated and resolved the piano audio playback issue in [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/script.js) and [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/css/style.css) where keys produced no sound when pressed (both with sustain enabled and disabled).
 
 ---
 
@@ -28,19 +28,19 @@ Investigated and resolved the piano audio playback issue in [script.js](file:///
 
 ## Fixes Implemented
 
-### 1. Active Autoplay Unlocking ([script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js))
+### 1. Active Autoplay Unlocking ([script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/script.js))
 - Added `unlockPianoAudioContext()` helper that proactively calls `audioCtx.resume()`.
 - Registered global one-time passive listeners on `pointerdown`, `touchstart`, `mousedown`, and `keydown` to automatically unlock audio on any initial user gesture.
 - Embedded `unlockPianoAudioContext()` directly into `showPianoDrawer()`, `togglePianoDrawer()`, `playPianoVoicePart()`, and `renderPianoKeyboard()`.
 - Ensured `getPianoAudioContext()` validates that `masterPianoGain` is alive, set to `gain.value = 1.0`, and connected to `destination`, with a direct destination fallback.
 
-### 2. Envelope Protection & Natural Damper Release ([script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js))
+### 2. Envelope Protection & Natural Damper Release ([script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/script.js))
 - Enforced a minimum sounding duration (`minSoundingDuration = 0.06s`) in `stopPianoNote()` so quick taps and clicks complete their attack phase cleanly without being muted prematurely.
 - Guarded release starting level against indeterminate or zero `gain.value` reads (fallback `0.26`).
 - Implemented a smooth acoustic damper release over `0.12s` (or `0.05s` when force-muting).
 - Kept sustain pedal ring-out (`3.2s`) natural and uninterrupted when sustain is ON.
 
-### 3. Pointer Capture & Touch Action Optimization ([script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js) & [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/css/style.css))
+### 3. Pointer Capture & Touch Action Optimization ([script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/script.js) & [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/css/style.css))
 - In `renderPianoKeyboard()`, implemented `setPointerCapture(e.pointerId)` on `pointerdown` and `releasePointerCapture(e.pointerId)` on `pointerup`/`pointercancel`.
 - Removed the fragile `pointerleave` listener that caused immediate note cancellation when keys moved slightly or when mouse drifted.
 - Set `touch-action: none;` on `.piano-keyboard`, `.piano-key-white`, and `.piano-key-black` in `css/style.css` to prevent mobile scroll hijacking.

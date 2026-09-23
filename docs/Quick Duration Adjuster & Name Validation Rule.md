@@ -14,7 +14,7 @@ Add an inline timer duration adjuster directly on the landing rehearsal card, an
 
 ### 1. HTML Markup Updates
 
-#### [MODIFY] [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/index.html)
+#### [MODIFY] [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/index.html)
 - In `#practiceWorkspace`:
   - Add `.quick-duration-wrapper` with pill buttons for 5m, 10m, 15m, 20m, 30m, 45m, 60m.
 - In `#profileCard`:
@@ -26,7 +26,7 @@ Add an inline timer duration adjuster directly on the landing rehearsal card, an
 
 ### 2. Styling Updates
 
-#### [MODIFY] [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/css/style.css)
+#### [MODIFY] [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/css/style.css)
 - **Quick Duration Adjuster Styles**:
   - `.quick-duration-wrapper`: clean card bar positioned right above the timer countdown.
   - `.quick-duration-pill`: tactile rounded pills with active state highlight, hover transitions, and locked/disabled state styling.
@@ -38,7 +38,7 @@ Add an inline timer duration adjuster directly on the landing rehearsal card, an
 
 ### 3. Application Logic Updates
 
-#### [MODIFY] [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js)
+#### [MODIFY] [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/script.js)
 - **Quick Duration Adjuster (`selectQuickDuration`)**:
   - Implement `selectQuickDuration(mins)` that triggers `handleTimerDurationChange(mins)`.
   - Implement `updateDurationSelectorUI(mins, isLocked)` to sync the landing page pills, dropdown in Settings modal, and lock pills when the countdown is running (`toggleTimer()`, `updateTimerTick()`, `restoreTimerState()`).

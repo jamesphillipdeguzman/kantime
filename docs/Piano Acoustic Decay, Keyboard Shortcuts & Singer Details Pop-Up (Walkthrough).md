@@ -1,7 +1,7 @@
 # Walkthrough - Piano Acoustic Decay, Keyboard Shortcuts & Singer Details Pop-Up
 
 ## Summary of Changes
-Completed the three requested updates across [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/index.html), [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/css/style.css), and [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js):
+Completed the three requested updates across [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/index.html), [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/css/style.css), and [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/script.js):
 
 1. **Remove Piano Sustain & Fall Back to Pure Natural Decay:**
    - Completely eliminated the `Sustain: On/Off` button and its associated state logic.
@@ -21,21 +21,21 @@ Completed the three requested updates across [index.html](file:///c:/Users/PC/On
 
 ## Detailed Modifications
 
-### 1. [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/index.html)
+### 1. [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/index.html)
 - Removed `#pianoToggleSustainBtn` from the piano controls toolbar.
 - Added `#singerDetailsModal` before `</body>` with semantic modal structure:
   - Hero section: Avatar (`#singerDetailsAvatarContainer`), untruncated full name (`#singerDetailsFullName`), voice badge (`#singerDetailsVoicePart`), and rank pill (`#singerDetailsRankPill`).
   - Stat cards: Total Practice Time (`#singerDetailsTimeValue`, `#singerDetailsTimeSub`) and Rehearsal Rank (`#singerDetailsRankValue`, `#singerDetailsRankSub`).
   - Close button (`✕`) and "Done" button.
 
-### 2. [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/css/style.css)
+### 2. [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/css/style.css)
 - Added `.key-pressed` selectors for `.piano-key-white` and `.piano-key-black` matching `.is-pressed` across both light and dark themes.
 - Styled `.board-row.clickable-singer` with cursor pointer, hover background highlight, and active tap feedback (`transform: scale(0.99)`).
 - Added comprehensive styles for `#singerDetailsModal`:
   - `.singer-details-modal-box`, `.singer-details-avatar-container`, `.singer-details-fullname`, `.singer-details-rank-pill`, `.singer-stat-tile`.
   - Dark mode adaptations for rank pill, stat tiles, and singer hover states.
 
-### 3. [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js)
+### 3. [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/script.js)
 - **Natural Decay Piano Engine**:
   - Removed `isSustainPedalOn`, `pianoSustain`, `togglePianoSustain`, and `dampLingeringSustainedNotes`.
   - Configured `playPianoNote()` to ring out with `linearRampToValueAtTime(0.32, now + 0.015)` and `exponentialRampToValueAtTime(0.0001, now + 1.35)`.

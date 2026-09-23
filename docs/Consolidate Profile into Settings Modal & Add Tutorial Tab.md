@@ -34,7 +34,7 @@ The gear icon (⚙️) "Practice Preferences" modal will be expanded into 3 dist
 
 ## Proposed Changes
 
-### [HTML Markup] [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/index.html)
+### [HTML Markup] [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/index.html)
 - Update `#settingsModalTitle` and tab navigation list to 3 buttons:
   - `👤 Profile & Voice` (`#tabBtnProfile`)
   - `⚙️ Preferences & Repertoire` (`#tabBtnPreferences`)
@@ -44,12 +44,12 @@ The gear icon (⚙️) "Practice Preferences" modal will be expanded into 3 dist
 - Implement `#tabPanelTutorial` with 5 step cards (`.tutorial-step-card`).
 - Connect "Switch Voice / Change Name" in `#activeProfileBanner` to open Settings on the Profile tab.
 
-### [Styling] [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/css/style.css)
+### [Styling] [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/css/style.css)
 - Add styles for 3-tab navigation on desktop and mobile (`.settings-tab-btn` with flex wrapping/scroll).
 - Add styles for `.tutorial-guide-list`, `.tutorial-step-card`, `.step-badge`, and step typography matching choir theme colors (`#1d4ed8`, `#059669`, `#0f766e`).
 - Ensure `#settingAvatarPicker` renders smoothly inside the modal with horizontal scrolling or responsive grid wrap.
 
-### [JavaScript Logic] [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js)
+### [JavaScript Logic] [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/script.js)
 - Update `openSettingsModal(defaultTab = 'profile')` to accept and activate a target tab.
 - Update `switchSettingsTab(tabName)` to handle `'profile'`, `'preferences'`, and `'tutorial'`.
 - Implement `renderSettingAvatarPicker(currentAvatar)` and `selectSettingAvatar(filename)` for the modal profile tab.

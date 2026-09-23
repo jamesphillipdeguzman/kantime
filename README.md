@@ -1,4 +1,4 @@
-# 🎶 KanTime
+# 🎶 KanTimes
 
 > **Track your kanta time!**  
 > A lightweight, mobile-first rehearsal companion and practice tracker built for Stake Choir preparation (October 24–25).
@@ -7,7 +7,7 @@
 
 ## 📌 Overview
 
-**KanTime** is a modern, offline-first Progressive Web App (PWA) designed to encourage steady, focused choir practice.
+**KanTimes** is a modern, offline-first Progressive Web App (PWA) designed to encourage steady, focused choir practice.
 
 It provides choir members with:
 - Direct access to sheet music and rehearsal audio tracks
@@ -98,7 +98,8 @@ It provides choir members with:
 
 | Version    |    Date    | Key Highlights                                                                                                                                                                                                                                                                                                                                                                  |
 | :--------- | :--------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **v2.5.8** | 2026-09-21 | Extended maximum audio recording duration to **5 minutes**; added **MP3 audio export** functionality; updated recorded file naming convention to use a **generic prefix** (`kantime-practice-recording-[timestamp].mp3`) instead of specific song titles.                                                                                                                       |
+| **v2.6.0** | 2026-09-23 | Rebranded application name from KanTime to **KanTimes** across all UI elements, headers, and documentation; added **automatic cache invalidation and PWA update checks** on app launch so mobile shortcuts fetch new updates seamlessly without requiring manual re-installation.                                                                                               |
+| **v2.5.8** | 2026-09-21 | Extended maximum audio recording duration to **5 minutes**[cite: 6]; added **MP3 audio export** functionality[cite: 6]; updated recorded file naming convention to use a **generic prefix** (`kantime-practice-recording-[timestamp].mp3`) instead of specific song titles[cite: 6].                                                                                            |
 | **v2.5.7** | 2026-09-20 | Fixed rogue octave pill in **In-Browser Piano Drawer** (maximized mode); improved **maximized layout alignment** (horizontal centering + content bottom-aligned); added **automatic session cleanup** on browser close; updated app and badge versions; enhanced full project documentation.                                                                                    |
 | **v2.5.6** | 2026-09-17 | Added interactive **Section Breakdown** modal for Section Standings with compact summary header, 3-column stats strip, and dominant section roster (~75% modal height); added direct singer profile drill-down; synchronized active contributor counts with case-insensitive voice part normalization; fixed scroll clipping and bumped cache version.                          |
 | **v2.5.5** | 2026-09-16 | Added interactive **In-Browser Web Audio Piano** quick tool with pitch note labels; removed redundant `"Repertoire Management"` badge in Settings; bumped cache version for clean asset hydration.                                                                                                                                                                              |
@@ -109,9 +110,7 @@ It provides choir members with:
 | **v2.0.0** | 2026-09-10 | Converted into **Offline-First Progressive Web App (PWA)** with Service Worker (`sw.js`), Web App Manifest, offline queuing, and mobile-isolated clean **PDF export**. Gated rehearsal sheet music and audio behind timer start.                                                                                                                                                |
 | **v1.8.0** | 2026-09-10 | Introduced **5-Minute Inactivity Auto-Pause** guard, weekly practice streak calculations, and Milestone Celebration completion modals.                                                                                                                                                                                                                                          |
 | **v1.5.0** | 2026-09-10 | Added client-side **Real-Time Voice Pitch Detector** (autocorrelation engine, ±50 cents gauge, lock detection, and reference starting pitch pipe).                                                                                                                                                                                                                              |
-| **v1.0.0** | 2026-09-10 | Initial release of KanTime Stake Choir Rehearsal Hub with countdown timer, repertoire list, avatar selection, and Google Sheets leaderboard integration.                                                                                                                                                                                                                        |
-
----
+| **v1.0.0** | 2026-09-10 | Initial release of KanTimes Stake Choir Rehearsal Hub with countdown timer, repertoire list, avatar selection, and Google Sheets leaderboard integration.                                                                                                                                                                                                                       |
 
 ## 🛠️ Tech Stack & Architecture
 
@@ -136,7 +135,7 @@ It provides choir members with:
 ## 📂 Project Structure
 
 ```text
-kantime/
+kantimes/
 ├── css/
 │   └── style.css            # Responsive layout, design tokens, dark mode, metronome, pitch UI
 │
@@ -144,7 +143,7 @@ kantime/
 │
 ├── images/                  # Choir avatars, PWA icons, and background artwork
 │
-├── kantime-resources/       # Bundled audio tracks and sheet music PDF assets
+├── kantimes-resources/      # Bundled audio tracks and sheet music PDF assets
 │
 ├── index.html               # Main application markup, modals, and templates
 │

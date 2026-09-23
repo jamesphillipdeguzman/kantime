@@ -1,13 +1,13 @@
 # Walkthrough: Mobile PDF Export Fix & Gated Rehearsal Resources
 
-We have updated [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/index.html), [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/css/style.css), and [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js) to resolve mobile PDF export scaling/clipping bugs and gate song rehearsal materials behind the timer start action.
+We have updated [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/index.html), [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/css/style.css), and [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/script.js) to resolve mobile PDF export scaling/clipping bugs and gate song rehearsal materials behind the timer start action.
 
 ## Summary of Changes
 
 ### 1. Mobile-Optimized "Export to PDF" Fix
 - **html2pdf Integration**:
-  - Added `<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>` to [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/index.html).
-  - Added resilient fallback in [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js) to dynamically fetch the bundle if offline or blocked.
+  - Added `<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>` to [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/index.html).
+  - Added resilient fallback in [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/script.js) to dynamically fetch the bundle if offline or blocked.
 - **Isolated Off-Screen Export Container**:
   - In `exportTutorialToPdf()`, `window.scrollTo(0, 0)` is called before capture.
   - Generates a temporary off-screen container (`.pdf-isolated-container`) with a fixed layout width (`700px`), preventing mobile viewport clipping, duplication, or element looping.

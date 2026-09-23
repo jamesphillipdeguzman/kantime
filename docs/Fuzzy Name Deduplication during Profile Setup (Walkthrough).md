@@ -36,7 +36,7 @@ Prevented duplicate records in Google Sheets and fragmented practice statistics 
   - Frosted glass backdrop (`backdrop-filter: blur(6px)`), responsive card layout, mobile-optimized button stacks (`flex-direction: column-reverse` on narrow screens), and full dark mode support using CSS variables.
 
 ### 1.3 Backend Google Apps Script Guard Documentation
-- Created [`docs/Fuzzy Name Deduplication & Google Apps Script Guard.md`](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/docs/Fuzzy%20Name%20Deduplication%20&%20Google%20Apps%20Script%20Guard.md) with ready-to-use Google Apps Script code for canonical name matching in `doPost(e)` to enforce deduplication on the sheet side.
+- Created [`docs/Fuzzy Name Deduplication & Google Apps Script Guard.md`](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/docs/Fuzzy%20Name%20Deduplication%20&%20Google%20Apps%20Script%20Guard.md) with ready-to-use Google Apps Script code for canonical name matching in `doPost(e)` to enforce deduplication on the sheet side.
 
 ---
 

@@ -1,6 +1,6 @@
 # Walkthrough - Vocal Warm-Ups & "Start Practice" Updates + Version History
 
-Updated [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/index.html), [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js), [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/css/style.css), and [README.md](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/README.md) to implement the "Start Practice" button label, Vocal Warm-Ups & Singing Tips catalog, and a comprehensive app version history.
+Updated [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/index.html), [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/script.js), [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/css/style.css), and [README.md](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/README.md) to implement the "Start Practice" button label, Vocal Warm-Ups & Singing Tips catalog, and a comprehensive app version history.
 
 ---
 
@@ -34,7 +34,7 @@ Updated [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents
   - Smooth scrolling, fixed header and footer, top-right `✕` close button, backdrop click dismiss, and bottom `Done` button.
 
 ### 📜 Comprehensive README Version History
-- Rewrote [README.md](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/README.md) with:
+- Rewrote [README.md](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/README.md) with:
   - Project banner and mission statement.
   - Complete feature catalog (PWA, Rehearsal Timer, Inactivity Guard, Metronome, Vocal Pitch Detector, Vocal Warm-Ups & Tips, Attendance Ledger, Theme System, Multi-Lingual Tutorial & PDF Export).
   - Progressive Web App offline capabilities.

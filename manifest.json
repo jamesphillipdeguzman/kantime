@@ -1,14 +1,14 @@
 {
-  "name": "KanTime - Stake Choir Hub",
-  "short_name": "KanTime",
+  "name": "KanTimes - Stake Choir Hub",
+  "short_name": "KanTimes",
   "description": "Stake Choir Practice Hub & Daily Rehearsal Tracker",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#1e3a8a",
   "background_color": "#ffffff",
-  "id": "/",
+  "id": "/?source=pwa",
   "icons": [
     {
       "src": "/images/icon-192.png",

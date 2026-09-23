@@ -7,12 +7,12 @@ We have implemented a detailed pop-up modal for the **Section Standings** list (
 ## What Was Added & Changed
 
 ### 1. Interactive Section Standings Rows
-- In [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/index.html) and [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js):
+- In [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/index.html) and [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/script.js):
   - Each section row (`Primary`, `Alto`, `Tenor`, `Soprano`, `Bass`) is now interactive with `.clickable-section`, `role="button"`, `tabindex="0"`, hover effects, and keyboard navigation support (`Enter` / `Space`).
   - Added delegated click handling on `#sectionList` and inline invocation to guarantee responsiveness.
 
 ### 2. Dedicated Section Details Modal (`#sectionDetailsModal`)
-- **Semantic Structure**: Added `#sectionDetailsModal` modal container before `</body>` in [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/index.html).
+- **Semantic Structure**: Added `#sectionDetailsModal` modal container before `</body>` in [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/index.html).
 - **Header**: "Section Breakdown 📊" with accessible dismiss (`✕`) button.
 - **Hero Card**:
   - Voice-specific stylized avatar badge (🌸 Soprano, 💜 Alto, 🌟 Tenor, ⚓ Bass, 🧒 Primary).
@@ -27,7 +27,7 @@ We have implemented a detailed pop-up modal for the **Section Standings** list (
 - **Footer**: Full-width primary "Close" button.
 
 ### 3. High-Contrast Light & Dark Mode Styling
-- In [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/css/style.css):
+- In [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/css/style.css):
   - Added dedicated styling matching the color palette and contrast rules of the Singer Profile modal.
   - Light mode uses soft neutral surfaces (`#f8fafc`, `#f1f5f9`), crisp slate text (`#0f172a`), and defined borders (`#e2e8f0`).
   - Dark mode (`[data-theme="dark"]` / `.dark`) uses theme-appropriate dark backgrounds (`var(--bg-modal)`, `#1e293b`), high-contrast text (`#f8fafc`, `#94a3b8`), and subtle border outlines (`#334155`).

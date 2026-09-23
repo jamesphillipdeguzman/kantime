@@ -1,12 +1,12 @@
 # Walkthrough - Piano Sound Engine Restoration & Leaderboard Modal Bugfix
 
 ## Summary of Changes
-Inspected and resolved the issues across [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/index.html), [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/css/style.css), and [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js):
+Inspected and resolved the issues across [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/index.html), [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/css/style.css), and [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/script.js):
 
 ### 1. Leaderboard Singer Details Modal Fix
-- **Root Cause**: In [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/index.html), `#duplicateConfirmModal` was missing its closing `</div>` tag. Because of this unclosed container, `#singerDetailsModal` was parsed as a nested child of `#duplicateConfirmModal`. Since `#duplicateConfirmModal` is a `.modal-backdrop` with `opacity: 0; pointer-events: none;`, the singer details modal remained hidden and unclickable even when `.active` was added.
+- **Root Cause**: In [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/index.html), `#duplicateConfirmModal` was missing its closing `</div>` tag. Because of this unclosed container, `#singerDetailsModal` was parsed as a nested child of `#duplicateConfirmModal`. Since `#duplicateConfirmModal` is a `.modal-backdrop` with `opacity: 0; pointer-events: none;`, the singer details modal remained hidden and unclickable even when `.active` was added.
 - **Fixes Applied**:
-  - **DOM Structure**: Corrected the closing `</div>` for `#duplicateConfirmModal` in [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/index.html) so `#singerDetailsModal` is an independent root-level modal dialog before `</body>`.
+  - **DOM Structure**: Corrected the closing `</div>` for `#duplicateConfirmModal` in [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/index.html) so `#singerDetailsModal` is an independent root-level modal dialog before `</body>`.
   - **Handler Resolution**: Added `showSingerDetails(identifier, optionalRank)` supporting name lookups (`decodeURIComponent`), singer indices, and singer objects.
   - **Click Binding & Delegation**: Updated rows to trigger `showSingerDetails('${encodeURIComponent(s.name)}', ${idx + 1})` inline AND registered a delegated click listener on `#topSingersList` to guarantee click detection.
   - **Populated Content**: Untruncated full name, voice badge (`data-voice`), rank and practice pill in the format `#3 • 85m (1.4h)`, and practice statistics.
@@ -21,7 +21,7 @@ Inspected and resolved the issues across [index.html](file:///c:/Users/PC/OneDri
   ```
   In Web Audio, calling `osc1.stop(now + 1.22)` while the oscillator is still in `UNSCHEDULED_STATE` (before `osc1.start(now)` has been executed) throws an immediate fatal `InvalidStateError`. This aborted execution at line 6609 into `catch (err)`, preventing `osc.start()` from ever running and muting all keys.
 - **Fix Applied**:
-  - Reordered the lifecycle in `playPianoNote()` in [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js):
+  - Reordered the lifecycle in `playPianoNote()` in [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/script.js):
     1. Connect nodes: `osc1.connect(gain); osc2.connect(gain); gain.connect(audioCtx.destination);`
     2. Start nodes: `osc1.start(now); osc2.start(now);`
     3. Schedule stop: `osc1.stop(now + 1.22); osc2.stop(now + 1.22);`

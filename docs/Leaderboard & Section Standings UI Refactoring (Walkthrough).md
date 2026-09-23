@@ -7,7 +7,7 @@ We have refactored the Leaderboard and Section Standings components in KanTime t
 ## 1. Objectives Completed
 
 ### 🏆 1. Removed Card-Level "Refresh" Button
-- Removed the small, redundant `Refresh` button inside the **Top Dedicated Singers** card header in [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/index.html).
+- Removed the small, redundant `Refresh` button inside the **Top Dedicated Singers** card header in [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/index.html).
 - Global app-wide updates and cache clearing continue to be handled seamlessly by tapping the KanTime logo in the top app header.
 
 ### 🌟 2. Added Horizontal Segmented Tabs & Dynamic Titles
@@ -46,7 +46,7 @@ We have refactored the Leaderboard and Section Standings components in KanTime t
 ---
 
 ## 3. Files Modified
-- [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/index.html): Removed card refresh button, added segmented tab buttons, updated title ID and asset cache buster.
-- [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/css/style.css): Added `.leaderboard-tabs`, `.leaderboard-tab`, `.board-user-info`, `.singer-name` (ellipsis truncation), `.section-name-wrap`, and dark mode overrides.
-- [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js): Added `switchLeaderboardTab`, `renderLeaderboardSingers`, tab switching handlers, dynamic header updating, and clean section row formatting.
-- [sw.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/sw.js): Bumped `APP_VERSION` to `2.5.3` for seamless cache invalidation.
+- [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/index.html): Removed card refresh button, added segmented tab buttons, updated title ID and asset cache buster.
+- [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/css/style.css): Added `.leaderboard-tabs`, `.leaderboard-tab`, `.board-user-info`, `.singer-name` (ellipsis truncation), `.section-name-wrap`, and dark mode overrides.
+- [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/script.js): Added `switchLeaderboardTab`, `renderLeaderboardSingers`, tab switching handlers, dynamic header updating, and clean section row formatting.
+- [sw.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/sw.js): Bumped `APP_VERSION` to `2.5.3` for seamless cache invalidation.

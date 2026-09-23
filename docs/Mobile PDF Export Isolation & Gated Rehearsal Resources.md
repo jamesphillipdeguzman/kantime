@@ -14,7 +14,7 @@ Resolve mobile PDF export clipping/duplication issues using isolated DOM cloning
 
 ### 1. HTML Markup Updates
 
-#### [MODIFY] [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/index.html)
+#### [MODIFY] [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/index.html)
 - Include `html2pdf.bundle.min.js` CDN before `script.js`.
 - Add accessibility and structural markup for the gated song resource container in `#activeResourcesCard`.
 
@@ -22,7 +22,7 @@ Resolve mobile PDF export clipping/duplication issues using isolated DOM cloning
 
 ### 2. Styling Updates
 
-#### [MODIFY] [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/css/style.css)
+#### [MODIFY] [css/style.css](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/css/style.css)
 - **PDF Export Container Styling**:
   - Off-screen container styles (`#pdfIsolatedContainer` or `.pdf-export-isolated`) with fixed layout width (`700px`), clean background, high-contrast typography, and print-ready card spacing.
   - Pagebreak helper classes to ensure tutorial step cards never get sliced mid-card.
@@ -35,7 +35,7 @@ Resolve mobile PDF export clipping/duplication issues using isolated DOM cloning
 
 ### 3. Application Logic Updates
 
-#### [MODIFY] [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantime/script.js)
+#### [MODIFY] [script.js](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/Documents/.WEBSITES/kantimes/script.js)
 - **Mobile PDF Export (`exportTutorialToPdf`)**:
   - Remove buggy modal targeting and popup window logic.
   - Call `window.scrollTo(0, 0)` before capture.
