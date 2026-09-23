@@ -34,7 +34,7 @@ const PRECACHE_ASSETS = [
   "./images/elder-choir.jpg",
   "./images/sister-choir.jpg",
   // Local Repertoire Resources (kantimes-resources)
-  "./kantimes-resources/kantimes-thumbnail.png",
+  "./kantimes-resources/kantimes-thumbnail.jpg",
   "./kantimes-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day.mp3",
   "./kantimes-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20(piano).mp3",
   "./kantimes-resources/Choose%20You%20This%20Day/Choose%20You%20This%20Day%20-%20SOPRANO.mp3",
