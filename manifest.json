@@ -1,6 +1,6 @@
 {
-  "name": "KanTimes - Stake Choir Hub",
-  "short_name": "KanTimes",
+  "name": "Kantimes - Stake Choir Hub",
+  "short_name": "Kantimes",
   "description": "Stake Choir Practice Hub & Daily Rehearsal Tracker",
   "start_url": "/?source=pwa",
   "scope": "/",

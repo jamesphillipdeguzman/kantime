@@ -1,5 +1,5 @@
 // ==========================================================================
-// KanTimes | Stake Choir Practice Hub - Main Application Script
+// Kantimes | Stake Choir Practice Hub - Main Application Script
 // ==========================================================================
 
 // --- APPLICATION & REPERTOIRE VERSION ---

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   KanTime | Stake Choir Practice Hub - Modern Stylesheet
+   Kantime | Stake Choir Practice Hub - Modern Stylesheet
    ========================================================================== */
 
 :root {
@@ -2730,8 +2730,8 @@ input[type="text"].input-invalid {
 /* Ensure descriptive subtext has proper breathing room and cannot overlap headers */
 .settings-section-desc,
 .settings-subtext,
-.settings-section-title-wrap + .settings-hint,
-.settings-section h4 + .settings-hint {
+.settings-section-title-wrap+.settings-hint,
+.settings-section h4+.settings-hint {
   margin-top: 0 !important;
   margin-bottom: 12px;
   line-height: 1.4;
@@ -6146,10 +6146,21 @@ input[type="text"].input-invalid {
   color: #fff;
 }
 
-.part-soprano .part-badge { background: #e11d48; }
-.part-alto .part-badge { background: #7c3aed; }
-.part-tenor .part-badge { background: #2563eb; }
-.part-bass .part-badge { background: #059669; }
+.part-soprano .part-badge {
+  background: #e11d48;
+}
+
+.part-alto .part-badge {
+  background: #7c3aed;
+}
+
+.part-tenor .part-badge {
+  background: #2563eb;
+}
+
+.part-bass .part-badge {
+  background: #059669;
+}
 
 /* Toolbar & Octave Controls */
 .piano-toolbar {
@@ -6558,6 +6569,7 @@ body.piano-fullscreen-active {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -6589,7 +6601,7 @@ body.piano-fullscreen-active {
   min-width: 0 !important;
 }
 
-#pianoDrawer.is-maximized .piano-header-left > div {
+#pianoDrawer.is-maximized .piano-header-left>div {
   min-width: 0 !important;
 }
 
@@ -6862,7 +6874,7 @@ body.piano-fullscreen-active {
    Mobile Landscape Optimization
    ========================================================================== */
 @media (max-width: 1023px) and (orientation: landscape),
-       (orientation: landscape) and (max-height: 560px) {
+(orientation: landscape) and (max-height: 560px) {
   #pianoDrawer.is-maximized {
     padding: 0.5rem 0.85rem !important;
   }
@@ -6895,7 +6907,8 @@ body.piano-fullscreen-active {
   }
 
   #pianoDrawer.is-maximized .piano-toolbar {
-    display: none !important; /* In landscape full real estate is given to keys */
+    display: none !important;
+    /* In landscape full real estate is given to keys */
   }
 
   #pianoDrawer.is-maximized .piano-status-strip {
