@@ -4723,7 +4723,7 @@ function exportTutorialToPdf() {
             line-height:1.2;
             margin:0 0 3px;
           ">
-            KanTime: Choir Member Quick Guide &bull; Stake Choir Prep
+            Kantimes: Choir Member Quick Guide &bull; Stake Choir Prep
           </div>
 
           <div style="
@@ -6504,7 +6504,7 @@ function exportVocalDrillsToPdf() {
             line-height:1.2;
             margin:0 0 3px;
           ">
-            KanTime: Vocal Warm-Ups &amp; Singing Tips
+            Kantimes: Vocal Warm-Ups &amp; Singing Tips
           </div>
 
           <div style="

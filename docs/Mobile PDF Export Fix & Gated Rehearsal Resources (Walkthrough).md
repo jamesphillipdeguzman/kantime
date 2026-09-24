@@ -13,7 +13,7 @@ We have updated [index.html](file:///c:/Users/PC/OneDrive%20-%20Lucky%20mobile/D
   - Generates a temporary off-screen container (`.pdf-isolated-container`) with a fixed layout width (`700px`), preventing mobile viewport clipping, duplication, or element looping.
   - Completely excludes modal headers, close buttons (`✕`), tab bars, language pills (`EN/HIL/TL/CEB`), and the "Export to PDF" button itself.
   - Clones only the tutorial steps in the currently selected language.
-  - **Header**: `"KanTime: Choir Member Quick Guide • Stake Choir Prep"` with event details and singer name.
+  - **Header**: `"Kantimes: Choir Member Quick Guide • Stake Choir Prep"` with event details and singer name.
   - **Footer**: `"Developed for Iloilo Stake Choir | Built by James Phillip De Guzman"`.
 - **Canvas & PDF Settings**:
   - `html2canvas: { scale: 2, useCORS: true, scrollY: 0 }`
