@@ -1,4 +1,4 @@
-# 🎶 KanTimes
+# 🎶 Kantimes
 
 > **Track your kanta time!**  
 > A lightweight, mobile-first rehearsal companion and practice tracker built for Stake Choir preparation (October 24–25).
