@@ -4793,7 +4793,7 @@ function exportTutorialToPdf() {
       </span>
 
       <span style="color:#94a3b8;">
-        &copy; ${year} KanTime Practice Hub
+        &copy; ${year} Kantimes Practice Hub
       </span>
     </div>
   `;
@@ -6574,7 +6574,7 @@ function exportVocalDrillsToPdf() {
       </span>
 
       <span style="color:#94a3b8;">
-        &copy; ${year} KanTime Practice Hub &bull; All Vocal Drills
+        &copy; ${year} Kantimes Practice Hub &bull; All Vocal Drills
       </span>
     </div>
   `;
